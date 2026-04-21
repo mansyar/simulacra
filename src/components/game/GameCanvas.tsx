@@ -5,6 +5,7 @@ import { IsometricGrid } from './IsometricGrid'
 
 export default function GameCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const gridRef = useRef<IsometricGrid | null>(null)
 
   useEffect(() => {
     if (!canvasRef.current) return
@@ -28,6 +29,7 @@ export default function GameCanvas() {
       tileWidth: 32,
       tileHeight: 16,
     })
+    gridRef.current = grid
 
     // Create an actor that draws the grid each frame
     const gridActor = new Actor({
@@ -38,11 +40,24 @@ export default function GameCanvas() {
     }
     scene.add(gridActor)
 
+    // Mouse move handler to update hovered tile
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!canvasRef.current) return
+      const rect = canvasRef.current.getBoundingClientRect()
+      const scaleX = canvasRef.current.width / rect.width
+      const scaleY = canvasRef.current.height / rect.height
+      const x = (e.clientX - rect.left) * scaleX
+      const y = (e.clientY - rect.top) * scaleY
+      grid.setMousePosition(x, y)
+    }
+    canvasRef.current.addEventListener('mousemove', handleMouseMove)
+
     // Start the engine
     engine.start()
 
     // Cleanup
     return () => {
+      canvasRef.current?.removeEventListener('mousemove', handleMouseMove)
       engine.stop()
     }
   }, [])

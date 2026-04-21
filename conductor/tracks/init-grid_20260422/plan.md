@@ -47,11 +47,11 @@
     - [x] Sub-task: Render 64x64 tile grid
     - [x] Sub-task: Verify grid displays correctly
 
-- [ ] Task: Style grid tiles
-    - [ ] Sub-task: Write tests for tile styling
-    - [ ] Sub-task: Apply tile colors and borders
-    - [ ] Sub-task: Add hover effects
-    - [ ] Sub-task: Verify visual appearance
+- [x] Task: Style grid tiles
+    - [x] Sub-task: Write tests for tile styling
+    - [x] Sub-task: Apply tile colors and borders
+    - [x] Sub-task: Add hover effects
+    - [x] Sub-task: Verify visual appearance
 
 ---
 
