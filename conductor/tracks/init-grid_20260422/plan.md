@@ -59,23 +59,23 @@
 
 ### Tasks
 
-- [ ] Task: Implement camera pan functionality
-    - [ ] Sub-task: Write tests for pan controls
-    - [ ] Sub-task: Create Camera component
-    - [ ] Sub-task: Implement mouse drag handling
-    - [ ] Sub-task: Add boundary constraints
+- [x] Task: Implement camera pan functionality
+    - [x] Sub-task: Write tests for pan controls
+    - [x] Sub-task: Create Camera component
+    - [x] Sub-task: Implement mouse drag handling
+    - [x] Sub-task: Add boundary constraints
 
-- [ ] Task: Implement camera zoom functionality
-    - [ ] Sub-task: Write tests for zoom controls
-    - [ ] Sub-task: Implement mouse wheel zoom
-    - [ ] Sub-task: Add zoom range limits (0.5x - 3x)
-    - [ ] Sub-task: Center zoom on mouse position
+- [x] Task: Implement camera zoom functionality
+    - [x] Sub-task: Write tests for zoom controls
+    - [x] Sub-task: Implement mouse wheel zoom
+    - [x] Sub-task: Add zoom range limits (0.5x - 3x)
+    - [x] Sub-task: Center zoom on mouse position
 
-- [ ] Task: Add smooth camera transitions
-    - [ ] Sub-task: Write tests for smooth transitions
-    - [ ] Sub-task: Implement lerp for camera movement
-    - [ ] Sub-task: Add transition duration
-    - [ ] Sub-task: Verify smooth animation
+- [x] Task: Add smooth camera transitions
+    - [x] Sub-task: Write tests for smooth transitions
+    - [x] Sub-task: Implement lerp for camera movement
+    - [x] Sub-task: Add transition duration
+    - [x] Sub-task: Verify smooth animation
 
 ---
 
