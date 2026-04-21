@@ -35,11 +35,11 @@
 
 ### Tasks
 
-- [ ] Task: Create isometric coordinate utilities
-    - [ ] Sub-task: Write tests for coordinate conversion
-    - [ ] Sub-task: Implement grid-to-screen conversion
-    - [ ] Sub-task: Implement screen-to-grid conversion
-    - [ ] Sub-task: Verify conversion accuracy
+- [x] Task: Create isometric coordinate utilities
+    - [x] Sub-task: Write tests for coordinate conversion
+    - [x] Sub-task: Implement grid-to-screen conversion
+    - [x] Sub-task: Implement screen-to-grid conversion
+    - [x] Sub-task: Verify conversion accuracy
 
 - [ ] Task: Implement IsometricGrid component
     - [ ] Sub-task: Write tests for grid rendering
