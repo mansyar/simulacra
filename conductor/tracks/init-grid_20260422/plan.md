@@ -9,15 +9,15 @@
 
 ### Tasks
 
-- [ ] Task: Initialize TanStack Start project with TypeScript
+- [x] Task: Initialize TanStack Start project with TypeScript
     - [x] Sub-task: Write tests for project initialization
     - [x] Sub-task: Initialize TanStack Start project
     - [x] Sub-task: Verify project runs without errors
 
-- [ ] Task: Configure Tailwind CSS
-    - [ ] Sub-task: Write tests for Tailwind configuration
-    - [ ] Sub-task: Install and configure Tailwind CSS
-    - [ ] Sub-task: Add custom theme colors
+- [x] Task: Configure Tailwind CSS
+    - [x] Sub-task: Write tests for Tailwind configuration
+    - [x] Sub-task: Install and configure Tailwind CSS
+    - [x] Sub-task: Add custom theme colors
 
 - [ ] Task: Set up project structure
     - [ ] Sub-task: Write tests for directory structure
