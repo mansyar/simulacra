@@ -11,5 +11,16 @@ export default defineConfig({
         // canvas: true, // This may not be a valid option
       },
     },
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        'node_modules/',
+        'src/__tests__/',
+        '**/*.test.ts',
+        '**/*.test.tsx',
+        '**/*.spec.ts',
+      ],
+    },
   },
 })

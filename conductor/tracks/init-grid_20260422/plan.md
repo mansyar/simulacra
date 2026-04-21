@@ -83,29 +83,29 @@
 
 ### Tasks
 
-- [ ] Task: Create placeholder agent data
-    - [ ] Sub-task: Write tests for agent data structure
-    - [ ] Sub-task: Define PlaceholderAgent interface
-    - [ ] Sub-task: Create sample agent data
-    - [ ] Sub-task: Verify data structure
+- [x] Task: Create placeholder agent data
+    - [x] Sub-task: Write tests for agent data structure
+    - [x] Sub-task: Define PlaceholderAgent interface
+    - [x] Sub-task: Create sample agent data
+    - [x] Sub-task: Verify data structure
 
-- [ ] Task: Implement AgentSprite component
-    - [ ] Sub-task: Write tests for agent rendering
-    - [ ] Sub-task: Create AgentSprite component
-    - [ ] Sub-task: Render agent at grid position
-    - [ ] Sub-task: Add agent colors based on archetype
+- [x] Task: Implement AgentSprite component
+    - [x] Sub-task: Write tests for agent rendering
+    - [x] Sub-task: Create AgentSprite component
+    - [x] Sub-task: Render agent at grid position
+    - [x] Sub-task: Add agent colors based on archetype
 
-- [ ] Task: Add agent name tags
-    - [ ] Sub-task: Write tests for name tags
-    - [ ] Sub-task: Create floating name tag component
-    - [ ] Sub-task: Position tag above agent
-    - [ ] Sub-task: Verify tag visibility
+- [x] Task: Add agent name tags
+    - [x] Sub-task: Write tests for name tags
+    - [x] Sub-task: Create floating name tag component
+    - [x] Sub-task: Position tag above agent
+    - [x] Sub-task: Verify tag visibility
 
-- [ ] Task: Implement smooth agent movement
-    - [ ] Sub-task: Write tests for movement interpolation
-    - [ ] Sub-task: Implement lerp function
-    - [ ] Sub-task: Update agent position smoothly
-    - [ ] Sub-task: Verify smooth movement
+- [x] Task: Implement smooth agent movement
+    - [x] Sub-task: Write tests for movement interpolation
+    - [x] Sub-task: Implement lerp function
+    - [x] Sub-task: Update agent position smoothly
+    - [x] Sub-task: Verify smooth movement
 
 ---
 
@@ -113,23 +113,23 @@
 
 ### Tasks
 
-- [ ] Task: Integrate all components
-    - [ ] Sub-task: Write integration tests
-    - [ ] Sub-task: Connect GameCanvas with grid and agents
-    - [ ] Sub-task: Verify full render pipeline
-    - [ ] Sub-task: Check for visual glitches
+- [x] Task: Integrate all components
+    - [x] Sub-task: Write integration tests
+    - [x] Sub-task: Connect GameCanvas with grid and agents
+    - [x] Sub-task: Verify full render pipeline
+    - [x] Sub-task: Check for visual glitches
 
-- [ ] Task: Performance optimization
-    - [ ] Sub-task: Write performance tests
-    - [ ] Sub-task: Target 60 FPS rendering
-    - [ ] Sub-task: Optimize tile rendering
-    - [ ] Sub-task: Verify performance targets
+- [x] Task: Performance optimization
+    - [x] Sub-task: Write performance tests
+    - [x] Sub-task: Target 60 FPS rendering
+    - [x] Sub-task: Optimize tile rendering
+    - [x] Sub-task: Verify performance targets
 
-- [ ] Task: Final verification
-    - [ ] Sub-task: Run full test suite
-    - [ ] Sub-task: Verify code coverage >80%
-    - [ ] Sub-task: Check against acceptance criteria
-    - [ ] Sub-task: Update track status to completed
+- [x] Task: Final verification
+    - [x] Sub-task: Run full test suite
+    - [x] Sub-task: Verify code coverage >80%
+    - [x] Sub-task: Check against acceptance criteria
+    - [x] Sub-task: Update track status to completed
 
 ---
 

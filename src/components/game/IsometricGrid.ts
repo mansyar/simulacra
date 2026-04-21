@@ -40,6 +40,31 @@ export class IsometricGrid {
     }
   }
 
+  public getBoundingBox(): { left: number; right: number; top: number; bottom: number } {
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity
+    for (let x = 0; x < this.width; x++) {
+      for (let y = 0; y < this.height; y++) {
+        const screenPos = gridToScreen(x, y)
+        const halfWidth = this.tileWidth / 2
+        const halfHeight = this.tileHeight / 2
+        // diamond vertices
+        const vertices = [
+          { x: screenPos.x, y: screenPos.y - halfHeight },
+          { x: screenPos.x + halfWidth, y: screenPos.y },
+          { x: screenPos.x, y: screenPos.y + halfHeight },
+          { x: screenPos.x - halfWidth, y: screenPos.y },
+        ]
+        vertices.forEach(v => {
+          if (v.x < minX) minX = v.x
+          if (v.x > maxX) maxX = v.x
+          if (v.y < minY) minY = v.y
+          if (v.y > maxY) maxY = v.y
+        })
+      }
+    }
+    return { left: minX, right: maxX, top: minY, bottom: maxY }
+  }
+
   public render(ctx: ExcaliburGraphicsContext): void {
     // Render 64x64 tile grid
     for (let x = 0; x < this.width; x++) {

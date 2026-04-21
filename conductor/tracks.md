@@ -4,5 +4,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [~] **Track: Initialize project and render isometric game grid**
+- [x] **Track: Initialize project and render isometric game grid**
   *Link: [./tracks/init-grid_20260422/](./tracks/init-grid_20260422/)*

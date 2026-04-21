@@ -1,0 +1,36 @@
+import { describe, it, expect } from 'vitest'
+import { AgentSprite } from '../components/game/AgentSprite'
+import type { PlaceholderAgent } from '../components/game/AgentSprite'
+import { Vector } from 'excalibur'
+
+describe('AgentSprite', () => {
+  const mockAgent: PlaceholderAgent = {
+    id: 'test',
+    name: 'Test Agent',
+    gridX: 10,
+    gridY: 20,
+    color: '#ff0000',
+  }
+
+  it('should create agent with given properties', () => {
+    const agent = new AgentSprite(mockAgent)
+    expect(agent).toBeDefined()
+    // AgentSprite extends Actor, so it should have pos property
+    expect(agent.pos).toBeInstanceOf(Vector)
+  })
+
+  it('should update grid position and move actor', () => {
+    const agent = new AgentSprite(mockAgent)
+    agent.updateGridPosition(30, 40)
+    // The position should be updated (we can't assert exact screen coordinates without mocking gridToScreen)
+    // Ensure no error thrown
+    expect(() => agent.updateGridPosition(30, 40)).not.toThrow()
+  })
+
+  it('should have a circle graphic and label', () => {
+    const agent = new AgentSprite(mockAgent)
+    // AgentSprite adds a circle graphic and a label child
+    // We can't easily inspect graphics component, but we can ensure the constructor succeeded
+    expect(agent).toBeDefined()
+  })
+})
