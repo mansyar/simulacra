@@ -41,11 +41,11 @@
     - [x] Sub-task: Implement screen-to-grid conversion
     - [x] Sub-task: Verify conversion accuracy
 
-- [ ] Task: Implement IsometricGrid component
-    - [ ] Sub-task: Write tests for grid rendering
-    - [ ] Sub-task: Create IsometricGrid component
-    - [ ] Sub-task: Render 64x64 tile grid
-    - [ ] Sub-task: Verify grid displays correctly
+- [x] Task: Implement IsometricGrid component
+    - [x] Sub-task: Write tests for grid rendering
+    - [x] Sub-task: Create IsometricGrid component
+    - [x] Sub-task: Render 64x64 tile grid
+    - [x] Sub-task: Verify grid displays correctly
 
 - [ ] Task: Style grid tiles
     - [ ] Sub-task: Write tests for tile styling
