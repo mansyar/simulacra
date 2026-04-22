@@ -28,7 +28,7 @@ export class CameraController {
     const pointer = this.input.pointers.primary
     const isDraggingNow = this.input.pointers.isDragging(0)
     if (isDraggingNow) {
-      const currentPos = pointer.lastWorldPos
+      const currentPos = pointer.lastWorldPos ?? Vector.Zero
       if (!this.isDragging) {
         // Drag start
         this.isDragging = true

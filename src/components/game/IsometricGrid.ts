@@ -14,8 +14,6 @@ export class IsometricGrid {
   private height: number
   private tileWidth: number
   private tileHeight: number
-  private mouseX: number = 0
-  private mouseY: number = 0
   private hoveredTile: { x: number; y: number } | null = null
 
   constructor(options: IsometricGridOptions) {
@@ -23,14 +21,9 @@ export class IsometricGrid {
     this.height = options.height
     this.tileWidth = options.tileWidth
     this.tileHeight = options.tileHeight
-    // Ensure mouseX and mouseY are used (they are set via setMousePosition)
-    void this.mouseX
-    void this.mouseY
   }
 
   public setMousePosition(screenX: number, screenY: number): void {
-    this.mouseX = screenX
-    this.mouseY = screenY
     // Convert screen coordinates to grid coordinates
     const gridPos = screenToGrid(screenX, screenY)
     if (gridPos.x >= 0 && gridPos.x < this.width && gridPos.y >= 0 && gridPos.y < this.height) {
