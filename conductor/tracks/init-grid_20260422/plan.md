@@ -146,6 +146,17 @@
 
 ---
 
+## Phase: Review Fixes
+
+### Tasks
+
+- [x] Task: Apply review suggestions
+    - [x] Sub-task: Remove unused mouseX/mouseY variables from IsometricGrid
+    - [x] Sub-task: Add null check for pointer.lastWorldPos in Camera
+    - [x] Sub-task: Add trailing newline to isometric.ts
+
+---
+
 ## Notes
 
 - Each task follows TDD: Write Tests → Implement → Verify
