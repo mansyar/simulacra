@@ -39,11 +39,11 @@
   - [x] Create `events_by_time` index (automatically added by Convex)
   - [x] Task: Conductor - User Manual Verification 'Index Creation' (Protocol in workflow.md)
 
-- [ ] **Task:** Deploy schema to Convex
-  - [ ] Run `npx convex deploy`
-  - [ ] Verify schema deployed successfully
-  - [ ] Test schema with sample query
-  - [ ] Task: Conductor - User Manual Verification 'Schema Deployment' (Protocol in workflow.md)
+- [x] **Task:** Deploy schema to Convex
+  - [x] Run `npx convex deploy`
+  - [x] Verify schema deployed successfully
+  - [x] Test schema with sample query
+  - [x] Task: Conductor - User Manual Verification 'Schema Deployment' (Protocol in workflow.md)
 
 ### Day 3-4: CRUD Operations
 
