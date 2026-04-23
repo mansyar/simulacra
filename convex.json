@@ -1,0 +1,6 @@
+{
+  "node": "18",
+  "generators": {
+    "typescript": "1.0.0"
+  }
+}

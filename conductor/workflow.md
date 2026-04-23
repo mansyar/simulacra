@@ -154,23 +154,31 @@ Before marking any task complete, verify:
 
 ### Setup
 ```bash
-# Example: Commands to set up the development environment (e.g., install dependencies, configure database)
-# e.g., for a Node.js project: npm install
-# e.g., for a Go project: go mod tidy
+# Convex setup
+pnpm add convex
+npx convex dev  # Start local dev server
+# Configure convex.json with Node 18
+# Set environment variables: CONVEX_DEPLOYMENT, CONVEX_SECRET_KEY
 ```
 
 ### Daily Development
 ```bash
-# Example: Commands for common daily tasks (e.g., start dev server, run tests, lint, format)
-# e.g., for a Node.js project: npm run dev, npm test, npm run lint
-# e.g., for a Go project: go run main.go, go test ./..., go fmt ./...
+# Convex development
+npx convex dev  # Start local Convex dev server
+pnpm test  # Run unit tests
+pnpm test:coverage  # Run tests with coverage
+# Convex deployment
+npx convex deploy  # Deploy schema to Convex
 ```
 
 ### Before Committing
 ```bash
-# Example: Commands to run all pre-commit checks (e.g., format, lint, type check, run tests)
-# e.g., for a Node.js project: npm run check
-# e.g., for a Go project: make check (if a Makefile exists)
+# Pre-commit checks
+pnpm test  # Run unit tests
+pnpm test:coverage  # Ensure coverage >80%
+npx tsc --noEmit  # Type checking
+# Convex-specific: verify schema deployment
+npx convex deploy --dry-run  # Check for schema changes
 ```
 
 ## Testing Requirements
