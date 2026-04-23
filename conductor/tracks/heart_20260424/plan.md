@@ -47,11 +47,11 @@
 
 ### Day 3-4: CRUD Operations
 
-- [ ] **Task:** Create Convex functions directory
-  - [ ] Create `convex/functions/` directory
-  - [ ] Create `convex/functions/agents.ts`
-  - [ ] Add TypeScript types for agent operations
-  - [ ] Task: Conductor - User Manual Verification 'Functions Directory' (Protocol in workflow.md)
+- [~] **Task:** Create Convex functions directory
+  - [x] Create `convex/functions/` directory
+  - [x] Create `convex/functions/agents.ts`
+  - [x] Add TypeScript types for agent operations
+  - [x] Task: Conductor - User Manual Verification 'Functions Directory' (Protocol in workflow.md)
 
 - [ ] **Task:** Implement `getAll` query
   - [ ] Write `getAll` query function
