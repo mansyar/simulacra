@@ -6,6 +6,36 @@ import schema from "./schema";
 
 const modules = import.meta.glob("./**/*.ts");
 
+test("updatePosition bounds validation", async () => {
+  const t = convexTest(schema, modules);
+  const agentId = await t.mutation(api.functions.agents.create, {
+    name: "Agent 4",
+    archetype: "nurturer",
+    gridX: 10,
+    gridY: 10,
+  });
+  
+  // Test out of bounds (too high)
+  await t.mutation(api.functions.agents.updatePosition, {
+    agentId,
+    targetX: 100,
+    targetY: 100,
+  });
+  let agent = await t.query(api.functions.agents.getById, { agentId });
+  expect(agent?.targetX).toBe(63);
+  expect(agent?.targetY).toBe(63);
+
+  // Test out of bounds (too low)
+  await t.mutation(api.functions.agents.updatePosition, {
+    agentId,
+    targetX: -10,
+    targetY: -10,
+  });
+  agent = await t.query(api.functions.agents.getById, { agentId });
+  expect(agent?.targetX).toBe(0);
+  expect(agent?.targetY).toBe(0);
+});
+
 test("getAll returns empty array when no agents", async () => {
   const t = convexTest(schema, modules);
   const agents = await t.query(api.functions.agents.getAll);
