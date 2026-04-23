@@ -59,18 +59,18 @@
   - [x] Add unit tests for `getAll`
   - [x] Task: Conductor - User Manual Verification 'getAll Query' (Protocol in workflow.md)
 
-- [ ] **Task:** Implement `getById` query
-  - [ ] Write `getById` query function
-  - [ ] Validate agent ID exists
-  - [ ] Add unit tests for `getById`
-  - [ ] Task: Conductor - User Manual Verification 'getById Query' (Protocol in workflow.md)
+- [x] **Task:** Implement `getById` query [d56fe7c]
+  - [x] Write `getById` query function
+  - [x] Validate agent ID exists
+  - [x] Add unit tests for `getById`
+  - [x] Task: Conductor - User Manual Verification 'getById Query' (Protocol in workflow.md)
 
-- [ ] **Task:** Implement `create` mutation
-  - [ ] Write `create` mutation function
-  - [ ] Validate input fields (name, archetype, position)
-  - [ ] Generate default values for needs
-  - [ ] Add unit tests for `create`
-  - [ ] Task: Conductor - User Manual Verification 'create Mutation' (Protocol in workflow.md)
+- [x] **Task:** Implement `create` mutation [f2ef6d7]
+  - [x] Write `create` mutation function
+  - [x] Validate input fields (name, archetype, position)
+  - [x] Generate default values for needs
+  - [x] Add unit tests for `create`
+  - [x] Task: Conductor - User Manual Verification 'create Mutation' (Protocol in workflow.md)
 
 - [ ] **Task:** Implement `updatePosition` mutation
   - [ ] Write `updatePosition` mutation function
