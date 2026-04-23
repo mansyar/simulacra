@@ -3,93 +3,92 @@
 ## Phase 1: Project Setup & Tool Installation
 
 ### Tasks
-- [ ] Task: Install required dependencies
-    - [ ] Task: Install Husky for Git hook management
-        - [ ] Sub-task: Run `npm install husky --save-dev`
-        - [ ] Sub-task: Run `npx husky init` to initialize hooks directory
-    - [ ] Task: Install ESLint with TypeScript support
-        - [ ] Sub-task: Run `npm install eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin --save-dev`
-        - [ ] Sub-task: Initialize ESLint config for TypeScript
-    - [ ] Task: Ensure Vitest is installed for testing
-        - [ ] Sub-task: Verify `vitest` is in devDependencies
-        - [ ] Sub-task: Configure coverage thresholds in vitest.config.ts (80%)
-    - [ ] Task: Verify TypeScript compiler is available
-        - [ ] Sub-task: Confirm `tsc` is in devDependencies
-        - [ ] Sub-task: Verify `tsconfig.json` is properly configured
+- [x] Task: Install required dependencies
+    - [x] Task: Install Husky for Git hook management
+        - [x] Sub-task: Run `npx husky init` to initialize hooks directory
+    - [x] Task: Install ESLint with TypeScript support
+        - [x] Sub-task: Install ESLint packages (used pnpm)
+        - [x] Sub-task: Initialize ESLint config for TypeScript (eslint.config.js)
+    - [x] Task: Ensure Vitest is installed for testing
+        - [x] Sub-task: Verify `vitest` is in devDependencies
+        - [x] Sub-task: Verify coverage thresholds configured in vitest.config.ts
+    - [x] Task: Verify TypeScript compiler is available
+        - [x] Sub-task: Confirm `tsc` is in devDependencies
+        - [x] Sub-task: Verify `tsconfig.json` is properly configured
 
 - [ ] Task: Conductor - User Manual Verification 'Project Setup & Tool Installation' (Protocol in workflow.md)
 
 ## Phase 2: Pre-commit Hook Implementation
 
 ### Tasks
-- [ ] Task: Configure ESLint linting hook
-    - [ ] Sub-task: Create pre-commit script that runs `npx eslint`
-    - [ ] Sub-task: Verify ESLint blocks commits with lint errors
-    - [ ] Sub-task: Test with intentionally linting code
+    - [x] Task: Configure ESLint linting hook
+        - [x] Sub-task: Create pre-commit script that runs `npx eslint`
+        - [x] Sub-task: Verify ESLint blocks commits with lint errors
+        - [x] Sub-task: Test with intentionally linting code
 
-- [ ] Task: Configure TypeScript type check hook
-    - [ ] Sub-task: Create pre-commit script that runs `npx tsc --noEmit`
-    - [ ] Sub-task: Verify type check blocks commits with type errors
-    - [ ] Sub-task: Test with intentionally typed code
+    - [x] Task: Configure TypeScript type check hook
+        - [x] Sub-task: Create pre-commit script that runs `npx tsc --noEmit`
+        - [x] Sub-task: Verify type check blocks commits with type errors
+        - [x] Sub-task: Test with intentionally typed code
 
-- [ ] Task: Configure Vitest unit test hook
-    - [ ] Sub-task: Create pre-commit script that runs `npx vitest run`
-    - [ ] Sub-task: Verify tests block commits when failing
-    - [ ] Sub-task: Test with intentionally failing tests
+    - [x] Task: Configure Vitest unit test hook
+        - [x] Sub-task: Create pre-commit script that runs `npx vitest run`
+        - [x] Sub-task: Verify tests block commits when failing
+        - [x] Sub-task: Test with intentionally failing tests
 
-- [ ] Task: Create file line count check script
-    - [ ] Sub-task: Create `scripts/check-line-counts.js`
-    - [ ] Sub-task: Implement recursive file scanning in `src/` directory
-    - [ ] Sub-task: Implement recursive file scanning in `convex/` directory
-    - [ ] Sub-task: Implement line counting logic (excluding node_modules)
-    - [ ] Sub-task: Implement 500-line threshold check
-    - [ ] Sub-task: Implement clear error reporting for oversized files
-    - [ ] Sub-task: Test script with files exceeding 500 lines
-    - [ ] Sub-task: Test script with normal-sized files
+    - [x] Task: Create file line count check script
+        - [x] Sub-task: Create `scripts/check-line-counts.cjs`
+        - [x] Sub-task: Implement recursive file scanning in `src/` directory
+        - [x] Sub-task: Implement recursive file scanning in `convex/` directory
+        - [x] Sub-task: Implement line counting logic (excluding node_modules)
+        - [x] Sub-task: Implement 500-line threshold check
+        - [x] Sub-task: Implement clear error reporting for oversized files
+        - [x] Sub-task: Test script with files exceeding 500 lines
+        - [x] Sub-task: Test script with normal-sized files
 
-- [ ] Task: Configure pre-commit hook to run all checks
-    - [ ] Sub-task: Update `.husky/pre-commit` to run ESLint, tsc, Vitest, line count script
-    - [ ] Sub-task: Ensure all checks must pass for commit to succeed
-    - [ ] Sub-task: Test complete pre-commit workflow
+    - [x] Task: Configure pre-commit hook to run all checks
+        - [x] Sub-task: Update `.husky/pre-commit` to run ESLint, tsc, Vitest, line count script
+        - [x] Sub-task: Ensure all checks must pass for commit to succeed
+        - [x] Sub-task: Test complete pre-commit workflow
 
-- [ ] Task: Conductor - User Manual Verification 'Pre-commit Hook Implementation' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Pre-commit Hook Implementation' (Protocol in workflow.md)
 
 ## Phase 3: Pre-push Hook Implementation
 
 ### Tasks
-- [ ] Task: Configure Vitest coverage check hook
-    - [ ] Sub-task: Create pre-push script that runs `npx vitest run --coverage`
-    - [ ] Sub-task: Verify coverage threshold is enforced (80%)
-    - [ ] Sub-task: Test with insufficient coverage
+    - [x] Task: Configure Vitest coverage check hook
+        - [x] Sub-task: Create pre-push script that runs `npx vitest run --coverage`
+        - [x] Sub-task: Verify coverage threshold is enforced (80%)
+        - [x] Sub-task: Test with insufficient coverage
 
-- [ ] Task: Configure TypeScript type check for pre-push
-    - [ ] Sub-task: Create pre-push script that runs `npx tsc --noEmit`
-    - [ ] Sub-task: Verify type check blocks pushes with type errors
-    - [ ] Sub-task: Test with intentionally typed code
+    - [x] Task: Configure TypeScript type check for pre-push
+        - [x] Sub-task: Create pre-push script that runs `npx tsc --noEmit`
+        - [x] Sub-task: Verify type check blocks pushes with type errors
+        - [x] Sub-task: Test with intentionally typed code
 
-- [ ] Task: Configure pre-push hook to run all checks
-    - [ ] Sub-task: Update `.husky/pre-push` to run coverage check and tsc
-    - [ ] Sub-task: Ensure all checks must pass for push to succeed
-    - [ ] Sub-task: Test complete pre-push workflow
+    - [x] Task: Configure pre-push hook to run all checks
+        - [x] Sub-task: Update `.husky/pre-push` to run coverage check and tsc
+        - [x] Sub-task: Ensure all checks must pass for push to succeed
+        - [x] Sub-task: Test complete pre-push workflow
 
-- [ ] Task: Conductor - User Manual Verification 'Pre-push Hook Implementation' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Pre-push Hook Implementation' (Protocol in workflow.md)
 
 ## Phase 4: Testing & Documentation
 
 ### Tasks
-- [ ] Task: End-to-end testing of all hooks
-    - [ ] Sub-task: Test pre-commit with lint errors (should block)
-    - [ ] Sub-task: Test pre-commit with type errors (should block)
-    - [ ] Sub-task: Test pre-commit with failing tests (should block)
-    - [ ] Sub-task: Test pre-commit with oversized files (should block)
-    - [ ] Sub-task: Test pre-commit with valid code (should pass)
-    - [ ] Sub-task: Test pre-push with low coverage (should block)
-    - [ ] Sub-task: Test pre-push with type errors (should block)
-    - [ ] Sub-task: Test pre-push with valid code (should pass)
+    - [x] Task: End-to-end testing of all hooks
+        - [x] Sub-task: Test pre-commit with lint errors (should block)
+        - [x] Sub-task: Test pre-commit with type errors (should block)
+        - [x] Sub-task: Test pre-commit with failing tests (should block)
+        - [x] Sub-task: Test pre-commit with oversized files (should block)
+        - [x] Sub-task: Test pre-commit with valid code (should pass)
+        - [x] Sub-task: Test pre-push with low coverage (should block)
+        - [x] Sub-task: Test pre-push with type errors (should block)
+        - [x] Sub-task: Test pre-push with valid code (should pass)
 
-- [ ] Task: Document hook configuration and usage
-    - [ ] Sub-task: Add README section explaining hooks
-    - [ ] Sub-task: Document how to bypass hooks with `--no-verify`
-    - [ ] Sub-task: Document expected error messages
+    - [x] Task: Document hook configuration and usage
+        - [x] Sub-task: Add README section explaining hooks
+        - [x] Sub-task: Document how to bypass hooks with `--no-verify`
+        - [x] Sub-task: Document expected error messages
 
-- [ ] Task: Conductor - User Manual Verification 'Testing & Documentation' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Testing & Documentation' (Protocol in workflow.md)
