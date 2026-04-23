@@ -24,20 +24,20 @@
   - [x] Configure `convex.json` with Node 18
   - [x] Task: Conductor - User Manual Verification 'Convex Initialization' (Protocol in workflow.md)
 
-- [ ] **Task:** Create Convex schema file
-  - [ ] Create `convex/schema.ts` with table definitions
-  - [ ] Define `agents` table schema (from SCHEMA.md)
-  - [ ] Define `world_state` table schema
-  - [ ] Define `events` table schema (sensory buffer)
-  - [ ] Define `config` table schema
-  - [ ] Task: Conductor - User Manual Verification 'Schema Creation' (Protocol in workflow.md)
+- [x] **Task:** Create Convex schema file [875fcc2]
+  - [x] Create `convex/schema.ts` with table definitions
+  - [x] Define `agents` table schema (from SCHEMA.md)
+  - [x] Define `world_state` table schema
+  - [x] Define `events` table schema (sensory buffer)
+  - [x] Define `config` table schema
+  - [x] Task: Conductor - User Manual Verification 'Schema Creation' (Protocol in workflow.md)
 
-- [ ] **Task:** Define database indexes
-  - [ ] Create `agents_by_active` index
-  - [ ] Create `agents_by_position` index
-  - [ ] Create `events_by_agent` index
-  - [ ] Create `events_by_time` index
-  - [ ] Task: Conductor - User Manual Verification 'Index Creation' (Protocol in workflow.md)
+- [x] **Task:** Define database indexes [875fcc2]
+  - [x] Create `agents_by_active` index
+  - [x] Create `agents_by_position` index
+  - [x] Create `events_by_agent` index
+  - [x] Create `events_by_time` index (automatically added by Convex)
+  - [x] Task: Conductor - User Manual Verification 'Index Creation' (Protocol in workflow.md)
 
 - [ ] **Task:** Deploy schema to Convex
   - [ ] Run `npx convex deploy`
