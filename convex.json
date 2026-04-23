@@ -1,5 +1,8 @@
 {
-  "node": "18",
+  "$schema": "./node_modules/convex/schemas/convex.schema.json",
+  "node": {
+    "nodeVersion": "18"
+  },
   "generators": {
     "typescript": "1.0.0"
   }
