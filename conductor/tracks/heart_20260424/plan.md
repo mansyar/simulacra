@@ -72,12 +72,12 @@
   - [x] Add unit tests for `create`
   - [x] Task: Conductor - User Manual Verification 'create Mutation' (Protocol in workflow.md)
 
-- [ ] **Task:** Implement `updatePosition` mutation
-  - [ ] Write `updatePosition` mutation function
-  - [ ] Validate position bounds (0-63)
-  - [ ] Update `lastActiveAt` timestamp
-  - [ ] Add unit tests for `updatePosition`
-  - [ ] Task: Conductor - User Manual Verification 'updatePosition Mutation' (Protocol in workflow.md)
+- [x] **Task:** Implement `updatePosition` mutation [0ab1ca2]
+  - [x] Write `updatePosition` mutation function
+  - [x] Validate position bounds (0-63)
+  - [x] Update `lastActiveAt` timestamp
+  - [x] Add unit tests for `updatePosition`
+  - [x] Task: Conductor - User Manual Verification 'updatePosition Mutation' (Protocol in workflow.md)
 
 ### Day 5-7: Real-time Integration
 
