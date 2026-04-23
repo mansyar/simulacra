@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { Engine } from 'excalibur'
+import packageJson from '../../package.json' assert { type: 'json' }
 
 describe('Excalibur Integration', () => {
   it('should import Excalibur Engine', () => {
@@ -13,7 +14,6 @@ describe('Excalibur Integration', () => {
   })
 
   it('should have Excalibur version in package.json', () => {
-    const packageJson = require('../../package.json')
     expect(packageJson.dependencies.excalibur).toBeDefined()
   })
 })
