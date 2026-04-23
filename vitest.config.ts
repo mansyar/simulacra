@@ -8,7 +8,6 @@ export default defineConfig({
     environmentOptions: {
       jsdom: {
         resources: 'usable',
-        // canvas: true, // This may not be a valid option
       },
     },
     coverage: {
@@ -43,5 +42,21 @@ export default defineConfig({
         'src/routes/__root.tsx',
       ],
     },
+    projects: [
+      {
+        // Frontend tests (jsdom environment)
+        test: {
+          environment: 'jsdom',
+          include: ['src/**/*.{test,spec}.{ts,tsx}'],
+        },
+      },
+      {
+        // Convex function tests (edge-runtime environment)
+        test: {
+          environment: 'edge-runtime',
+          include: ['convex/**/*.{test,spec}.{ts,tsx}'],
+        },
+      },
+    ],
   },
 })
