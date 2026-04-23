@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useRef } from 'react'
 import { Engine, Scene, Actor, Color, Vector, BoundingBox } from 'excalibur'
 import type { ExcaliburGraphicsContext } from 'excalibur'
@@ -7,35 +9,46 @@ import { AgentSprite } from './AgentSprite'
 import type { PlaceholderAgent } from './AgentSprite'
 
 export default function GameCanvas() {
+  const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const gridRef = useRef<IsometricGrid | null>(null)
-  const cameraControllerRef = useRef<CameraController | null>(null)
+  const engineRef = useRef<Engine | null>(null)
+  const agentsRef = useRef<AgentSprite[]>([])
+  const gridActorRef = useRef<Actor | null>(null)
+  const isVisibleRef = useRef(true)
 
   useEffect(() => {
-    if (!canvasRef.current) return
+    if (!containerRef.current || !canvasRef.current) return
 
-    // Create Excalibur engine
+    const container = containerRef.current
+    const canvas = canvasRef.current
+
+    // Get actual container dimensions
+    const rect = container.getBoundingClientRect()
+    canvas.width = rect.width
+    canvas.height = rect.height
+
+    // Create Excalibur engine with exact dimensions
     const engine = new Engine({
-      canvasElement: canvasRef.current,
-      viewport: { width: 800, height: 600 },
-      backgroundColor: Color.fromHex('#0f172a'), // dark slate
+      canvasElement: canvas,
+      viewport: { width: rect.width, height: rect.height },
+      backgroundColor: Color.fromHex('#0f172a'),
+      antialiasing: false, // Disable antialiasing to prevent memory issues
+      pixelRatio: 1, // Force pixel ratio to prevent high-DPI memory issues
+      maxFps: 60, // Limit frame rate
     })
+    engineRef.current = engine
 
-    // Create a scene for the game
     const scene = new Scene()
     engine.addScene('game', scene)
     engine.goToScene('game')
 
-    // Create isometric grid renderer
     const grid = new IsometricGrid({
       width: 64,
       height: 64,
       tileWidth: 32,
       tileHeight: 16,
     })
-    gridRef.current = grid
 
-    // Compute grid bounding box for camera limits
     const bbox = grid.getBoundingBox()
     const bounds = new BoundingBox({
       left: bbox.left,
@@ -43,16 +56,9 @@ export default function GameCanvas() {
       top: bbox.top,
       bottom: bbox.bottom,
     })
-    // Create camera controller
-    const cameraController = new CameraController(scene.camera, engine.input, engine, bounds)
-    cameraControllerRef.current = cameraController
-    // Center camera on the grid
-    scene.camera.pos = new Vector((bounds.left + bounds.right) / 2, (bounds.top + bounds.bottom) / 2)
 
-    // Create an actor that draws the grid each frame and updates camera
-    const gridActor = new Actor({
-      pos: Vector.Zero,
-    })
+    const gridActor = new Actor({ pos: Vector.Zero })
+    gridActorRef.current = gridActor
     gridActor.graphics.onPostDraw = (ctx: ExcaliburGraphicsContext) => {
       grid.render(ctx)
     }
@@ -61,9 +67,13 @@ export default function GameCanvas() {
     }
     scene.add(gridActor)
 
-    // Create placeholder agents
+    const cameraController = new CameraController(scene.camera, engine.input, engine, bounds)
+    // Center camera on the grid
+    scene.camera.pos = new Vector((bounds.left + bounds.right) / 2, (bounds.top + bounds.bottom) / 2)
+
     const agentColors = ['#8B4513', '#FF69B4', '#9370DB', '#228B22', '#FFA07A']
     const agentNames = ['Builder', 'Socialite', 'Philosopher', 'Explorer', 'Nurturer']
+
     const agents: AgentSprite[] = []
     for (let i = 0; i < 5; i++) {
       const agentData: PlaceholderAgent = {
@@ -78,28 +88,68 @@ export default function GameCanvas() {
       scene.add(agentSprite)
       agents.push(agentSprite)
     }
+    agentsRef.current = agents
 
-    // Mouse move handler to update hovered tile (for hover effect)
     const handleMouseMove = (e: MouseEvent) => {
-      if (!canvasRef.current) return
-      const rect = canvasRef.current.getBoundingClientRect()
-      const scaleX = canvasRef.current.width / rect.width
-      const scaleY = canvasRef.current.height / rect.height
+      const rect = canvas.getBoundingClientRect()
+      const scaleX = canvas.width / rect.width
+      const scaleY = canvas.height / rect.height
       const x = (e.clientX - rect.left) * scaleX
       const y = (e.clientY - rect.top) * scaleY
       grid.setMousePosition(x, y)
     }
-    canvasRef.current.addEventListener('mousemove', handleMouseMove)
+    canvas.addEventListener('mousemove', handleMouseMove)
 
-    // Start the engine
+    // Pause when tab is not visible
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        isVisibleRef.current = false
+        engine.stop()
+      } else {
+        isVisibleRef.current = true
+        engine.start()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
     engine.start()
 
-    // Cleanup
     return () => {
-      canvasRef.current?.removeEventListener('mousemove', handleMouseMove)
-      engine.stop()
+      canvas.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      
+      // Properly clean up all actors
+      agentsRef.current.forEach(agent => {
+        if (scene.world.entityManager.getById(agent.id)) {
+          scene.remove(agent)
+        }
+      })
+      agentsRef.current = []
+      
+      // Remove grid actor
+      if (gridActorRef.current) {
+        scene.remove(gridActorRef.current)
+        gridActorRef.current = null
+      }
+      
+      // Stop engine and clear reference
+      if (engineRef.current) {
+        engineRef.current.stop()
+        engineRef.current = null
+      }
     }
   }, [])
 
-  return <canvas ref={canvasRef} style={{ width: '100%', height: '100%' }} />
+  return (
+    <div 
+      ref={containerRef} 
+      className="w-full h-full relative"
+    >
+      <canvas 
+        ref={canvasRef}
+        className="block"
+        style={{ width: '100%', height: '100%' }}
+      />
+    </div>
+  )
 }
