@@ -44,6 +44,15 @@ This document defines the technology stack for the Simulacra project - an autono
 |------------|---------|---------|
 | Convex Vector Index | Latest | 768-dimensional semantic memory storage |
 
+### Development Tools
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| Husky | 9.x | Git hook management for pre-commit and pre-push |
+| ESLint | 10.x | Code linting and static analysis |
+| Vitest | 3.x | Unit testing framework with coverage |
+| TypeScript | 5.x | Type checking (tsc --noEmit) |
+| Custom Scripts | - | File line count validation (max 500 lines) |
+
 ---
 
 ## Architecture Diagram
