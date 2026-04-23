@@ -47,6 +47,7 @@ export class AgentSprite extends Actor {
     this.targetGridY = gridY
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public onPreUpdate(_engine: Engine, _elapsed: number) {
     // Smoothly interpolate grid position towards target
     const currentGridX = this.agent.gridX

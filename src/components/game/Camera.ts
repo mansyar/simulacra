@@ -18,6 +18,7 @@ export class CameraController {
     this.targetPos = camera.pos.clone()
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public update(_elapsed: number): void {
     const pointer = this.input.pointers
 

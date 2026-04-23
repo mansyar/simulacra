@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { CameraController } from '../components/game/Camera'
-import { Camera, InputHost, PointerEventReceiver, Vector, BoundingBox, Engine, Screen } from 'excalibur'
+import { Camera, InputHost, PointerEventReceiver, Vector, BoundingBox, Engine, Screen, WheelEvent } from 'excalibur'
 
 describe('CameraController', () => {
   let mockCamera: Camera
@@ -64,7 +64,7 @@ describe('CameraController', () => {
 
   it('should zoom camera when mouse wheel event', () => {
     // Simulate wheel event
-    mockPointers.currentFrameWheel = [{ deltaY: -100 }] as any
+    mockPointers.currentFrameWheel = [{ deltaY: -100 }] as WheelEvent[]
     const initialZoom = mockCamera.zoom
     controller.update(16)
     // Zoom should increase (deltaY negative => zoom in)

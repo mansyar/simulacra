@@ -1,11 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import type { MockInstance } from 'vitest'
 import { IsometricGrid } from '../components/game/IsometricGrid'
 import type { ExcaliburGraphicsContext } from 'excalibur'
-import { Color } from 'excalibur'
+import { Color, Vector } from 'excalibur'
+
+type DrawLineCall = [Vector, Vector, Color, number];
 
 describe('IsometricGrid', () => {
   let mockCtx: ExcaliburGraphicsContext
-  let drawLineSpy: any
+  let drawLineSpy: MockInstance
 
   beforeEach(() => {
     // Mock ExcaliburGraphicsContext
@@ -48,8 +51,8 @@ describe('IsometricGrid', () => {
     grid.render(mockCtx)
 
     // Verify drawLine calls have color #475569
-    const calls = drawLineSpy.mock.calls
-    calls.forEach((call: any) => {
+    const calls = drawLineSpy.mock.calls as DrawLineCall[]
+    calls.forEach((call: DrawLineCall) => {
       expect(call[2]).toBeInstanceOf(Color)
       const color = call[2] as Color
       expect(color.toHex()).toBe('#475569')
@@ -70,7 +73,7 @@ describe('IsometricGrid', () => {
     grid.render(mockCtx)
     
     // Should have drawn highlight lines (thicker lines)
-    const highlightCalls = drawLineSpy.mock.calls.filter((call: any) => {
+    const highlightCalls = (drawLineSpy.mock.calls as DrawLineCall[]).filter((call: DrawLineCall) => {
       const color = call[2] as Color
       return color.toHex() === '#334155'
     })
@@ -97,7 +100,7 @@ describe('IsometricGrid', () => {
     grid.render(mockCtx)
     
     // Should not have highlight lines
-    const highlightCalls = drawLineSpy.mock.calls.filter((call: any) => {
+    const highlightCalls = (drawLineSpy.mock.calls as DrawLineCall[]).filter((call: DrawLineCall) => {
       const color = call[2] as Color
       return color.toHex() === '#334155'
     })

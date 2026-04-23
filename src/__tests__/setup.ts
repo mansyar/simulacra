@@ -15,6 +15,7 @@ Object.defineProperty(window, 'webkitAudioContext', {
 // Mock HTMLCanvasElement methods
 if (typeof HTMLCanvasElement !== 'undefined') {
   HTMLCanvasElement.prototype.toDataURL = vi.fn(() => 'data:image/png;base64,')
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   HTMLCanvasElement.prototype.getContext = vi.fn((_type: string) => {
     // Return a mock context with all possible methods
     return {
@@ -67,6 +68,7 @@ if (typeof HTMLCanvasElement !== 'undefined') {
       shadowColor: 'transparent',
       shadowOffsetX: 0,
       shadowOffsetY: 0,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any
   })
 }
