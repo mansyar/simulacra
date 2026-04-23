@@ -12,11 +12,11 @@
 
 ### Day 1-2: Convex Installation & Schema
 
-- [ ] **Task:** Install Convex dependencies
-  - [ ] Run `npm install convex`
-  - [ ] Verify installation in package.json
-  - [ ] Update `conductor/workflow.md` with Convex commands
-  - [ ] Task: Conductor - User Manual Verification 'Convex Installation' (Protocol in workflow.md)
+- [x] **Task:** Install Convex dependencies [6b24690]
+  - [x] Run `npm install convex`
+  - [x] Verify installation in package.json
+  - [x] Update `conductor/workflow.md` with Convex commands
+  - [x] Task: Conductor - User Manual Verification 'Convex Installation' (Protocol in workflow.md)
 
 - [ ] **Task:** Initialize Convex development environment
   - [ ] Run `npx convex dev` to start local dev server
