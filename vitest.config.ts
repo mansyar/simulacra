@@ -36,6 +36,11 @@ export default defineConfig({
         'vitest.config.ts',
         'vite.config.ts',
         'eslint.config.js',
+        // Ignored files
+        'src/routeTree.gen.ts',
+        'src/router.tsx',
+        'src/components/index.ts',
+        'src/routes/__root.tsx',
       ],
     },
   },
