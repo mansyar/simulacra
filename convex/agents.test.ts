@@ -28,6 +28,29 @@ test("getAll returns active agents", async () => {
   expect(agents[0].isActive).toBe(true);
 });
 
+test("create mutation sets all default fields", async () => {
+  const t = convexTest(schema, modules);
+  const agentId = await t.mutation(api.functions.agents.create, {
+    name: "New Agent",
+    archetype: "builder",
+    gridX: 5,
+    gridY: 5,
+  });
+  const agent = await t.query(api.functions.agents.getById, { agentId });
+  expect(agent).toBeTruthy();
+  expect(agent?.name).toBe("New Agent");
+  expect(agent?.archetype).toBe("builder");
+  expect(agent?.gridX).toBe(5);
+  expect(agent?.gridY).toBe(5);
+  expect(agent?.isActive).toBe(true);
+  expect(agent?.hunger).toBe(50);
+  expect(agent?.energy).toBe(50);
+  expect(agent?.social).toBe(50);
+  expect(agent?.currentAction).toBe("idle");
+  expect(typeof agent?.spriteVariant).toBe("number");
+  expect(typeof agent?.lastActiveAt).toBe("number");
+});
+
 test("getById returns correct agent", async () => {
   const t = convexTest(schema, modules);
   const agentId = await t.mutation(api.functions.agents.create, {
