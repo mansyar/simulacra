@@ -1,0 +1,12 @@
+# Pre-push hook for Git hooks setup
+# This hook runs before each push to ensure code quality
+
+# Run Vitest with coverage check
+echo "Running coverage check..."
+npx vitest run --coverage
+
+# Run TypeScript type check
+echo "Running TypeScript type check..."
+npx tsc --noEmit
+
+# If all checks pass, the push will proceed

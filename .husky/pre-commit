@@ -1,0 +1,20 @@
+# Pre-commit hook for Git hooks setup
+# This hook runs before each commit to ensure code quality
+
+# Run ESLint
+echo "Running ESLint..."
+npx eslint --config eslint.config.js src/
+
+# Run TypeScript type check
+echo "Running TypeScript type check..."
+npx tsc --noEmit
+
+# Run Vitest
+echo "Running unit tests..."
+npx vitest run
+
+# Run file line count check
+echo "Checking file line counts..."
+node scripts/check-line-counts.cjs
+
+# If all checks pass, the commit will proceed
