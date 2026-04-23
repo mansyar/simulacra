@@ -1,5 +1,7 @@
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
 import { Suspense, lazy } from 'react'
+import { ConvexProvider } from "convex/react"
+import { convex } from "../lib/convex"
 import Footer from '../components/Footer'
 import Header from '../components/Header'
 
@@ -39,22 +41,24 @@ function RootDocument() {
         <HeadContent />
       </head>
       <body className="font-sans antialiased">
-        <div className="flex flex-col h-screen w-screen overflow-hidden">
-          <Header />
-          <main className="flex-1 w-full overflow-hidden">
-            <Suspense fallback={
-              <div className="flex h-full w-full items-center justify-center bg-slate-900">
-                <div className="text-center">
-                  <div className="w-8 h-8 border-2 border-slate-400 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                  <p className="text-slate-400">Loading game...</p>
+        <ConvexProvider client={convex}>
+          <div className="flex flex-col h-screen w-screen overflow-hidden">
+            <Header />
+            <main className="flex-1 w-full overflow-hidden">
+              <Suspense fallback={
+                <div className="flex h-full w-full items-center justify-center bg-slate-900">
+                  <div className="text-center">
+                    <div className="w-8 h-8 border-2 border-slate-400 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                    <p className="text-slate-400">Loading game...</p>
+                  </div>
                 </div>
-              </div>
-            }>
-              <GameCanvas />
-            </Suspense>
-          </main>
-          <Footer />
-        </div>
+              }>
+                <GameCanvas />
+              </Suspense>
+            </main>
+            <Footer />
+          </div>
+        </ConvexProvider>
         <Scripts />
       </body>
     </html>
