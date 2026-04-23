@@ -1,0 +1,8 @@
+{
+  "track_id": "git-hooks_20260423",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-04-23T21:47:00Z",
+  "updated_at": "2026-04-23T21:47:00Z",
+  "description": "Set up Git hooks (pre-commit & pre-push) using Husky to enforce code quality checks: ESLint, TypeScript typecheck, Vitest tests, file line count check, and coverage enforcement."
+}
