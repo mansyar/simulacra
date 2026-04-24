@@ -120,11 +120,16 @@ test("ai:decision handles API error", async () => {
   
   process.env.OPENAI_API_KEY = "sk-test-key";
   
-  await expect(t.action(api.functions.ai.decision, {
+  const result = await t.action(api.functions.ai.decision, {
     agentState: { name: "Bob", hunger: 50, energy: 50, social: 50 },
     nearbyAgents: [],
     archetype: "friendly",
-  })).rejects.toThrow("AI API error: API Error");
+  });
+  expect(result).toEqual({
+    action: "idle",
+    target: "none",
+    reasoning: expect.stringContaining("Rate limited"),
+  });
   
   delete process.env.OPENAI_API_KEY;
   vi.unstubAllGlobals();
@@ -167,10 +172,13 @@ test("ai:chat handles API error", async () => {
   
   process.env.OPENAI_API_KEY = "sk-test-key";
   
-  await expect(t.action(api.functions.ai.chat, {
+  const result = await t.action(api.functions.ai.chat, {
     message: "Hello",
     archetype: "friendly",
-  })).rejects.toThrow("AI API error: API Error");
+  });
+  expect(result).toEqual({
+    content: expect.stringContaining("[MOCK]"),
+  });
   
   delete process.env.OPENAI_API_KEY;
   vi.unstubAllGlobals();

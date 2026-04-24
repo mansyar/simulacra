@@ -7,7 +7,7 @@
 ## Phase 1: Presence Component Setup
 
 ### Task 1.1: Install @convex-dev/presence Component
-- [~] Task: Install the presence component via pnpm
+- [x] Task: Install the presence component via pnpm (2d4e7ae)
   - [x] Run: `pnpm add @convex-dev/presence`
   - [x] Verify: Check package.json for the dependency
 

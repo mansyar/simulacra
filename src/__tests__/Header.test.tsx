@@ -19,6 +19,7 @@ vi.mock('../convex/_generated/api', () => ({
         getState: 'world:getState',
       },
     },
+    presence: {},
   },
 }))
 
@@ -34,6 +35,11 @@ vi.mock('@tanstack/react-router', () => ({
 // Mock ThemeToggle
 vi.mock('../components/ThemeToggle', () => ({
   default: () => <button data-testid="theme-toggle">Theme</button>,
+}))
+
+// Mock @convex-dev/presence/react
+vi.mock('@convex-dev/presence/react', () => ({
+  default: vi.fn().mockReturnValue([]),
 }))
 
 describe('Header', () => {
