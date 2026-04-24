@@ -81,11 +81,11 @@
 
 ### Day 5-7: Real-time Integration
 
-- [ ] **Task:** Connect TanStack Start to Convex
-  - [ ] Install `@convex-dev/react` package
-  - [ ] Configure Convex provider in app
-  - [ ] Set up environment variables (CONVEX_DEPLOYMENT)
-  - [ ] Task: Conductor - User Manual Verification 'Convex Connection' (Protocol in workflow.md)
+- [x] **Task:** Connect TanStack Start to Convex [0ade859]
+  - [x] Install `convex` package (already installed)
+  - [x] Configure Convex provider in app
+  - [x] Set up environment variables (CONVEX_DEPLOYMENT)
+  - [x] Task: Conductor - User Manual Verification 'Convex Connection' (Protocol in workflow.md)
 
 - [ ] **Task:** Replace placeholder agents with database agents
   - [ ] Update `GameWorld` component to use Convex query
