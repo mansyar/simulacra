@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import ThemeToggle from './ThemeToggle'
 import WorldHUD from './WorldHUD'
+import ActiveUserCount from './ui/ActiveUserCount'
 
 export default function Header() {
   return (
@@ -21,6 +22,7 @@ export default function Header() {
         </div>
 
         <div className="ml-auto flex items-center gap-1.5 sm:ml-0 sm:gap-2">
+          <ActiveUserCount />
           <a
             href="https://x.com/tan_stack"
             target="_blank"
