@@ -29,12 +29,12 @@
 ## Phase 2: Convex API Functions
 
 ### Task 2.1: Write Tests for Presence Functions (Red Phase)
-- [ ] Task: Create test file for presence functions
-  - [ ] Create: `convex/presence.test.ts`
-  - [ ] Write: Tests for `heartbeat` mutation
-  - [ ] Write: Tests for `list` query
-  - [ ] Write: Tests for `disconnect` mutation
-  - [ ] Run: Tests and confirm they fail (expected behavior)
+- [x] Task: Create test file for presence functions (e8992dc)
+  - [x] Create: `convex/presence.test.ts`
+  - [x] Write: Tests for `heartbeat` mutation
+  - [x] Write: Tests for `list` query
+  - [x] Write: Tests for `disconnect` mutation
+  - [x] Run: Tests and confirm they fail (expected behavior)
 
 ### Task 2.2: Implement heartbeat Mutation (Green Phase)
 - [ ] Task: Implement the heartbeat mutation
