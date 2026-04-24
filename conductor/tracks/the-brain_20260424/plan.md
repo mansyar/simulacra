@@ -8,7 +8,7 @@
 - [x] Task: Tier 1 Memory (Sensory Buffer) (944ee83)
     - [ ] Write failing test for sensory buffer storage and cleanup logic.
     - [ ] Implement sensory buffer to store last 10 events per agent in `convex/functions/memory.ts`.
-- [ ] Task: Tier 2 Memory (Semantic Memory)
+- [x] Task: Tier 2 Memory (Semantic Memory) (e977b1d)
     - [ ] Write failing test for semantic memory vector storage and retrieval.
     - [ ] Configure Convex Vector Index (768 dimensions) for `memoryIndex`.
     - [ ] Implement vector search and storage for semantic memory in `convex/functions/memory.ts`.
