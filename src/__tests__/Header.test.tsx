@@ -3,6 +3,25 @@ import { render, screen } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import Header from '../components/Header'
 
+// Mock Convex
+vi.mock('convex/react', () => ({
+  useQuery: vi.fn().mockReturnValue({
+    weather: 'sunny',
+    timeOfDay: 12,
+    dayCount: 1,
+  }),
+}))
+
+vi.mock('../convex/_generated/api', () => ({
+  api: {
+    functions: {
+      world: {
+        getState: 'world:getState',
+      },
+    },
+  },
+}))
+
 // Mock TanStack Router Link
 vi.mock('@tanstack/react-router', () => ({
   Link: ({ to, children, className, activeProps }: { to: string; children: ReactNode; className?: string; activeProps?: { className?: string } }) => (
@@ -18,9 +37,9 @@ vi.mock('../components/ThemeToggle', () => ({
 }))
 
 describe('Header', () => {
-  it('should render TanStack Start link', () => {
+  it('should render Simulacra link', () => {
     render(<Header />)
-    const link = screen.getByText(/TanStack Start/i)
+    const link = screen.getByText(/Simulacra/i)
     expect(link).toBeTruthy()
   })
 
