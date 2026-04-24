@@ -25,13 +25,14 @@ test("presence.disconnect exists", () => {
 test("heartbeat mutation creates presence record", async () => {
   const t = convexTest({ schema, modules });
   presenceTestHelper.register(t, "presence");
+  const tWithAuth = t.withIdentity({ subject: "test-user" });
 
   const roomId = "test-room";
   const userId = "test-user";
   const sessionId = "test-session";
   const interval = 10000;
 
-  const result = await t.mutation(api.presence.heartbeat, {
+  const result = await tWithAuth.mutation(api.presence.heartbeat, {
     roomId,
     userId,
     sessionId,
@@ -47,13 +48,14 @@ test("heartbeat mutation creates presence record", async () => {
 test("list query returns user after heartbeat", async () => {
   const t = convexTest({ schema, modules });
   presenceTestHelper.register(t, "presence");
+  const tWithAuth = t.withIdentity({ subject: "test-user-2" });
 
   const roomId = "test-room-2";
   const userId = "test-user-2";
   const sessionId = "test-session-2";
   const interval = 10000;
 
-  const { roomToken } = await t.mutation(api.presence.heartbeat, {
+  const { roomToken } = await tWithAuth.mutation(api.presence.heartbeat, {
     roomId,
     userId,
     sessionId,
@@ -70,25 +72,26 @@ test("list query returns user after heartbeat", async () => {
 test("disconnect mutation marks user offline", async () => {
   const t = convexTest({ schema, modules });
   presenceTestHelper.register(t, "presence");
+  const tWithAuth = t.withIdentity({ subject: "test-user-3" });
 
   const roomId = "test-room-3";
   const userId = "test-user-3";
   const sessionId = "test-session-3";
   const interval = 10000;
 
-  const { sessionToken } = await t.mutation(api.presence.heartbeat, {
+  const { sessionToken } = await tWithAuth.mutation(api.presence.heartbeat, {
     roomId,
     userId,
     sessionId,
     interval,
   });
 
-  // Disconnect
-  await t.mutation(api.presence.disconnect, { sessionToken });
+  // Disconnect (note: disconnect may not require auth, but we still use tWithAuth)
+  await tWithAuth.mutation(api.presence.disconnect, { sessionToken });
 
   // List should still show user but offline? Actually after disconnect, user may be removed from list? 
   // The spec says list returns users with online status. Let's just verify no error.
-  const { roomToken } = await t.mutation(api.presence.heartbeat, {
+  const { roomToken } = await tWithAuth.mutation(api.presence.heartbeat, {
     roomId,
     userId: "other-user",
     sessionId: "other-session",
