@@ -38,6 +38,7 @@ This document defines the technology stack for the Simulacra project - an autono
 |------------|---------|---------|
 | Tailwind CSS | Latest | Utility-first CSS framework |
 | Framer Motion | Latest | Animations for UI overlays |
+| Lucide React | Latest | Icon library for UI elements |
 
 ### Vector Search
 | Technology | Version | Purpose |

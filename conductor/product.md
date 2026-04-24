@@ -110,11 +110,12 @@
 - Placeholder agents render on grid
 - Agents move smoothly (interpolated)
 
-### Phase 2 - The Heart
-- Convex schema deployed with agents table
-- Real-time sync works (open two tabs, see updates)
-- Agent positions persist to database
-- Basic CRUD operations functional
+### Phase 2 - The Heart [COMPLETE]
+- Convex schema deployed with `agents` and `world_state` tables
+- Real-time sync functional via `useQuery`
+- Agent positions and needs persist to database
+- World state management (Weather, Time, Day count) implemented
+- Integrated WorldHUD for real-time state display
 
 ### Phase 3 - The Brain
 - LLM integration via Convex Actions
