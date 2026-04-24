@@ -36,3 +36,28 @@ test("world state query and mutation", async () => {
   expect(state?.dayCount).toBe(2);
   expect(state?.timeOfDay).toBe(18); // unchanged
 });
+
+test("world tick updates agents needs and triggers decisions", async () => {
+  const t = convexTest(schema, modules);
+  
+  const agentId = await t.mutation(api.functions.agents.create, {
+    name: "Agent 1",
+    archetype: "builder",
+    gridX: 0,
+    gridY: 0,
+  });
+  
+  // Initial needs are 50
+  let agent = await t.query(api.functions.agents.getById, { agentId });
+  expect(agent?.hunger).toBe(50);
+  expect(agent?.energy).toBe(50);
+  
+  // Run world tick
+  // This should fail because tick doesn't exist or doesn't do this yet
+  await t.action(api.functions.world.tick);
+  
+  agent = await t.query(api.functions.agents.getById, { agentId });
+  // Hunger should increase, Energy should decrease
+  expect(agent?.hunger).toBeGreaterThan(50);
+  expect(agent?.energy).toBeLessThan(50);
+});

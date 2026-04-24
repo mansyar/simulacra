@@ -1,4 +1,4 @@
-import { query, mutation } from "../_generated/server";
+import { query, mutation, internalMutation } from "../_generated/server";
 import { v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 
@@ -12,7 +12,7 @@ export type AgentDoc = Doc<"agents">;
  */
 export interface CreateAgentArgs {
   name: string;
-  archetype: "builder" | "socialite" | "philosopher" | "explorer" | "nurturer";
+  archetype: "builder" | "socialite" | "philosopher" | "explorer" | "nurturer" | "friendly" | "grumpy" | "curious";
   gridX: number;
   gridY: number;
   spriteVariant?: number;
@@ -63,7 +63,10 @@ export const create = mutation({
       v.literal("socialite"),
       v.literal("philosopher"),
       v.literal("explorer"),
-      v.literal("nurturer")
+      v.literal("nurturer"),
+      v.literal("friendly"),
+      v.literal("grumpy"),
+      v.literal("curious")
     ),
     gridX: v.number(),
     gridY: v.number(),
@@ -113,5 +116,56 @@ export const updatePosition = mutation({
       lastActiveAt: Date.now(),
     });
     return { success: true };
+  },
+});
+
+/**
+ * Internal Mutation: Update agent needs
+ */
+export const updateNeeds = internalMutation({
+  args: {
+    agentId: v.id("agents"),
+    hungerDelta: v.number(),
+    energyDelta: v.number(),
+    socialDelta: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const agent = await ctx.db.get(args.agentId);
+    if (!agent) return;
+
+    await ctx.db.patch(args.agentId, {
+      hunger: Math.max(0, Math.min(100, agent.hunger + args.hungerDelta)),
+      energy: Math.max(0, Math.min(100, agent.energy + args.energyDelta)),
+      social: Math.max(0, Math.min(100, agent.social + args.socialDelta)),
+      lastActiveAt: Date.now(),
+    });
+  },
+});
+
+/**
+ * Internal Mutation: Update agent action
+ */
+export const updateAction = internalMutation({
+  args: {
+    agentId: v.id("agents"),
+    action: v.union(
+      v.literal("idle"),
+      v.literal("walking"),
+      v.literal("eating"),
+      v.literal("sleeping"),
+      v.literal("talking"),
+      v.literal("working"),
+      v.literal("exploring")
+    ),
+    targetX: v.optional(v.number()),
+    targetY: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.agentId, {
+      currentAction: args.action,
+      targetX: args.targetX,
+      targetY: args.targetY,
+      lastActiveAt: Date.now(),
+    });
   },
 });

@@ -7,7 +7,10 @@ const AgentArchetype = v.union(
   v.literal("socialite"),
   v.literal("philosopher"),
   v.literal("explorer"),
-  v.literal("nurturer")
+  v.literal("nurturer"),
+  v.literal("friendly"),
+  v.literal("grumpy"),
+  v.literal("curious")
 );
 
 const AgentAction = v.union(
