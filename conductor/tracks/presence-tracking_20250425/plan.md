@@ -12,10 +12,10 @@
   - [x] Verify: Check package.json for the dependency
 
 ### Task 1.2: Configure Convex App
-- [ ] Task: Add presence component to Convex configuration
-  - [ ] Read: `convex/convex.config.ts`
-  - [ ] Edit: Import and use the presence component
-  - [ ] Verify: Component is properly registered
+- [x] Task: Add presence component to Convex configuration (3769f37)
+  - [x] Read: `convex/convex.config.ts`
+  - [x] Edit: Import and use the presence component
+  - [x] Verify: Component is properly registered
 
 ### Task 1.3: Create Presence Directory Structure
 - [ ] Task: Create directory for presence-related files
