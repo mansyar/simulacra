@@ -1,0 +1,8 @@
+{
+  "track_id": "presence-tracking_20250425",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2025-04-25T00:00:00Z",
+  "updated_at": "2025-04-25T00:00:00Z",
+  "description": "Implement a comprehensive user presence tracking system to replace the current tick-based sleep mode logic with accurate, real-time user activity detection using the official Convex @convex-dev/presence component"
+}
