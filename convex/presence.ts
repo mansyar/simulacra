@@ -13,7 +13,13 @@ export const heartbeat = mutation({
     interval: v.number(),
   },
   handler: async (ctx, { roomId, userId, sessionId, interval }) => {
-    // TODO: Add your auth checks here.
+    // Auth check: ensure user is authenticated
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Authentication required");
+    }
+    // Optionally verify that the provided userId matches the authenticated user's tokenIdentifier
+    // but for now we just ensure authentication.
     return await presence.heartbeat(ctx, roomId, userId, sessionId, interval);
   },
 });
