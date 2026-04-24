@@ -4,7 +4,7 @@
 
 ---
 
-## Phase 1: Presence Component Setup
+## Phase 1: Presence Component Setup [checkpoint: 70e3676]
 
 ### Task 1.1: Install @convex-dev/presence Component
 - [x] Task: Install the presence component via pnpm (2d4e7ae)
