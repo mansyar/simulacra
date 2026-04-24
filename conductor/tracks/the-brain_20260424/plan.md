@@ -17,3 +17,6 @@
     - [ ] Create Convex Cron job for world tick (running every 60 seconds).
     - [ ] Connect LLM to social decisions and deterministic needs.
 - [x] Task: Conductor - User Manual Verification 'Phase 3: The Brain' (Protocol in workflow.md) (4dd68b2)
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions 1344dd6
