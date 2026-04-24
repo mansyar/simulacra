@@ -68,13 +68,19 @@ export default defineSchema({
     agentId: v.id("agents"),
     type: MemoryType,
     content: v.string(),
+    embedding: v.array(v.float64()),
     timestamp: v.number(),
     importance: v.number(),
     tags: v.array(v.string()),
   })
     .index("by_agent", ["agentId"])
     .index("by_agent_and_type", ["agentId", "type"])
-    .index("by_timestamp", ["timestamp"]),
+    .index("by_timestamp", ["timestamp"])
+    .vectorIndex("by_embedding", {
+      vectorField: "embedding",
+      dimensions: 768,
+      filterFields: ["agentId", "type"],
+    }),
 
   relationships: defineTable({
     agentAId: v.id("agents"),

@@ -34,3 +34,28 @@ test("sensory buffer stores events and limits to 10", async () => {
   expect(events[0].description).toBe("Event 2");
   expect(events[9].description).toBe("Event 11");
 });
+
+test("semantic memory storage and retrieval", async () => {
+  const t = convexTest(schema, modules);
+  
+  const agentId = await t.mutation(api.functions.agents.create, {
+    name: "Agent 1",
+    archetype: "builder",
+    gridX: 0,
+    gridY: 0,
+  });
+  
+  // This should fail because functions/memory.ts doesn't have these yet
+  await t.action(api.functions.memory.addSemanticMemory, {
+    agentId,
+    content: "I love building houses.",
+  });
+  
+  const results = await t.action(api.functions.memory.searchSemanticMemory, {
+    agentId,
+    query: "building",
+  });
+  
+  expect(results).toHaveLength(1);
+  expect(results[0].content).toBe("I love building houses.");
+});

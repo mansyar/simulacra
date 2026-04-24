@@ -32,7 +32,7 @@ export default function GameCanvas() {
 
     const scene = sceneRef.current
     const currentAgentsMap = agentsMapRef.current
-    const dataIds = new Set(agentsData.map((a) => a._id))
+    const dataIds = new Set(agentsData.map((a: { _id: Id<'agents'> }) => a._id))
 
     // Remove agents that are no longer in the data
     for (const [id, sprite] of currentAgentsMap.entries()) {

@@ -1,5 +1,7 @@
-import { mutation, query } from "../_generated/server";
+import { mutation, query, action, internalMutation, internalQuery } from "../_generated/server";
 import { v } from "convex/values";
+import { api, internal } from "../_generated/api";
+import type { Doc } from "../_generated/dataModel";
 
 export const addEvent = mutation({
   args: {
@@ -54,5 +56,81 @@ export const getEvents = query({
       .query("events")
       .withIndex("by_agent", (q) => q.eq("agentId", args.agentId))
       .collect();
+  },
+});
+
+export const addSemanticMemory = action({
+  args: {
+    agentId: v.id("agents"),
+    content: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const embedding = await ctx.runAction(api.functions.ai.embed, { text: args.content });
+
+    await ctx.runMutation(internal.functions.memory.insertMemory, {
+      agentId: args.agentId,
+      content: args.content,
+      embedding,
+      type: "semantic",
+    });
+  },
+});
+
+export const insertMemory = internalMutation({
+  args: {
+    agentId: v.id("agents"),
+    content: v.string(),
+    embedding: v.array(v.float64()),
+    type: v.union(
+      v.literal("sensory"),
+      v.literal("semantic"),
+      v.literal("reflection"),
+      v.literal("interaction")
+    ),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.insert("memories", {
+      agentId: args.agentId,
+      content: args.content,
+      embedding: args.embedding,
+      type: args.type,
+      timestamp: Date.now(),
+      importance: 5, // Default importance
+      tags: [],
+    });
+  },
+});
+
+export const searchSemanticMemory = action({
+  args: {
+    agentId: v.id("agents"),
+    query: v.string(),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args): Promise<Doc<"memories">[]> => {
+    const embedding = await ctx.runAction(api.functions.ai.embed, { text: args.query });
+
+    const results = await ctx.vectorSearch("memories", "by_embedding", {
+      vector: embedding,
+      filter: (q) => q.eq("agentId", args.agentId),
+      limit: args.limit || 3,
+    });
+
+    // Fetch the actual memory documents and filter by type
+    const memories: Doc<"memories">[] = [];
+    for (const result of results) {
+      const memory = await ctx.runQuery(internal.functions.memory.getMemoryById, { id: result._id });
+      if (memory && memory.type === "semantic") {
+        memories.push(memory as Doc<"memories">);
+      }
+    }
+    return memories;
+  },
+});
+
+export const getMemoryById = internalQuery({
+  args: { id: v.id("memories") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.id);
   },
 });

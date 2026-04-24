@@ -137,3 +137,40 @@ export const decision = action({
     }
   },
 });
+
+export const embed = action({
+  args: {
+    text: v.string(),
+  },
+  handler: async (_ctx, args) => {
+    const apiKey = process.env.OPENAI_API_KEY;
+    const baseUrl = process.env.OPENAI_API_BASE_URL || "https://api.openai.com/v1";
+    const model = process.env.OPENAI_EMBEDDING_MODEL || "text-embedding-3-small";
+
+    if (!apiKey) {
+      // Mock embedding (768 dimensions)
+      const embedding = new Array(768).fill(0).map(() => Math.random());
+      return embedding;
+    }
+
+    const response = await fetch(`${baseUrl}/embeddings`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: model,
+        input: args.text,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`AI API error: ${error}`);
+    }
+
+    const data = await response.json();
+    return data.data[0].embedding;
+  },
+});
