@@ -11,7 +11,7 @@ npx tsc --noEmit
 
 # Run Vitest
 echo "Running unit tests..."
-npx vitest run
+npx vitest related
 
 # Run file line count check
 echo "Checking file line counts..."

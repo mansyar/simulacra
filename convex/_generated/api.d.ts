@@ -9,6 +9,8 @@
  */
 
 import type * as functions_agents from "../functions/agents.js";
+import type * as functions_seed from "../functions/seed.js";
+import type * as functions_world from "../functions/world.js";
 
 import type {
   ApiFromModules,
@@ -18,6 +20,8 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   "functions/agents": typeof functions_agents;
+  "functions/seed": typeof functions_seed;
+  "functions/world": typeof functions_world;
 }>;
 
 /**
