@@ -60,6 +60,7 @@ export default defineSchema({
     energy: v.number(),
     social: v.number(),
     coreTraits: v.array(v.string()),
+    model: v.optional(v.string()), // per-agent model override
     isActive: v.boolean(),
     lastActiveAt: v.number(),
   })

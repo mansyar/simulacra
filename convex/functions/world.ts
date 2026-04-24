@@ -91,6 +91,7 @@ export const tick = action({
           hunger: agent.hunger + 5,
           energy: agent.energy - 2,
           social: agent.social - 1,
+          model: agent.model,
         },
         nearbyAgents,
         archetype: aiArchetype,

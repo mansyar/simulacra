@@ -27,12 +27,12 @@ interface AiConfig {
   model: string;
 }
 
-async function getAiConfig(ctx: any): Promise<AiConfig> {
+async function getAiConfig(ctx: any, modelOverride?: string): Promise<AiConfig> {
   const config = await ctx.runQuery(internal.functions.config.getInternal);
   return {
     apiKey: process.env.OPENAI_API_KEY,
     baseUrl: config?.llmBaseUrl || process.env.OPENAI_API_BASE_URL || "https://api.openai.com/v1",
-    model: config?.llmModel || process.env.OPENAI_MODEL || "gpt-3.5-turbo",
+    model: modelOverride || config?.llmModel || process.env.OPENAI_MODEL || "gpt-3.5-turbo",
   };
 }
 
@@ -40,13 +40,14 @@ export const chat = action({
   args: {
     message: v.string(),
     archetype: v.union(v.literal("friendly"), v.literal("grumpy"), v.literal("curious")),
+    model: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { apiKey, baseUrl, model } = await getAiConfig(ctx);
+    const { apiKey, baseUrl, model } = await getAiConfig(ctx, args.model);
 
     if (!apiKey) {
       return {
-        content: `[MOCK] ${ARCHETYPE_PROMPTS[args.archetype]} Response to: ${args.message}`,
+        content: `[MOCK] ${ARCHETYPE_PROMPTS[args.archetype]} Response to: ${args.message} (Model: ${model})`,
       };
     }
 
@@ -84,12 +85,13 @@ export const decision = action({
       hunger: v.number(),
       energy: v.number(),
       social: v.number(),
+      model: v.optional(v.string()),
     }),
     nearbyAgents: v.array(v.string()),
     archetype: v.union(v.literal("friendly"), v.literal("grumpy"), v.literal("curious")),
   },
   handler: async (ctx, args) => {
-    const { apiKey, baseUrl, model } = await getAiConfig(ctx);
+    const { apiKey, baseUrl, model } = await getAiConfig(ctx, args.agentState.model);
 
     if (!apiKey) {
       // Mock decision logic
@@ -102,7 +104,7 @@ export const decision = action({
       return {
         action,
         target: args.nearbyAgents[0] || "none",
-        reasoning: `[MOCK] Based on hunger ${args.agentState.hunger} and archetype ${args.archetype}`,
+        reasoning: `[MOCK] Based on hunger ${args.agentState.hunger} and archetype ${args.archetype} (Model: ${model})`,
       };
     }
 
