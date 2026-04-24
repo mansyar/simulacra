@@ -1,7 +1,7 @@
 # Implementation Plan: Phase 3 - The Brain
 
 ## Phase 3: The Brain (LLM Integration + Memory)
-- [ ] Task: Setup AI Integration and Basic Testing
+- [x] Task: Setup AI Integration and Basic Testing (dadf2c6)
     - [ ] Write failing test for LLM action API integration.
     - [ ] Implement OpenAI-compatible API connection with Kimi K2.6 and Qwen-9b in `convex/functions/ai.ts`.
     - [ ] Implement personality archetype templates (Friendly & Outgoing, Grumpy & Reclusive, Curious & Exploratory) and JSON output parsing.
