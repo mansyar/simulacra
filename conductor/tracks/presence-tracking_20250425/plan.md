@@ -18,9 +18,9 @@
   - [x] Verify: Component is properly registered
 
 ### Task 1.3: Create Presence Directory Structure
-- [ ] Task: Create directory for presence-related files
-  - [ ] Create: `convex/presence.ts` file
-  - [ ] Create: `src/components/ui/ActiveUserCount.tsx` file
+- [x] Task: Create directory for presence-related files (118312f)
+  - [x] Create: `convex/presence.ts` file
+  - [x] Create: `src/components/ui/ActiveUserCount.tsx` file
 
 ### Task 1.4: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
 
