@@ -3,18 +3,60 @@
 import { useEffect, useRef } from 'react'
 import { Engine, Scene, Actor, Color, Vector, BoundingBox } from 'excalibur'
 import type { ExcaliburGraphicsContext } from 'excalibur'
+import { useQuery } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
+import type { Id } from '../../../convex/_generated/dataModel'
 import { IsometricGrid } from './IsometricGrid'
 import { CameraController } from './Camera'
 import { AgentSprite } from './AgentSprite'
-import type { PlaceholderAgent } from './AgentSprite'
+import type { AgentData } from './AgentSprite'
 
 export default function GameCanvas() {
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const engineRef = useRef<Engine | null>(null)
-  const agentsRef = useRef<AgentSprite[]>([])
+  const sceneRef = useRef<Scene | null>(null)
+  const agentsMapRef = useRef<Map<string, AgentSprite>>(new Map())
   const gridActorRef = useRef<Actor | null>(null)
   const isVisibleRef = useRef(true)
+
+  const agentsData = useQuery(api.functions.agents.getAll)
+
+  // Sync agents from database
+  useEffect(() => {
+    if (!sceneRef.current || !agentsData) return
+
+    const scene = sceneRef.current
+    const currentAgentsMap = agentsMapRef.current
+    const dataIds = new Set(agentsData.map((a) => a._id))
+
+    // Remove agents that are no longer in the data
+    for (const [id, sprite] of currentAgentsMap.entries()) {
+      if (!dataIds.has(id as Id<'agents'>)) {
+        scene.remove(sprite)
+        currentAgentsMap.delete(id)
+      }
+    }
+
+    // Add or update agents
+    for (const agent of agentsData) {
+      const existingSprite = currentAgentsMap.get(agent._id)
+      if (existingSprite) {
+        existingSprite.updateGridPosition(agent.gridX, agent.gridY)
+      } else {
+        const agentData: AgentData = {
+          id: agent._id,
+          name: agent.name,
+          gridX: agent.gridX,
+          gridY: agent.gridY,
+          archetype: agent.archetype,
+        }
+        const newSprite = new AgentSprite(agentData)
+        scene.add(newSprite)
+        currentAgentsMap.set(agent._id, newSprite)
+      }
+    }
+  }, [agentsData])
 
   useEffect(() => {
     if (!containerRef.current || !canvasRef.current) return
@@ -68,27 +110,7 @@ export default function GameCanvas() {
     scene.add(gridActor)
 
     const cameraController = new CameraController(scene.camera, engine.input, engine, bounds)
-    // Center camera on the grid
-    scene.camera.pos = new Vector((bounds.left + bounds.right) / 2, (bounds.top + bounds.bottom) / 2)
-
-    const agentColors = ['#8B4513', '#FF69B4', '#9370DB', '#228B22', '#FFA07A']
-    const agentNames = ['Builder', 'Socialite', 'Philosopher', 'Explorer', 'Nurturer']
-
-    const agents: AgentSprite[] = []
-    for (let i = 0; i < 5; i++) {
-      const agentData: PlaceholderAgent = {
-        id: `agent_${i}`,
-        name: agentNames[i],
-        gridX: Math.floor(Math.random() * 64),
-        gridY: Math.floor(Math.random() * 64),
-        color: agentColors[i],
-      }
-      const agentSprite = new AgentSprite(agentData)
-      agentSprite.updateGridPosition(agentData.gridX, agentData.gridY)
-      scene.add(agentSprite)
-      agents.push(agentSprite)
-    }
-    agentsRef.current = agents
+    sceneRef.current = scene
 
     const handleMouseMove = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect()
@@ -119,12 +141,13 @@ export default function GameCanvas() {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       
       // Properly clean up all actors
-      agentsRef.current.forEach(agent => {
-        if (scene.world.entityManager.getById(agent.id)) {
-          scene.remove(agent)
+      const currentAgentsMap = agentsMapRef.current
+      for (const sprite of currentAgentsMap.values()) {
+        if (scene.world.entityManager.getById(sprite.id)) {
+          scene.remove(sprite)
         }
-      })
-      agentsRef.current = []
+      }
+      currentAgentsMap.clear()
       
       // Remove grid actor
       if (gridActorRef.current) {

@@ -1,23 +1,31 @@
 import { Actor, Circle, Color, Vector, Label, Engine } from 'excalibur'
 import { gridToScreen } from '../../lib/isometric'
 
-export interface PlaceholderAgent {
+export interface AgentData {
   id: string
   name: string
   gridX: number
   gridY: number
-  color: string
+  archetype: string
+}
+
+const ARCHETYPE_COLORS: Record<string, string> = {
+  builder: '#8B4513',
+  socialite: '#FF69B4',
+  philosopher: '#9370DB',
+  explorer: '#228B22',
+  nurturer: '#FFA07A',
 }
 
 export class AgentSprite extends Actor {
-  private agent: PlaceholderAgent
+  private agent: AgentData
   private circleGraphic: Circle
   private nameLabel: Label
   private targetGridX: number
   private targetGridY: number
   private lerpSpeed: number = 0.1 // adjust as needed
 
-  constructor(agent: PlaceholderAgent) {
+  constructor(agent: AgentData) {
     super({
       pos: new Vector(0, 0),
     })
@@ -25,10 +33,12 @@ export class AgentSprite extends Actor {
     this.targetGridX = agent.gridX
     this.targetGridY = agent.gridY
 
+    const color = ARCHETYPE_COLORS[agent.archetype] || '#FFFFFF'
+
     // Create a circle graphic (16x16 pixels)
     this.circleGraphic = new Circle({
       radius: 8,
-      color: Color.fromHex(agent.color),
+      color: Color.fromHex(color),
     })
     this.graphics.add(this.circleGraphic)
 

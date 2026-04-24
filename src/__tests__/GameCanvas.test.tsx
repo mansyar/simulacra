@@ -1,6 +1,23 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render } from '@testing-library/react'
 
+// Mock Convex
+vi.mock('convex/react', () => ({
+  useQuery: vi.fn().mockReturnValue([
+    { _id: 'agent_1', name: 'Builder', gridX: 10, gridY: 10, archetype: 'builder' },
+  ]),
+}))
+
+vi.mock('../../convex/_generated/api', () => ({
+  api: {
+    functions: {
+      agents: {
+        getAll: 'agents:getAll',
+      },
+    },
+  },
+}))
+
 // Mock Excalibur dependencies with proper class constructors
 vi.mock('excalibur', () => {
   class MockEngine {

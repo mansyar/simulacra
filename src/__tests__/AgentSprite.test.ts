@@ -49,10 +49,10 @@ vi.mock('../../lib/isometric', () => ({
 
 // Import AgentSprite AFTER mocking
 import { AgentSprite } from '../components/game/AgentSprite'
-import type { PlaceholderAgent } from '../components/game/AgentSprite'
+import type { AgentData } from '../components/game/AgentSprite'
 
 describe('AgentSprite', () => {
-  let mockAgent: PlaceholderAgent
+  let mockAgent: AgentData
 
   beforeEach(() => {
     mockAgent = {
@@ -60,7 +60,7 @@ describe('AgentSprite', () => {
       name: 'Test Agent',
       gridX: 5,
       gridY: 10,
-      color: '#FF0000',
+      archetype: 'builder',
     }
   })
 
@@ -90,12 +90,12 @@ describe('AgentSprite', () => {
   })
 
   it('should use agent properties in constructor', () => {
-    const customAgent: PlaceholderAgent = {
+    const customAgent: AgentData = {
       id: 'custom-1',
       name: 'Custom Agent',
       gridX: 100,
       gridY: 200,
-      color: '#00FF00',
+      archetype: 'socialite',
     }
     
     const sprite = new AgentSprite(customAgent)
