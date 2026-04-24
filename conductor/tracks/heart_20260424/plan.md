@@ -87,11 +87,11 @@
   - [x] Set up environment variables (CONVEX_DEPLOYMENT)
   - [x] Task: Conductor - User Manual Verification 'Convex Connection' (Protocol in workflow.md)
 
-- [ ] **Task:** Replace placeholder agents with database agents
-  - [ ] Update `GameWorld` component to use Convex query
-  - [ ] Replace hardcoded agent array with `useQuery(agents.getAll)`
-  - [ ] Update agent rendering to use Convex data
-  - [ ] Task: Conductor - User Manual Verification 'Agent Integration' (Protocol in workflow.md)
+- [x] **Task:** Replace placeholder agents with database agents [ca9d31e]
+  - [x] Update `GameWorld` component to use Convex query
+  - [x] Replace hardcoded agent array with `useQuery(agents.getAll)`
+  - [x] Update agent rendering to use Convex data
+  - [x] Task: Conductor - User Manual Verification 'Agent Integration' (Protocol in workflow.md)
 
 - [ ] **Task:** Verify real-time sync
   - [ ] Open two browser tabs simultaneously
