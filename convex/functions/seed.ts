@@ -5,30 +5,54 @@ export const agents = mutation({
   handler: async (ctx) => {
     const existingAgents = await ctx.db.query("agents").collect();
     if (existingAgents.length > 0) {
-      return { message: "Database already seeded" };
+      // Clear existing agents for a fresh seed
+      for (const agent of existingAgents) {
+        await ctx.db.delete(agent._id);
+      }
     }
 
-    const initialAgents = [
-      { name: "Builder", archetype: "builder" as const, gridX: 10, gridY: 10, coreTraits: ["diligent", "practical"] },
-      { name: "Socialite", archetype: "socialite" as const, gridX: 20, gridY: 20, coreTraits: ["outgoing", "charming"] },
-      { name: "Philosopher", archetype: "philosopher" as const, gridX: 30, gridY: 30, coreTraits: ["thoughtful", "analytical"] },
-      { name: "Explorer", archetype: "explorer" as const, gridX: 40, gridY: 40, coreTraits: ["curious", "brave"] },
-      { name: "Nurturer", archetype: "nurturer" as const, gridX: 50, gridY: 50, coreTraits: ["kind", "patient"] },
-    ];
+    const archetypes = [
+      { type: "builder", traits: ["diligent", "practical"], names: ["Bob", "Wendy", "Homer", "Marge", "Fixer"] },
+      { type: "socialite", traits: ["outgoing", "charming"], names: ["Paris", "Kim", "Leo", "Gatsby", "Muse"] },
+      { type: "philosopher", traits: ["thoughtful", "analytical"], names: ["Socrates", "Plato", "Kant", "Nietzsche", "Sage"] },
+      { type: "explorer", traits: ["curious", "brave"], names: ["Indy", "Lara", "Marco", "Polo", "Scout"] },
+      { type: "nurturer", traits: ["kind", "patient"], names: ["Florence", "Clara", "Mother", "Teresa", "Angel"] },
+    ] as const;
 
-    for (const agent of initialAgents) {
-      await ctx.db.insert("agents", {
-        ...agent,
-        isActive: true,
-        hunger: 50,
-        energy: 50,
-        social: 50,
-        currentAction: "idle",
-        spriteVariant: Math.floor(Math.random() * 4),
-        lastActiveAt: Date.now(),
+    let count = 0;
+    for (const arch of archetypes) {
+      for (const name of arch.names) {
+        await ctx.db.insert("agents", {
+          name,
+          archetype: arch.type,
+          gridX: Math.floor(Math.random() * 64),
+          gridY: Math.floor(Math.random() * 64),
+          coreTraits: arch.traits as unknown as string[],
+          isActive: true,
+          hunger: 50,
+          energy: 50,
+          social: 50,
+          currentAction: "idle",
+          spriteVariant: Math.floor(Math.random() * 4),
+          lastActiveAt: Date.now(),
+        });
+        count++;
+      }
+    }
+
+    // Also seed world state if missing
+    const existingState = await ctx.db.query("world_state").first();
+    if (!existingState) {
+      await ctx.db.insert("world_state", {
+        weather: "sunny",
+        timeOfDay: 10,
+        dayCount: 1,
+        tickIntervalSeconds: 60,
+        totalTicks: 0,
+        lastTickAt: Date.now(),
       });
     }
 
-    return { message: `Seeded ${initialAgents.length} agents` };
+    return { message: `Seeded ${count} agents and world state` };
   },
 });
