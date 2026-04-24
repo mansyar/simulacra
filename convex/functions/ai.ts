@@ -1,5 +1,6 @@
 import { action } from "../_generated/server";
 import { v } from "convex/values";
+import { internal } from "../_generated/api";
 
 const ARCHETYPE_PROMPTS = {
   friendly: "You are a friendly and outgoing agent. You love meeting new people and are always eager to help. Your tone is warm and enthusiastic. You prioritize social interaction.",
@@ -20,15 +21,28 @@ You MUST return your decision in the following JSON format:
 }
 `;
 
+interface AiConfig {
+  apiKey: string | undefined;
+  baseUrl: string;
+  model: string;
+}
+
+async function getAiConfig(ctx: any): Promise<AiConfig> {
+  const config = await ctx.runQuery(internal.functions.config.getInternal);
+  return {
+    apiKey: process.env.OPENAI_API_KEY,
+    baseUrl: config?.llmBaseUrl || process.env.OPENAI_API_BASE_URL || "https://api.openai.com/v1",
+    model: config?.llmModel || process.env.OPENAI_MODEL || "gpt-3.5-turbo",
+  };
+}
+
 export const chat = action({
   args: {
     message: v.string(),
     archetype: v.union(v.literal("friendly"), v.literal("grumpy"), v.literal("curious")),
   },
-  handler: async (_ctx, args) => {
-    const apiKey = process.env.OPENAI_API_KEY;
-    const baseUrl = process.env.OPENAI_API_BASE_URL || "https://api.openai.com/v1";
-    const model = process.env.OPENAI_MODEL || "gpt-3.5-turbo";
+  handler: async (ctx, args) => {
+    const { apiKey, baseUrl, model } = await getAiConfig(ctx);
 
     if (!apiKey) {
       return {
@@ -74,10 +88,8 @@ export const decision = action({
     nearbyAgents: v.array(v.string()),
     archetype: v.union(v.literal("friendly"), v.literal("grumpy"), v.literal("curious")),
   },
-  handler: async (_ctx, args) => {
-    const apiKey = process.env.OPENAI_API_KEY;
-    const baseUrl = process.env.OPENAI_API_BASE_URL || "https://api.openai.com/v1";
-    const model = process.env.OPENAI_MODEL || "gpt-3.5-turbo";
+  handler: async (ctx, args) => {
+    const { apiKey, baseUrl, model } = await getAiConfig(ctx);
 
     if (!apiKey) {
       // Mock decision logic
@@ -126,7 +138,8 @@ export const decision = action({
 
     const data = await response.json();
     try {
-      return JSON.parse(data.choices[0].message.content);
+      const content = data.choices[0].message.content;
+      return typeof content === "string" ? JSON.parse(content) : content;
     } catch (e) {
       console.error("Failed to parse AI response:", data.choices[0].message.content);
       return {
@@ -142,9 +155,8 @@ export const embed = action({
   args: {
     text: v.string(),
   },
-  handler: async (_ctx, args) => {
-    const apiKey = process.env.OPENAI_API_KEY;
-    const baseUrl = process.env.OPENAI_API_BASE_URL || "https://api.openai.com/v1";
+  handler: async (ctx, args) => {
+    const { apiKey, baseUrl } = await getAiConfig(ctx);
     const model = process.env.OPENAI_EMBEDDING_MODEL || "text-embedding-3-small";
 
     if (!apiKey) {

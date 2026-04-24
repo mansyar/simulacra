@@ -120,7 +120,8 @@ export default defineSchema({
     masterPasswordHash: v.string(),
     defaultTickInterval: v.number(),
     enableSleepMode: v.boolean(),
-    llmProvider: v.union(v.literal("openai"), v.literal("anthropic")),
+    llmProvider: v.string(), // e.g. "openai", "siliconflow", "deepseek"
+    llmBaseUrl: v.optional(v.string()),
     llmModel: v.string(),
   }),
 
