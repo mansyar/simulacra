@@ -12,7 +12,7 @@
     - [ ] Write failing test for semantic memory vector storage and retrieval.
     - [ ] Configure Convex Vector Index (768 dimensions) for `memoryIndex`.
     - [ ] Implement vector search and storage for semantic memory in `convex/functions/memory.ts`.
-- [ ] Task: Decision Loop and World Tick
+- [x] Task: Decision Loop and World Tick (de372e4)
     - [ ] Write failing test for world tick cron job and decision loop.
     - [ ] Create Convex Cron job for world tick (running every 60 seconds).
     - [ ] Connect LLM to social decisions and deterministic needs.
