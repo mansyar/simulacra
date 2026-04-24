@@ -5,7 +5,7 @@
     - [ ] Write failing test for LLM action API integration.
     - [ ] Implement OpenAI-compatible API connection with Kimi K2.6 and Qwen-9b in `convex/functions/ai.ts`.
     - [ ] Implement personality archetype templates (Friendly & Outgoing, Grumpy & Reclusive, Curious & Exploratory) and JSON output parsing.
-- [ ] Task: Tier 1 Memory (Sensory Buffer)
+- [x] Task: Tier 1 Memory (Sensory Buffer) (944ee83)
     - [ ] Write failing test for sensory buffer storage and cleanup logic.
     - [ ] Implement sensory buffer to store last 10 events per agent in `convex/functions/memory.ts`.
 - [ ] Task: Tier 2 Memory (Semantic Memory)
