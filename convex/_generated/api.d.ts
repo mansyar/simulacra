@@ -8,7 +8,11 @@
  * @module
  */
 
+import type * as crons from "../crons.js";
 import type * as functions_agents from "../functions/agents.js";
+import type * as functions_ai from "../functions/ai.js";
+import type * as functions_config from "../functions/config.js";
+import type * as functions_memory from "../functions/memory.js";
 import type * as functions_seed from "../functions/seed.js";
 import type * as functions_world from "../functions/world.js";
 
@@ -19,7 +23,11 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  crons: typeof crons;
   "functions/agents": typeof functions_agents;
+  "functions/ai": typeof functions_ai;
+  "functions/config": typeof functions_config;
+  "functions/memory": typeof functions_memory;
   "functions/seed": typeof functions_seed;
   "functions/world": typeof functions_world;
 }>;

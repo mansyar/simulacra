@@ -1,4 +1,5 @@
 import { action } from "../_generated/server";
+import type { ActionCtx } from "../_generated/server";
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 
@@ -27,7 +28,7 @@ interface AiConfig {
   model: string;
 }
 
-async function getAiConfig(ctx: any, modelOverride?: string): Promise<AiConfig> {
+async function getAiConfig(ctx: ActionCtx, modelOverride?: string): Promise<AiConfig> {
   const config = await ctx.runQuery(internal.functions.config.getInternal);
   return {
     apiKey: process.env.OPENAI_API_KEY,

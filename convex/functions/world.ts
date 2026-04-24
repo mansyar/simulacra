@@ -98,11 +98,34 @@ export const tick = action({
       });
 
       // Update action
+      // decision.target is a string: "none", agent name, or coordinates "x,y"
+      let targetX: number | undefined;
+      let targetY: number | undefined;
+      if (decision.target && decision.target !== "none") {
+        // Try to parse as coordinates "x,y"
+        const coords = decision.target.split(",");
+        if (coords.length === 2) {
+          const x = parseFloat(coords[0]);
+          const y = parseFloat(coords[1]);
+          if (!isNaN(x) && !isNaN(y)) {
+            targetX = x;
+            targetY = y;
+          }
+        }
+        // If not coordinates, treat as agent name
+        if (targetX === undefined) {
+          const targetAgent = agents.find(a => a.name === decision.target);
+          if (targetAgent) {
+            targetX = targetAgent.gridX;
+            targetY = targetAgent.gridY;
+          }
+        }
+      }
       await ctx.runMutation(internal.functions.agents.updateAction, {
         agentId: agent._id,
         action: decision.action,
-        targetX: decision.targetX, // If decision returns coords
-        targetY: decision.targetY,
+        targetX,
+        targetY,
       });
 
       // Add event to sensory buffer

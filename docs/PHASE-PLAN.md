@@ -5,7 +5,7 @@
 | Phase | Name | Focus | Status | Estimated Duration |
 |-------|------|-------|--------|-------------------|
 | 1 | The Body | Setup + Rendering | ✅ Complete | 1-2 weeks |
-| 2 | The Heart | Convex + Real-time Sync | ⏳ Not Started | 1-2 weeks |
+| 2 | The Heart | Convex + Real-time Sync | ✅ Complete | 1-2 weeks |
 | 3 | The Brain | LLM Integration + Memory | ⏳ Not Started | 2-3 weeks |
 | 4 | The Social | Proximity + Chat | ⏳ Not Started | 1-2 weeks |
 | 5 | The Polish | Master Panel + Deploy | ⏳ Not Started | 1 week |
@@ -60,43 +60,43 @@
 
 **Goal:** Convex database with real-time agent sync
 
-**Status:** ⏳ NOT STARTED (Phase 1 complete first)
+**Status:** ✅ COMPLETE
 
 ### Week 3: Convex Setup
 
 #### Day 1-2: Convex Installation
-- [ ] Install Convex: `npm install convex`
-- [ ] Initialize Convex: `npx convex dev`
-- [ ] Create `convex/schema.ts` with table definitions
-- [ ] Define agent table schema
-- [ ] Deploy schema to Convex
+- [x] Install Convex: `npm install convex`
+- [x] Initialize Convex: `npx convex dev`
+- [x] Create `convex/schema.ts` with table definitions
+- [x] Define agent table schema
+- [x] Deploy schema to Convex
 
 #### Day 3-4: CRUD Operations
-- [ ] Create `convex/functions/agents.ts`
-- [ ] Implement `getAll` query
-- [ ] Implement `getById` query
-- [ ] Implement `create` mutation
-- [ ] Implement `updatePosition` mutation
+- [x] Create `convex/functions/agents.ts`
+- [x] Implement `getAll` query
+- [x] Implement `getById` query
+- [x] Implement `create` mutation
+- [x] Implement `updatePosition` mutation
 
 #### Day 5-7: Real-time Integration
-- [ ] Connect TanStack Start to Convex
-- [ ] Replace placeholder agents with database agents
-- [ ] Verify real-time sync (open 2 browser tabs)
-- [ ] Test position updates sync across clients
+- [x] Connect TanStack Start to Convex
+- [x] Replace placeholder agents with database agents
+- [x] Verify real-time sync (open 2 browser tabs)
+- [x] Test position updates sync across clients
 
 ### Week 4: World State
 
-- [ ] Add `world_state` table
-- [ ] Implement weather system
-- [ ] Add time of day tracking
-- [ ] Create initial seed data for 25 agents
+- [x] Add `world_state` table
+- [x] Implement weather system
+- [x] Add time of day tracking
+- [x] Create initial seed data for 25 agents
 
 ### Phase 2 Checkpoints
 
-- [ ] Convex deployed and accessible
-- [ ] Agents persist in database
-- [ ] Opening multiple tabs shows real-time sync
-- [ ] Weather and time display correctly
+- [x] Convex deployed and accessible
+- [x] Agents persist in database
+- [x] Opening multiple tabs shows real-time sync
+- [x] Weather and time display correctly
 
 ---
 
@@ -285,11 +285,11 @@ Phase 5 (Polish)
 
 ## Recommended Development Order
 
-### Current Status: Phase 1 Complete ✅
+### Current Status: Phase 2 Complete ✅
 
 1. ✅ **Start simple:** Grid rendering complete with Excalibur.js
 2. ✅ **Add one thing at a time:** Agent sprites, camera controls, tests
-3. ⏳ **Next:** Install and configure Convex (Phase 2)
+3. ✅ **Next:** Install and configure Convex (Phase 2)
 4. ⏳ **Then:** Implement LLM integration (Phase 3)
 5. ⏳ **Then:** Add proximity and chat (Phase 4)
 6. ⏳ **Finally:** Master panel and deployment (Phase 5)
