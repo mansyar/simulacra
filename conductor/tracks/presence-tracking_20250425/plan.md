@@ -37,29 +37,29 @@
   - [x] Run: Tests and confirm they fail (expected behavior)
 
 ### Task 2.2: Implement heartbeat Mutation (Green Phase)
-- [ ] Task: Implement the heartbeat mutation
-  - [ ] Read: `convex/presence.ts` (create if needed)
-  - [ ] Edit: Add `heartbeat` mutation using presence component
-  - [ ] Run: Tests to verify implementation
+- [x] Task: Implement the heartbeat mutation (118312f)
+  - [x] Read: `convex/presence.ts` (create if needed)
+  - [x] Edit: Add `heartbeat` mutation using presence component
+  - [x] Run: Tests to verify implementation
 
 ### Task 2.3: Implement list Query (Green Phase)
-- [ ] Task: Implement the list query
-  - [ ] Read: `convex/presence.ts`
-  - [ ] Edit: Add `list` query using presence component
-  - [ ] Run: Tests to verify implementation
+- [x] Task: Implement the list query (118312f)
+  - [x] Read: `convex/presence.ts`
+  - [x] Edit: Add `list` query using presence component
+  - [x] Run: Tests to verify implementation
 
 ### Task 2.4: Implement disconnect Mutation (Green Phase)
-- [ ] Task: Implement the disconnect mutation
-  - [ ] Read: `convex/presence.ts`
-  - [ ] Edit: Add `disconnect` mutation using presence component
-  - [ ] Run: Tests to verify implementation
+- [x] Task: Implement the disconnect mutation (118312f)
+  - [x] Read: `convex/presence.ts`
+  - [x] Edit: Add `disconnect` mutation using presence component
+  - [x] Run: Tests to verify implementation
 
 ### Task 2.5: Refactor and Verify Coverage
-- [ ] Task: Refactor presence functions for clarity
-  - [ ] Refactor: Clean up code and improve readability
-  - [ ] Run: Tests to ensure they still pass
-  - [ ] Run: Coverage report (`pnpm test:coverage`)
-  - [ ] Verify: Coverage >80% for new code
+- [x] Task: Refactor presence functions for clarity (118312f)
+  - [x] Refactor: Clean up code and improve readability
+  - [x] Run: Tests to ensure they still pass
+  - [x] Run: Coverage report (`pnpm test:coverage`)
+  - [x] Verify: Coverage >80% for new code
 
 ### Task 2.6: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
 
