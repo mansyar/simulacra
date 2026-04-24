@@ -21,6 +21,7 @@ This document defines the technology stack for the Simulacra project - an autono
 | Convex | Latest | Real-time database with vector search |
 | Convex Actions | Latest | Server-side logic and AI integration |
 | Convex Cron | Latest | Scheduled world ticks |
+| Convex Config Table | - | Decoupled provider-agnostic AI configuration |
 
 ### Game Engine
 | Technology | Version | Purpose |
@@ -31,7 +32,7 @@ This document defines the technology stack for the Simulacra project - an autono
 | Technology | Version | Purpose |
 |------------|---------|---------|
 | OpenAI-compatible API | - | LLM for agent decision-making |
-| Available Models | - | GLM 5.1, Kimi K2.6, qwen-9b, kimi k2.5 lightning, etc. |
+| Available Models | - | Kimi K2.6, qwen-9b, GPT-4o-mini, etc. |
 
 ### Styling
 | Technology | Version | Purpose |
@@ -82,7 +83,7 @@ This document defines the technology stack for the Simulacra project - an autono
 │                             ▼                                    │
 │  ┌──────────────────────────────────────────────────────────┐   │
 │  │              OpenAI-Compatible API                         │   │
-│  │         (GLM 5.1, Kimi K2.6, qwen-9b, etc.)              │   │
+│  │         (Kimi K2.6, qwen-9b, GPT-4o-mini, etc.)          │   │
 │  └──────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -114,7 +115,6 @@ simulacra/
 │   │   └── memories.ts            # Memory system
 │   ├── lib/
 │   │   ├── isometric.ts           # Iso coords conversion
-│   │   ├── ai-client.ts           # OpenAI-compatible API client
 │   │   └── constants.ts           # Grid, tile, camera constants
 │   ├── routes/
 │   │   ├── index.tsx              # Main world view (/)
@@ -168,9 +168,9 @@ CONVEX_DEPLOYMENT=
 CONVEX_SECRET_KEY=
 
 # AI API (OpenAI-compatible)
-AI_API_BASE_URL=https://your-api-endpoint.com/v1
-AI_API_KEY=your-api-key
-AI_DEFAULT_MODEL=kimi-k2.6
+OPENAI_API_KEY=your-api-key
+OPENAI_API_BASE_URL=https://your-api-endpoint.com/v1
+OPENAI_MODEL=kimi-k2.6
 ```
 
 ### Convex Configuration (convex.json)
@@ -187,37 +187,15 @@ AI_DEFAULT_MODEL=kimi-k2.6
 
 ## API Integration
 
-### OpenAI-Compatible Client
+### OpenAI-Compatible Implementation
 
-The AI integration uses an OpenAI-compatible API endpoint. The client supports multiple models:
+The AI integration is implemented in `convex/functions/ai.ts` using `fetch` to remain provider-agnostic. Configuration is stored in the `config` table in Convex, allowing for dynamic provider and model switching. Each agent can also override the global model via its `model` field.
 
-- **GLM 5.1** - General purpose
+The implementation supports any OpenAI-compatible API endpoint. Models used include:
+
 - **Kimi K2.6** - High performance
 - **qwen-9b** - Efficient
-- **Kimi K2.5 Lightning** - Fast responses
-
-```typescript
-// lib/ai-client.ts
-import OpenAI from 'openai'
-
-const aiClient = new OpenAI({
-  baseURL: process.env.AI_API_BASE_URL,
-  apiKey: process.env.AI_API_KEY,
-  defaultQuery: {
-    model: process.env.AI_DEFAULT_MODEL || 'kimi-k2.6'
-  }
-})
-
-export async function generateAgentDecision(prompt: string) {
-  const response = await aiClient.chat.completions.create({
-    model: process.env.AI_DEFAULT_MODEL || 'kimi-k2.6',
-    messages: [{ role: 'user', content: prompt }],
-    response_format: { type: 'json_object' }
-  })
-
-  return JSON.parse(response.choices[0].message.content)
-}
-```
+- **GPT-4o-mini** - Balanced
 
 ---
 

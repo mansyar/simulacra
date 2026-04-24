@@ -95,7 +95,7 @@
 | Frontend | TanStack Start (Beta/RC) |
 | Backend/Database | Convex (Real-time + Vector Search) |
 | Game Engine | Excalibur.js (Custom isometric renderer) |
-| AI Integration | OpenAI GPT-4o-mini or Claude 3.5 Haiku |
+| AI Integration | Provider-agnostic OpenAI-compatible API (Kimi K2.6, Qwen-9b, etc.) |
 | Styling | Tailwind CSS + Framer Motion |
 | Vector Search | Convex Vector Index (768 dimensions) |
 
@@ -117,8 +117,8 @@
 - World state management (Weather, Time, Day count) implemented
 - Integrated WorldHUD for real-time state display
 
-### Phase 3 - The Brain
-- LLM integration via Convex Actions
+### Phase 3 - The Brain [COMPLETE]
+- Provider-agnostic LLM integration via Convex Actions
 - Vector index configured for memory storage
 - Agents make decisions based on memory
 - Sensory buffer stores recent events
