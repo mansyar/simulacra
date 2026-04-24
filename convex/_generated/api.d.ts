@@ -15,6 +15,7 @@ import type * as functions_config from "../functions/config.js";
 import type * as functions_memory from "../functions/memory.js";
 import type * as functions_seed from "../functions/seed.js";
 import type * as functions_world from "../functions/world.js";
+import type * as presence from "../presence.js";
 
 import type {
   ApiFromModules,
@@ -30,6 +31,7 @@ declare const fullApi: ApiFromModules<{
   "functions/memory": typeof functions_memory;
   "functions/seed": typeof functions_seed;
   "functions/world": typeof functions_world;
+  presence: typeof presence;
 }>;
 
 /**
@@ -58,4 +60,6 @@ export declare const internal: FilterApi<
   FunctionReference<any, "internal">
 >;
 
-export declare const components: {};
+export declare const components: {
+  presence: import("@convex-dev/presence/_generated/component.js").ComponentApi<"presence">;
+};
