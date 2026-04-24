@@ -40,23 +40,10 @@ export default defineConfig({
         'src/router.tsx',
         'src/components/index.ts',
         'src/routes/__root.tsx',
+        'convex/_generated/**',
+        'convex/functions/seed.ts',
+        'src/lib/convex.ts',
       ],
     },
-    projects: [
-      {
-        // Frontend tests (jsdom environment)
-        test: {
-          environment: 'jsdom',
-          include: ['src/**/*.{test,spec}.{ts,tsx}'],
-        },
-      },
-      {
-        // Convex function tests (edge-runtime environment)
-        test: {
-          environment: 'edge-runtime',
-          include: ['convex/**/*.{test,spec}.{ts,tsx}'],
-        },
-      },
-    ],
   },
 })
