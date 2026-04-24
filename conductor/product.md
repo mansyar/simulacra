@@ -30,13 +30,15 @@
 - **Background**: Procedural sky gradient (day/night cycle optional)
 
 ### 2. The Agent System
-- **Count**: 25-50 agents (MVP target)
+- **Count**: 6 agents (optimized for free tier AI limits)
 - **Visuals**: Sprite-based, 16×16 base size, 4-frame idle animation
 - **Name Tags**: Floating above agent, pixel font
 - **Movement**: Smooth interpolation between state updates (lerp)
+- **Archetypes**: Builder (2), Socialite (2), Philosopher (2)
 
 ### 3. The AI Architecture
-- **Heartbeat**: Convex Cron every 60-120 seconds (configurable)
+- **Heartbeat**: Convex Cron every 180 seconds (3 minutes, configurable via `WORLD_TICK_INTERVAL`)
+- **Sleep Mode**: Pauses world tick after 30 minutes of inactivity (enabled via `ENABLE_SLEEP_MODE=true`)
 - **Memory Tiers**:
   1. Sensory Buffer: Last 10 events (Convex table)
   2. Semantic Memory: Long-term facts (Convex Vector Index)
@@ -44,6 +46,7 @@
 - **Decision Logic**:
   - Deterministic: Hunger → Food, Sleep → Bed (code-based)
   - Generative: Social interactions (LLM-based)
+- **Rate Limit Handling**: Exponential backoff retry (up to 3 attempts) with graceful fallback to mock responses
 
 ### 4. User Roles
 | Role | Permissions |
@@ -95,9 +98,15 @@
 | Frontend | TanStack Start (Beta/RC) |
 | Backend/Database | Convex (Real-time + Vector Search) |
 | Game Engine | Excalibur.js (Custom isometric renderer) |
-| AI Integration | Provider-agnostic OpenAI-compatible API (Kimi K2.6, Qwen-9b, etc.) |
+| AI Integration | Groq API (`llama-3.1-8b-instant`) via OpenAI-compatible endpoint |
 | Styling | Tailwind CSS + Framer Motion |
 | Vector Search | Convex Vector Index (768 dimensions) |
+
+### AI Configuration
+- **Provider**: Groq (free tier)
+- **Model**: `llama-3.1-8b-instant`
+- **Rate Limits**: 30 req/min, 14.4K req/day, 500K tokens/day
+- **Optimization**: 6 agents, 180s tick interval, sleep mode enabled
 
 ---
 
@@ -151,9 +160,12 @@
 - Convex auth configured for production
 
 ### Cost Optimization
+- **Token Usage**: 432K tokens/day (86% of 500K daily limit)
+- **Request Usage**: 2,880 requests/day (20% of 14.4K daily limit)
 - Lazy LLM: Only call when agents are within interaction radius
 - Context pruning: Vector search retrieves only relevant memories
 - Sleep mode: Pause crons after 30 min of no active users
+- Rate limit handling: Exponential backoff retry with graceful fallback to mock responses
 
 ---
 
@@ -164,3 +176,4 @@
 - Map editing tools
 - Mobile responsive (desktop-first)
 - Audio/sound effects
+- Production deployment (sticking to development tier for now)

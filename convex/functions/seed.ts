@@ -16,12 +16,11 @@ export const agents = mutation({
       }
     }
 
+    // OPTIMIZED: Reduced to 6 agents for token limits
     const archetypes = [
-      { type: "builder", traits: ["diligent", "practical"], names: ["Bob", "Wendy", "Homer", "Marge", "Fixer"] },
-      { type: "socialite", traits: ["outgoing", "charming"], names: ["Paris", "Kim", "Leo", "Gatsby", "Muse"] },
-      { type: "philosopher", traits: ["thoughtful", "analytical"], names: ["Socrates", "Plato", "Kant", "Nietzsche", "Sage"] },
-      { type: "explorer", traits: ["curious", "brave"], names: ["Indy", "Lara", "Marco", "Polo", "Scout"] },
-      { type: "nurturer", traits: ["kind", "patient"], names: ["Florence", "Clara", "Mother", "Teresa", "Angel"] },
+      { type: "builder", traits: ["diligent", "practical"], names: ["Bob", "Wendy"] },
+      { type: "socialite", traits: ["outgoing", "charming"], names: ["Paris", "Kim"] },
+      { type: "philosopher", traits: ["thoughtful", "analytical"], names: ["Socrates", "Plato"] },
     ] as const;
 
     let count = 0;
@@ -52,7 +51,7 @@ export const agents = mutation({
         weather: "sunny",
         timeOfDay: 10,
         dayCount: 1,
-        tickIntervalSeconds: 60,
+        tickIntervalSeconds: 180,  // Increased to 3 minutes
         totalTicks: 0,
         lastTickAt: Date.now(),
       });

@@ -37,6 +37,54 @@ async function getAiConfig(ctx: ActionCtx, modelOverride?: string): Promise<AiCo
   };
 }
 
+/**
+ * Retry wrapper with exponential backoff for rate-limited requests
+ */
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  maxRetries: number = 3,
+  baseDelay: number = 1000
+): Promise<Response> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, options);
+
+      // If not a rate limit error, return immediately
+      if (response.status !== 429) {
+        return response;
+      }
+
+      // Rate limit error - check if we should retry
+      if (attempt === maxRetries) {
+        // Last attempt, return the rate limit response
+        return response;
+      }
+
+      // Calculate delay with exponential backoff
+      const delay = baseDelay * Math.pow(2, attempt);
+      console.log(`[AI] Rate limited, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries + 1})`);
+      
+      // Wait before retrying
+      await new Promise(resolve => setTimeout(resolve, delay));
+    } catch (error) {
+      lastError = error as Error;
+      
+      if (attempt === maxRetries) {
+        throw lastError;
+      }
+      
+      const delay = baseDelay * Math.pow(2, attempt);
+      console.log(`[AI] Error, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries + 1})`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+
+  throw lastError || new Error("Max retries exceeded");
+}
+
 export const chat = action({
   args: {
     message: v.string(),
@@ -52,30 +100,41 @@ export const chat = action({
       };
     }
 
-    const response = await fetch(`${baseUrl}/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: [
-          { role: "system", content: ARCHETYPE_PROMPTS[args.archetype] },
-          { role: "user", content: args.message },
-        ],
-      }),
-    });
+    try {
+      const response = await fetchWithRetry(
+        `${baseUrl}/chat/completions`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: [
+              { role: "system", content: ARCHETYPE_PROMPTS[args.archetype] },
+              { role: "user", content: args.message },
+            ],
+          }),
+        }
+      );
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`AI API error: ${error}`);
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`AI API error: ${error}`);
+      }
+
+      const data = await response.json();
+      return {
+        content: data.choices[0].message.content,
+      };
+    } catch (error) {
+      console.error("[AI] Chat error:", error);
+      // Return mock response on error
+      return {
+        content: `[MOCK] ${ARCHETYPE_PROMPTS[args.archetype]} Response to: ${args.message} (Model: ${model})`,
+      };
     }
-
-    const data = await response.json();
-    return {
-      content: data.choices[0].message.content,
-    };
   },
 });
 
@@ -118,37 +177,56 @@ export const decision = action({
     What is your next action?
     `;
 
-    const response = await fetch(`${baseUrl}/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: [
-          { role: "system", content: DECISION_SYSTEM_PROMPT + "\n" + ARCHETYPE_PROMPTS[args.archetype] },
-          { role: "user", content: userPrompt },
-        ],
-        response_format: { type: "json_object" },
-      }),
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`AI API error: ${error}`);
-    }
-
-    const data = await response.json();
     try {
-      const content = data.choices[0].message.content;
-      return typeof content === "string" ? JSON.parse(content) : content;
-    } catch (e) {
-      console.error("Failed to parse AI response:", data.choices[0].message.content);
+      const response = await fetchWithRetry(
+        `${baseUrl}/chat/completions`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: [
+              { role: "system", content: DECISION_SYSTEM_PROMPT + "\n" + ARCHETYPE_PROMPTS[args.archetype] },
+              { role: "user", content: userPrompt },
+            ],
+            response_format: { type: "json_object" },
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`AI API error: ${error}`);
+      }
+
+      const data = await response.json();
+      try {
+        const content = data.choices[0].message.content;
+        return typeof content === "string" ? JSON.parse(content) : content;
+      } catch (e) {
+        console.error("Failed to parse AI response:", data.choices[0].message.content);
+        return {
+          action: "idle",
+          target: "none",
+          reasoning: "Error parsing AI response",
+        };
+      }
+    } catch (error) {
+      console.error("[AI] Decision error:", error);
+      // Return mock decision on error
+      let action = "idle";
+      if (args.agentState.hunger > 70) action = "eating";
+      else if (args.agentState.energy < 30) action = "sleeping";
+      else if (args.nearbyAgents.length > 0 && args.archetype === "friendly") action = "talking";
+      else if (args.archetype === "curious") action = "exploring";
+
       return {
-        action: "idle",
-        target: "none",
-        reasoning: "Error parsing AI response",
+        action,
+        target: args.nearbyAgents[0] || "none",
+        reasoning: `[MOCK] Rate limited - using mock decision (Model: ${model})`,
       };
     }
   },
@@ -168,24 +246,33 @@ export const embed = action({
       return embedding;
     }
 
-    const response = await fetch(`${baseUrl}/embeddings`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: model,
-        input: args.text,
-      }),
-    });
+    try {
+      const response = await fetchWithRetry(
+        `${baseUrl}/embeddings`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: model,
+            input: args.text,
+          }),
+        }
+      );
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`AI API error: ${error}`);
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`AI API error: ${error}`);
+      }
+
+      const data = await response.json();
+      return data.data[0].embedding;
+    } catch (error) {
+      console.error("[AI] Embed error:", error);
+      // Return mock embedding on error
+      return new Array(768).fill(0).map(() => Math.random());
     }
-
-    const data = await response.json();
-    return data.data[0].embedding;
   },
 });

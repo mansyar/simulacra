@@ -50,11 +50,64 @@ export const updateState = mutation({
 });
 
 /**
+ * Action: Check and update sleep mode status
+ */
+export const checkSleepMode = action({
+  args: {},
+  handler: async (ctx): Promise<{ sleeping: boolean; reason: string; timeSinceLastTick?: number }> => {
+    const enableSleepMode = process.env.ENABLE_SLEEP_MODE === "true";
+    
+    if (!enableSleepMode) {
+      return { sleeping: false, reason: "Sleep mode disabled" };
+    }
+
+    const state = await ctx.runQuery(api.functions.world.getState);
+    if (!state) {
+      return { sleeping: false, reason: "No world state" };
+    }
+
+    const now = Date.now();
+    const lastTick = state.lastTickAt || now;
+    const timeSinceLastTick = now - lastTick;
+    const sleepTimeout = 30 * 60 * 1000; // 30 minutes
+
+    if (timeSinceLastTick > sleepTimeout) {
+      return { 
+        sleeping: true, 
+        reason: `Inactive for ${Math.round(timeSinceLastTick / 60000)} minutes`,
+        timeSinceLastTick 
+      };
+    }
+
+    return { 
+      sleeping: false, 
+      reason: `Active (last tick ${Math.round(timeSinceLastTick / 60000)} minutes ago)` 
+    };
+  },
+});
+
+/**
  * Action: Process a world tick
  */
 export const tick = action({
   args: {},
-  handler: async (ctx) => {
+  handler: async (ctx): Promise<{ success: boolean; skipped?: boolean; reason?: string; agentCount?: number }> => {
+    // Check sleep mode
+    const enableSleepMode = process.env.ENABLE_SLEEP_MODE === "true";
+    
+    if (enableSleepMode) {
+      const sleepStatus = await ctx.runAction(api.functions.world.checkSleepMode);
+      
+      if (sleepStatus.sleeping) {
+        console.log(`[WORLD] Skipping tick - sleep mode active: ${sleepStatus.reason}`);
+        return { 
+          success: true, 
+          skipped: true, 
+          reason: sleepStatus.reason 
+        };
+      }
+    }
+
     // 1. Get all active agents
     const agents = await ctx.runQuery(api.functions.agents.getAll);
     
@@ -70,13 +123,13 @@ export const tick = action({
 
       // Get nearby agents for decision making
       const nearbyAgents = agents
-        .filter(a => a._id !== agent._id)
-        .filter(a => {
+        .filter((a: any) => a._id !== agent._id)
+        .filter((a: any) => {
           const dx = a.gridX - agent.gridX;
           const dy = a.gridY - agent.gridY;
           return Math.sqrt(dx*dx + dy*dy) < 5; // Interaction radius
         })
-        .map(a => a.name);
+        .map((a: any) => a.name);
 
       // Archetype mapping if necessary (ensure it matches ai.ts literals)
       let aiArchetype: "friendly" | "grumpy" | "curious" = "friendly";
@@ -114,7 +167,7 @@ export const tick = action({
         }
         // If not coordinates, treat as agent name
         if (targetX === undefined) {
-          const targetAgent = agents.find(a => a.name === decision.target);
+          const targetAgent = agents.find((a: any) => a.name === decision.target);
           if (targetAgent) {
             targetX = targetAgent.gridX;
             targetY = targetAgent.gridY;
@@ -147,6 +200,6 @@ export const tick = action({
       });
     }
 
-    return { success: true };
+    return { success: true, skipped: false, agentCount: agents.length };
   },
 });
