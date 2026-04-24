@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Engine, Scene, Actor, Color, Vector, BoundingBox } from 'excalibur'
 import type { ExcaliburGraphicsContext } from 'excalibur'
 import { useQuery } from 'convex/react'
@@ -16,6 +16,7 @@ export default function GameCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const engineRef = useRef<Engine | null>(null)
   const sceneRef = useRef<Scene | null>(null)
+  const [isEngineReady, setIsEngineReady] = useState(false)
   const agentsMapRef = useRef<Map<string, AgentSprite>>(new Map())
   const gridActorRef = useRef<Actor | null>(null)
   const isVisibleRef = useRef(true)
@@ -24,7 +25,7 @@ export default function GameCanvas() {
 
   // Sync agents from database
   useEffect(() => {
-    if (!sceneRef.current || !agentsData) return
+    if (!isEngineReady || !sceneRef.current || !agentsData) return
 
     const scene = sceneRef.current
     const currentAgentsMap = agentsMapRef.current
@@ -56,7 +57,7 @@ export default function GameCanvas() {
         currentAgentsMap.set(agent._id, newSprite)
       }
     }
-  }, [agentsData])
+  }, [agentsData, isEngineReady])
 
   useEffect(() => {
     if (!containerRef.current || !canvasRef.current) return
@@ -111,6 +112,7 @@ export default function GameCanvas() {
 
     const cameraController = new CameraController(scene.camera, engine.input, engine, bounds)
     sceneRef.current = scene
+    setIsEngineReady(true)
 
     const handleMouseMove = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect()
@@ -139,6 +141,7 @@ export default function GameCanvas() {
     return () => {
       canvas.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
+      setIsEngineReady(false)
       
       // Properly clean up all actors
       const currentAgentsMap = agentsMapRef.current
