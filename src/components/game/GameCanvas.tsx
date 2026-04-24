@@ -3,25 +3,28 @@
 import { useEffect, useRef, useState } from 'react'
 import { Engine, Scene, Actor, Color, Vector, BoundingBox } from 'excalibur'
 import type { ExcaliburGraphicsContext } from 'excalibur'
-import { useQuery } from 'convex/react'
+import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { IsometricGrid } from './IsometricGrid'
 import { CameraController } from './Camera'
 import { AgentSprite } from './AgentSprite'
 import type { AgentData } from './AgentSprite'
+import { screenToGrid } from '../../lib/isometric'
 
 export default function GameCanvas() {
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const engineRef = useRef<Engine | null>(null)
   const sceneRef = useRef<Scene | null>(null)
+  const gridRef = useRef<IsometricGrid | null>(null)
   const [isEngineReady, setIsEngineReady] = useState(false)
   const agentsMapRef = useRef<Map<string, AgentSprite>>(new Map())
   const gridActorRef = useRef<Actor | null>(null)
   const isVisibleRef = useRef(true)
 
   const agentsData = useQuery(api.functions.agents.getAll)
+  const updatePosition = useMutation(api.functions.agents.updatePosition)
 
   // Sync agents from database
   useEffect(() => {
@@ -59,25 +62,24 @@ export default function GameCanvas() {
     }
   }, [agentsData, isEngineReady])
 
+  // Handle engine initialization
   useEffect(() => {
     if (!containerRef.current || !canvasRef.current) return
 
     const container = containerRef.current
     const canvas = canvasRef.current
 
-    // Get actual container dimensions
     const rect = container.getBoundingClientRect()
     canvas.width = rect.width
     canvas.height = rect.height
 
-    // Create Excalibur engine with exact dimensions
     const engine = new Engine({
       canvasElement: canvas,
       viewport: { width: rect.width, height: rect.height },
       backgroundColor: Color.fromHex('#0f172a'),
-      antialiasing: false, // Disable antialiasing to prevent memory issues
-      pixelRatio: 1, // Force pixel ratio to prevent high-DPI memory issues
-      maxFps: 60, // Limit frame rate
+      antialiasing: false,
+      pixelRatio: 1,
+      maxFps: 60,
     })
     engineRef.current = engine
 
@@ -91,6 +93,7 @@ export default function GameCanvas() {
       tileWidth: 32,
       tileHeight: 16,
     })
+    gridRef.current = grid
 
     const bbox = grid.getBoundingBox()
     const bounds = new BoundingBox({
@@ -114,17 +117,66 @@ export default function GameCanvas() {
     sceneRef.current = scene
     setIsEngineReady(true)
 
-    const handleMouseMove = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect()
-      const scaleX = canvas.width / rect.width
-      const scaleY = canvas.height / rect.height
-      const x = (e.clientX - rect.left) * scaleX
-      const y = (e.clientY - rect.top) * scaleY
-      grid.setMousePosition(x, y)
-    }
-    canvas.addEventListener('mousemove', handleMouseMove)
+    engine.start()
 
-    // Pause when tab is not visible
+    return () => {
+      setIsEngineReady(false)
+      
+      const currentScene = sceneRef.current
+      if (currentScene) {
+        // Clean up agents
+        const currentAgentsMap = agentsMapRef.current
+        for (const sprite of currentAgentsMap.values()) {
+          currentScene.remove(sprite)
+        }
+        currentAgentsMap.clear()
+
+        // Clean up grid actor
+        if (gridActorRef.current) {
+          currentScene.remove(gridActorRef.current)
+          gridActorRef.current = null
+        }
+      }
+
+      if (engineRef.current) {
+        engineRef.current.stop()
+        engineRef.current = null
+      }
+      sceneRef.current = null
+      gridRef.current = null
+    }
+  }, [])
+
+  // Handle event listeners separately to avoid engine re-init
+  useEffect(() => {
+    if (!isEngineReady || !canvasRef.current || !gridRef.current || !engineRef.current) return
+
+    const canvas = canvasRef.current
+    const grid = gridRef.current
+    const engine = engineRef.current
+
+    const handleMouseMove = () => {
+      const worldPos = engine.input.pointers.primary.lastWorldPos
+      grid.setMousePosition(worldPos.x, worldPos.y)
+    }
+
+    const handleClick = async () => {
+      const worldPos = engine.input.pointers.primary.lastWorldPos
+      const gridPos = screenToGrid(worldPos.x, worldPos.y)
+      
+      if (agentsData && agentsData.length > 0) {
+        try {
+          await updatePosition({
+            agentId: agentsData[0]._id,
+            targetX: gridPos.x,
+            targetY: gridPos.y,
+          })
+        } catch (err) {
+          console.error('updatePosition error:', err)
+        }
+      }
+    }
+
     const handleVisibilityChange = () => {
       if (document.hidden) {
         isVisibleRef.current = false
@@ -134,37 +186,17 @@ export default function GameCanvas() {
         engine.start()
       }
     }
-    document.addEventListener('visibilitychange', handleVisibilityChange)
 
-    engine.start()
+    canvas.addEventListener('mousemove', handleMouseMove)
+    canvas.addEventListener('click', handleClick)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
 
     return () => {
       canvas.removeEventListener('mousemove', handleMouseMove)
+      canvas.removeEventListener('click', handleClick)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
-      setIsEngineReady(false)
-      
-      // Properly clean up all actors
-      const currentAgentsMap = agentsMapRef.current
-      for (const sprite of currentAgentsMap.values()) {
-        if (scene.world.entityManager.getById(sprite.id)) {
-          scene.remove(sprite)
-        }
-      }
-      currentAgentsMap.clear()
-      
-      // Remove grid actor
-      if (gridActorRef.current) {
-        scene.remove(gridActorRef.current)
-        gridActorRef.current = null
-      }
-      
-      // Stop engine and clear reference
-      if (engineRef.current) {
-        engineRef.current.stop()
-        engineRef.current = null
-      }
     }
-  }, [])
+  }, [isEngineReady, agentsData, updatePosition])
 
   return (
     <div 

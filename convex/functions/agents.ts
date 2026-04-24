@@ -106,6 +106,8 @@ export const updatePosition = mutation({
     const boundedY = Math.max(0, Math.min(63, targetY));
 
     await ctx.db.patch(agentId, {
+      gridX: boundedX,
+      gridY: boundedY,
       targetX: boundedX,
       targetY: boundedY,
       lastActiveAt: Date.now(),

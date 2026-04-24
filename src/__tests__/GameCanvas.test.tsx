@@ -6,6 +6,7 @@ vi.mock('convex/react', () => ({
   useQuery: vi.fn().mockReturnValue([
     { _id: 'agent_1', name: 'Builder', gridX: 10, gridY: 10, archetype: 'builder' },
   ]),
+  useMutation: vi.fn().mockReturnValue(vi.fn()),
 }))
 
 vi.mock('../../convex/_generated/api', () => ({
@@ -25,8 +26,15 @@ vi.mock('excalibur', () => {
     goToScene = vi.fn()
     start = vi.fn()
     stop = vi.fn()
-    input = {}
+    input = {
+      pointers: {
+        primary: {
+          lastWorldPos: { x: 0, y: 0 },
+        },
+      },
+    }
     camera = { pos: { x: 0, y: 0 } }
+    screenToWorld = vi.fn().mockImplementation((vec) => vec)
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     constructor(_options?: unknown) {}
   }
