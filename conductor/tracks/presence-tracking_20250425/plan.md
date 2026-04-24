@@ -26,7 +26,7 @@
 
 ---
 
-## Phase 2: Convex API Functions
+## Phase 2: Convex API Functions [checkpoint: fc8f98b]
 
 ### Task 2.1: Write Tests for Presence Functions (Red Phase)
 - [x] Task: Create test file for presence functions (e8992dc)
