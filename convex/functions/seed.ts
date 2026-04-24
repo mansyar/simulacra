@@ -1,13 +1,18 @@
 import { mutation } from "../_generated/server";
+import { v } from "convex/values";
 
 export const agents = mutation({
-  args: {},
-  handler: async (ctx) => {
-    const existingAgents = await ctx.db.query("agents").collect();
-    if (existingAgents.length > 0) {
-      // Clear existing agents for a fresh seed
-      for (const agent of existingAgents) {
-        await ctx.db.delete(agent._id);
+  args: {
+    clearExisting: v.optional(v.boolean()),
+  },
+  handler: async (ctx, { clearExisting }) => {
+    if (clearExisting) {
+      const existingAgents = await ctx.db.query("agents").collect();
+      if (existingAgents.length > 0) {
+        // Clear existing agents for a fresh seed
+        for (const agent of existingAgents) {
+          await ctx.db.delete(agent._id);
+        }
       }
     }
 
