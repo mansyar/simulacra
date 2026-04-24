@@ -1,5 +1,5 @@
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
-import { Suspense, lazy } from 'react'
+import { Suspense, lazy, useState, useEffect } from 'react'
 import { ConvexProvider } from "convex/react"
 import { convex } from "../lib/convex"
 import Footer from '../components/Footer'
@@ -9,6 +9,15 @@ import appCss from '../styles.css?url'
 
 // Lazy load GameCanvas - it will only load in the browser
 const GameCanvas = lazy(() => import('../components/game/GameCanvas').then(m => ({ default: m.default })))
+
+function ClientOnly({ children }: { children: React.ReactNode }) {
+  const [isClient, setIsClient] = useState(false)
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  return isClient ? <>{children}</> : null
+}
 
 export const Route = createRootRoute({
   head: () => ({
@@ -45,16 +54,18 @@ function RootDocument() {
           <div className="flex flex-col h-screen w-screen overflow-hidden">
             <Header />
             <main className="flex-1 w-full overflow-hidden">
-              <Suspense fallback={
-                <div className="flex h-full w-full items-center justify-center bg-slate-900">
-                  <div className="text-center">
-                    <div className="w-8 h-8 border-2 border-slate-400 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                    <p className="text-slate-400">Loading game...</p>
+              <ClientOnly>
+                <Suspense fallback={
+                  <div className="flex h-full w-full items-center justify-center bg-slate-900">
+                    <div className="text-center">
+                      <div className="w-8 h-8 border-2 border-slate-400 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                      <p className="text-slate-400">Loading game...</p>
+                    </div>
                   </div>
-                </div>
-              }>
-                <GameCanvas />
-              </Suspense>
+                }>
+                  <GameCanvas />
+                </Suspense>
+              </ClientOnly>
             </main>
             <Footer />
           </div>
