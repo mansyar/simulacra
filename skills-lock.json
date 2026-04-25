@@ -35,6 +35,36 @@
       "source": "vercel-labs/skills",
       "sourceType": "github",
       "computedHash": "9e1c8b3103f92fa8092568a44fe64858de7c5c9dc65ce4bea8f168080e889cfd"
+    },
+    "pixijs": {
+      "source": "pixijs/pixijs-skills",
+      "sourceType": "github",
+      "computedHash": "d5379b5ebe761edeb4e661259a1f3337e0788000c1544e0fb2100f16a6e07cc6"
+    },
+    "pixijs-application": {
+      "source": "pixijs/pixijs-skills",
+      "sourceType": "github",
+      "computedHash": "b71c3a13d7f01e985ef1a024e1ccb1c9ab7999435a72b7618b34bd301246e180"
+    },
+    "pixijs-assets": {
+      "source": "pixijs/pixijs-skills",
+      "sourceType": "github",
+      "computedHash": "56634aaa50ae33605899fc71ab84d22c3382bb6f9146d79f9304a2973ad91366"
+    },
+    "pixijs-core-concepts": {
+      "source": "pixijs/pixijs-skills",
+      "sourceType": "github",
+      "computedHash": "7f2e06046831e5ca4f43fdf74a420d95c64ab7834546de6b6ee71075b22ef290"
+    },
+    "pixijs-scene-container": {
+      "source": "pixijs/pixijs-skills",
+      "sourceType": "github",
+      "computedHash": "3c46a5a870862c3f3dcf8e76d64c52c12162d6403383866b68b417d6c7a29495"
+    },
+    "pixijs-scene-graphics": {
+      "source": "pixijs/pixijs-skills",
+      "sourceType": "github",
+      "computedHash": "161da558d5094df306d25b40740af01db8bac725132f514b27290327e2549fa2"
     }
   }
 }
