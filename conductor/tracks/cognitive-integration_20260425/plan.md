@@ -9,7 +9,7 @@
 6. - [x] Task: Implement "Batch Processor" to stay within RPM/TPM limits. e3ddf22
 
 ## Phase 1: Simulation Logic & Perception
-1. - [ ] Task: Create data migration/seed function for new schema fields, POIs, and Full Archetype profiles.
+1. - [~] Task: Create data migration/seed function for new schema fields, POIs, and Full Archetype profiles.
 2. - [ ] Task: Write unit tests for Passive Perception (seeing nearby agents) and Weather-based speed multipliers.
 3. - [ ] Task: Implement 'Safety Layer' with Narrative Survival and Social Handshaking (Talking/Listening states).
 4. - [ ] Task: Implement Passive Perception logic to record proximity sightings in the sensory buffer.
