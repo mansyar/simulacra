@@ -30,8 +30,8 @@
 ## Phase 3: Reflection & Memory Encoding
 1. - [x] Task: Write unit tests for reflection, importance scoring, and relationship delta logic. f30b70f
 2. - [x] Task: Implement `reflect` action to summarize events into `coreTraits` and encode high-importance memories. 48ad728
-3. - [~] Task: Update tick to trigger reflection every 24 simulated hours with staggered jitter.
-4. - [ ] Task: Refactor and verify test coverage (>80%).
+3. - [x] Task: Update tick to trigger reflection every 24 simulated hours with staggered jitter. f5697ab
+4. - [~] Task: Refactor and verify test coverage (>80%).
 
 ## Phase 4: World State & Final Integration
 1. - [ ] Task: Write unit tests for world-state advancement logic using `TIME_SCALE`.
