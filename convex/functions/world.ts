@@ -1,4 +1,4 @@
-import { query, mutation, action } from "../_generated/server";
+import { query, mutation, action, internalMutation } from "../_generated/server";
 import { v } from "convex/values";
 import { api, internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
@@ -141,6 +141,51 @@ function normalizeAction(action: string): "idle" | "walking" | "eating" | "sleep
 
   return "idle";
 }
+
+/**
+ * Internal Mutation: Advance simulated time and update weather
+ */
+export const advanceWorldState = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const state = await ctx.db.query("world_state").first();
+    if (!state) return;
+
+    // 1. Advance Time (Assume 1 tick = 50 units (~30 mins))
+    let newTime = (state.timeOfDay || 0) + 50;
+    let newDayCount = state.dayCount || 1;
+
+    if (newTime >= 2400) {
+      newTime = newTime % 2400;
+      newDayCount += 1;
+    }
+
+    // 2. Stochastic Weather (80% chance to stay same)
+    const weatherOptions: ("sunny" | "cloudy" | "rainy" | "stormy")[] = ["sunny", "cloudy", "rainy", "stormy"];
+    let newWeather = state.weather;
+    
+    if (Math.random() > 0.8) {
+      const otherOptions = weatherOptions.filter(w => w !== state.weather);
+      newWeather = otherOptions[Math.floor(Math.random() * otherOptions.length)];
+      
+      // Log weather change event
+      await ctx.db.insert("events", {
+        type: "weather_change",
+        description: `The weather has changed from ${state.weather} to ${newWeather}.`,
+        gridX: 0,
+        gridY: 0,
+      });
+    }
+
+    await ctx.db.patch(state._id, {
+      timeOfDay: newTime,
+      dayCount: newDayCount,
+      weather: newWeather,
+      totalTicks: (state.totalTicks || 0) + 1,
+      lastTickAt: Date.now(),
+    });
+  },
+});
 
 /**
  * Action: Process a world tick
@@ -365,15 +410,8 @@ export const tick = action({
       }
     }
 
-
-    // 3. Update world state (total ticks, etc.)
-    const state = await ctx.runQuery(api.functions.world.getState);
-    if (state) {
-      await ctx.runMutation(api.functions.world.updateState, {
-        totalTicks: (state.totalTicks || 0) + 1,
-        lastTickAt: Date.now(),
-      });
-    }
+    // 3. Advance world state (time, weather, etc.)
+    await ctx.runMutation(internal.functions.world.advanceWorldState);
 
     return { success: true, skipped: false, agentCount: agents.length };
   },

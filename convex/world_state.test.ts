@@ -10,7 +10,7 @@ test("advanceWorldState increments time and wraps day", async () => {
   
   // 1. Initial state
   await t.mutation(api.functions.world.updateState, {
-    timeOfDay: 2300,
+    timeOfDay: 2390,
     dayCount: 1,
   });
 
