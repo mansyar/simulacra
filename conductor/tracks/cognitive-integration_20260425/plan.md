@@ -11,9 +11,9 @@
 ## Phase 1: Simulation Logic & Perception
 1. - [x] Task: Create data migration/seed function for new schema fields, POIs, and Full Archetype profiles. 8a303d6
 2. - [x] Task: Write unit tests for Passive Perception (seeing nearby agents) and Weather-based speed multipliers. 7ede330
-3. - [~] Task: Implement 'Safety Layer' with Narrative Survival and Social Handshaking (Talking/Listening states).
-4. - [ ] Task: Implement Passive Perception logic to record proximity sightings in the sensory buffer.
-5. - [ ] Task: Implement movement advance logic with weather multipliers and "Arrival" events.
+3. - [x] Task: Implement 'Safety Layer' with Narrative Survival and Social Handshaking (Talking/Listening states). 2ba23ea
+4. - [x] Task: Implement Passive Perception logic to record proximity sightings in the sensory buffer. 2ba23ea
+5. - [x] Task: Implement movement advance logic with weather multipliers and "Arrival" events. 2ba23ea
 6. - [ ] Task: Refactor and verify test coverage (>80%).
 
 ## Phase 1.1: POI & Feedback UI
