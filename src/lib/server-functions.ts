@@ -3,13 +3,16 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 
-const convexUrl = process.env.VITE_CONVEX_URL;
+// Try multiple ways to get the Convex URL for server/client compatibility
+const convexUrl = 
+  process.env.VITE_CONVEX_URL || 
+  (import.meta as any).env?.VITE_CONVEX_URL;
 
 if (!convexUrl) {
-  throw new Error("VITE_CONVEX_URL is not set");
+  console.error("VITE_CONVEX_URL is not set in process.env or import.meta.env");
 }
 
-const httpClient = new ConvexHttpClient(convexUrl);
+const httpClient = new ConvexHttpClient(convexUrl || "");
 
 /**
  * Server Function: Manually trigger world tick
