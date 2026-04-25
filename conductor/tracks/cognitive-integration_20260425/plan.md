@@ -5,7 +5,7 @@
 2. - [x] Task: Update `convex/schema.ts` to add the `pois` table (name, description, gridX, gridY, type). 000276f
 3. - [x] Task: Update `AgentAction` schema to include the `"listening"` state. 91b0aca
 4. - [x] Task: Implement dynamic Metabolism and Weather Multiplier logic in `updateNeeds` and movement helpers. 21fbf95
-5. - [~] Task: Implement `getGlobalEvents` query for the world-wide sidebar.
+5. - [x] Task: Implement `getGlobalEvents` query for the world-wide sidebar. 8517854
 6. - [ ] Task: Implement "Batch Processor" to stay within RPM/TPM limits.
 
 ## Phase 1: Simulation Logic & Perception
