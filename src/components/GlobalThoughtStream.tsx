@@ -18,7 +18,7 @@ export default function GlobalThoughtStream() {
   };
 
   return (
-    <div className="fixed right-4 top-20 bottom-24 w-64 bg-slate-900/80 backdrop-blur-md border border-slate-700/50 rounded-xl flex flex-col overflow-hidden shadow-2xl">
+    <div className="fixed right-4 top-20 bottom-24 w-64 bg-slate-900/80 backdrop-blur-md border border-slate-700/50 rounded-xl flex flex-col overflow-hidden shadow-2xl z-50">
       <div className="p-3 border-b border-slate-700/50 bg-slate-800/30">
         <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
           <Activity className="w-3 h-3" />

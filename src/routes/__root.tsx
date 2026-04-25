@@ -4,6 +4,7 @@ import { ConvexProvider } from "convex/react"
 import { convex } from "../lib/convex"
 import Footer from '../components/Footer'
 import Header from '../components/Header'
+import { GlobalThoughtStream } from '../components'
 
 import appCss from '../styles.css?url'
 
@@ -53,8 +54,9 @@ function RootDocument() {
         <ConvexProvider client={convex}>
           <div className="flex flex-col h-screen w-screen overflow-hidden">
             <Header />
-            <main className="flex-1 w-full overflow-hidden">
+            <main className="flex-1 w-full overflow-hidden relative">
               <ClientOnly>
+                <GlobalThoughtStream />
                 <Suspense fallback={
                   <div className="flex h-full w-full items-center justify-center bg-slate-900">
                     <div className="text-center">
