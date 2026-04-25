@@ -55,9 +55,6 @@ Follow the five archetypes defined in AI-PROMPTING.md:
 3. **Philosopher** - Thoughtful, introspective, wise
 4. **Explorer** - Adventurous, restless, curious
 5. **Nurturer** - Caring, protective, generous
-6. **Friendly** - Outgoing, enthusiastic, social
-7. **Grumpy** - Reclusive, blunt, solitary
-8. **Curious** - Inquisitive, fascinated, exploratory
 
 ### 3.2 LLM Response Schema
 All LLM responses must follow this JSON structure:

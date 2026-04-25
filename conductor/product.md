@@ -34,11 +34,11 @@
 - **Visuals**: Sprite-based, 16×16 base size, 4-frame idle animation
 - **Name Tags**: Floating above agent, pixel font
 - **Movement**: Smooth interpolation between state updates (lerp)
-- **Archetypes**: Builder (2), Socialite (2), Philosopher (2)
+- **Archetypes**: Builder, Socialite, Philosopher, Explorer, Nurturer (10 agents total)
 
 ### 3. The AI Architecture
 - **Heartbeat**: Convex Cron every 180 seconds (3 minutes, configurable via `WORLD_TICK_INTERVAL`)
-- **Sleep Mode**: Pauses world tick when no active observers are present, after a 30-second grace period (enabled via `ENABLE_SLEEP_MODE=true`)
+- **Sleep Mode**: Pauses world tick after 30 minutes of inactivity, with a 30-second grace period for real-time presence (enabled via `ENABLE_SLEEP_MODE=true`)
 - **Memory Tiers**:
   1. Sensory Buffer: Last 10 events (Convex table)
   2. Semantic Memory: Long-term facts (Convex Vector Index)
@@ -46,6 +46,12 @@
 - **Decision Logic**:
   - Deterministic: Hunger → Food, Sleep → Bed (code-based)
   - Generative: Social interactions (LLM-based)
+- **Decision Schema**:
+  - `thought`: Internal reasoning
+  - `action`: Current intent
+  - `target`: Interaction target or location
+  - `speech`: Spoken dialogue
+  - `confidence`: Decision certainty
 - **Rate Limit Handling**: Exponential backoff retry (up to 3 attempts) with graceful fallback to mock responses
 
 ### 4. User Roles
