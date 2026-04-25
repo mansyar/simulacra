@@ -49,3 +49,27 @@ test("agents table has new fields", async () => {
     speech: "Hello world",
   });
 });
+
+test("pois table exists with correct fields", async () => {
+  const t = convexTest(schema, modules);
+
+  const poiId = await t.run(async (ctx) => {
+    return await ctx.db.insert("pois", {
+      name: "The Great Library",
+      description: "A place of knowledge.",
+      gridX: 32,
+      gridY: 32,
+      type: "library",
+    });
+  });
+
+  const poi = await t.run(async (ctx) => {
+    return await ctx.db.get(poiId);
+  });
+
+  expect(poi).toMatchObject({
+    name: "The Great Library",
+    gridX: 32,
+    gridY: 32,
+  });
+});

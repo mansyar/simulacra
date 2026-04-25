@@ -103,6 +103,16 @@ export default defineSchema({
     .index("by_agents", ["agentAId", "agentBId"])
     .index("by_affinity", ["affinity"]),
 
+  pois: defineTable({
+    name: v.string(),
+    description: v.string(),
+    gridX: v.number(),
+    gridY: v.number(),
+    type: v.string(),
+  })
+    .index("by_position", ["gridX", "gridY"])
+    .index("by_type", ["type"]),
+
   world_state: defineTable({
     weather: Weather,
     timeOfDay: v.number(),
