@@ -2,10 +2,7 @@
 
 ## Phase 1: Environment Setup & Core Canvas
 - [x] Task: Remove Excalibur and Install PixiJS 694a297
-- [ ] Task: Create `GameCanvas` PixiJS Component
-    - [ ] Write failing test for `GameCanvas` component rendering a PixiJS Application and tearing it down.
-    - [ ] Implement `GameCanvas` React component with `useEffect` lifecycle management.
-    - [ ] Verify tests pass and test coverage is >80%.
+- [x] Task: Create `GameCanvas` PixiJS Component 445636e
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Environment Setup & Core Canvas' (Protocol in workflow.md)
 
 ## Phase 2: Isometric Grid & Viewport Culling
