@@ -37,7 +37,7 @@
 1. - [x] Task: Write unit tests for world-state advancement logic using `TIME_SCALE`. cda25c6
 2. - [x] Task: Implement automatic `timeOfDay` increment and stochastic `weather` transitions. 9f34857
 3. - [x] Task: Final integration testing of the complete decision loop. ed146e7
-4. - [ ] Task: Refactor and verify test coverage (>80%).
+4. - [x] Task: Refactor and verify test coverage (>80%). 7fae67f
 
 ## Phase 5: Master Controls & Admin API
 1. - [ ] Task: Create `world:admin` functions for `manualTick`, `manualReflect`, and `resetAgentBrain`.
