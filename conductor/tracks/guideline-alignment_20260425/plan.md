@@ -13,8 +13,8 @@
 4.  - [x] Task: Write unit tests for the new AI decision parsing and agent migration logic. (b6084a2)
 5.  - [x] Task: Conductor - User Manual Verification 'Phase 2: AI Brain' (Protocol in workflow.md) (b6084a2)
 
-### Phase 3: Visual and Technical Polish (The Skin)
+### Phase 3: Visual and Technical Polish (The Skin) [checkpoint: d181b00]
 1.  - [x] Task: Map guideline hex codes to agent archetypes in `src/components/game/AgentSprite.ts`. (b6084a2)
 2.  - [x] Task: Update `normalizeAction` in `convex/functions/world.ts` to handle any new action mapping needs. (b6084a2)
-3.  - [~] Task: Run full test suite and verify coverage for migration and AI logic.
-4.  - [ ] Task: Conductor - User Manual Verification 'Phase 3: Visuals & Polish' (Protocol in workflow.md)
+3.  - [x] Task: Run full test suite and verify coverage for migration and AI logic. (d181b00)
+4.  - [x] Task: Conductor - User Manual Verification 'Phase 3: Visuals & Polish' (Protocol in workflow.md) (d181b00)
