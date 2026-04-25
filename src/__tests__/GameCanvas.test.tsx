@@ -131,7 +131,7 @@ vi.mock('excalibur', () => {
 // Mock IsometricGrid as a class
 vi.mock('../components/game/IsometricGrid', () => {
   return {
-    IsometricGrid: vi.fn().mockImplementation((_options: unknown) => {
+    IsometricGrid: vi.fn().mockImplementation(() => {
       const mockInstance = {
         getBoundingBox: vi.fn().mockImplementation(() => {
           return { left: 0, right: 100, top: 0, bottom: 100 }
@@ -163,7 +163,8 @@ vi.mock('../components/game/AgentSprite', () => ({
 import GameCanvas from '../components/game/GameCanvas'
 import * as excalibur from 'excalibur'
 
-const { actorInstances } = excalibur as unknown as { actorInstances: any[] }
+const { actorInstances } = excalibur as unknown as { actorInstances: unknown[] }
+
 
 describe('GameCanvas', () => {
   beforeEach(() => {

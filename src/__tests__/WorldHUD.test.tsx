@@ -12,10 +12,10 @@ test("WorldHUD renders correctly for different weather", () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mockUseQuery = useQuery as any;
   
-  // Sunny
+  // Sunny (10:30 = 630 mins)
   mockUseQuery.mockReturnValue({
     weather: "sunny",
-    timeOfDay: 10.5,
+    timeOfDay: 630,
     dayCount: 5,
   });
   
@@ -24,30 +24,30 @@ test("WorldHUD renders correctly for different weather", () => {
   expect(screen.getByText("10:30")).toBeDefined();
   expect(screen.getByText("Day 5")).toBeDefined();
 
-  // Cloudy
+  // Cloudy (14:45 = 885 mins)
   mockUseQuery.mockReturnValue({
     weather: "cloudy",
-    timeOfDay: 14.75,
+    timeOfDay: 885,
     dayCount: 5,
   });
   rerender(<WorldHUD />);
   expect(screen.getByText("cloudy")).toBeDefined();
   expect(screen.getByText("14:45")).toBeDefined();
 
-  // Rainy
+  // Rainy (20:06 = 1206 mins)
   mockUseQuery.mockReturnValue({
     weather: "rainy",
-    timeOfDay: 20.1,
+    timeOfDay: 1206,
     dayCount: 5,
   });
   rerender(<WorldHUD />);
   expect(screen.getByText("rainy")).toBeDefined();
   expect(screen.getByText("20:06")).toBeDefined();
 
-  // Stormy
+  // Stormy (02:30 = 150 mins)
   mockUseQuery.mockReturnValue({
     weather: "stormy",
-    timeOfDay: 2.5,
+    timeOfDay: 150,
     dayCount: 6,
   });
   rerender(<WorldHUD />);
@@ -57,7 +57,7 @@ test("WorldHUD renders correctly for different weather", () => {
   // Unknown weather (default icon fallback)
   mockUseQuery.mockReturnValue({
     weather: "unknown",
-    timeOfDay: 12,
+    timeOfDay: 720,
     dayCount: 1,
   });
   rerender(<WorldHUD />);
