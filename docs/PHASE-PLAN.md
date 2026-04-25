@@ -197,6 +197,14 @@
 - [ ] Update/add Vitest tests for new rendering layer
 - [ ] Remove all Excalibur imports and types from codebase
 
+#### Documentation Updates
+- [ ] Update `docs/ARCHITECTURE.md` — Replace Excalibur references with PixiJS (rendering layer, component descriptions)
+- [ ] Update `docs/ISOMETRIC.md` — Update rendering implementation details to reflect PixiJS APIs
+- [ ] Update `docs/SPEC.md` — Update tech stack and rendering references
+- [ ] Update `docs/PRD.md` — Update technology stack section
+- [ ] Update `docs/PHASE-PLAN.md` — Mark Phase 4 complete, update Phase 1 description to note historical Excalibur usage
+- [ ] Update `README.md` — Update tech stack, setup instructions, and any Excalibur mentions
+
 ### Phase 4 Checkpoints
 
 - [ ] PixiJS renders identical isometric grid to previous Excalibur version
