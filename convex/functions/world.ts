@@ -205,7 +205,27 @@ export const tick = action({
           agentId: agent._id,
         });
 
-        // 2.4 Movement Resolution
+        // 2.4 Reflection Logic (every ~24 simulated hours / 480 ticks)
+        const currentTicks = worldState?.totalTicks || 0;
+        const lastReflected = agent.lastReflectedTick || 0;
+        // Add random jitter between -20 and +20 ticks to avoid batch processing spikes
+        const jitter = Math.floor(Math.random() * 40) - 20;
+        
+        if (currentTicks - lastReflected > (480 + jitter)) {
+          // Trigger async reflection (non-blocking)
+          await ctx.runAction(api.functions.ai.reflect, {
+            agentId: agent._id,
+          });
+          
+          // Update last reflected tick immediately to avoid duplicate triggers
+          await ctx.runMutation(internal.functions.agents.updateIdentity, {
+            agentId: agent._id,
+            newTraits: [], 
+            lastReflectedTick: currentTicks,
+          });
+        }
+
+        // 2.5 Movement Resolution
         if (agent.targetX !== undefined && agent.targetY !== undefined) {
           const result = await ctx.runMutation(internal.functions.agents.resolveMovement, {
             agentId: agent._id,

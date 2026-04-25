@@ -336,6 +336,7 @@ export const updateIdentity = internalMutation({
   args: {
     agentId: v.id("agents"),
     newTraits: v.array(v.string()),
+    lastReflectedTick: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const agent = await ctx.db.get(args.agentId);
@@ -344,10 +345,14 @@ export const updateIdentity = internalMutation({
     // Merge traits and keep unique ones, limited to 5
     const combinedTraits = Array.from(new Set([...agent.coreTraits, ...args.newTraits])).slice(0, 5);
 
-    await ctx.db.patch(args.agentId, {
+    const patch: any = {
       coreTraits: combinedTraits,
-      lastReflectedTick: 1, // Will be updated by world state logic later
-    });
+    };
+    if (args.lastReflectedTick !== undefined) {
+      patch.lastReflectedTick = args.lastReflectedTick;
+    }
+
+    await ctx.db.patch(args.agentId, patch);
   },
 });
 
