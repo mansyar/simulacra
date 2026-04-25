@@ -1,17 +1,37 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render } from '@testing-library/react'
+import { render, unmountComponentAtNode, waitFor } from '@testing-library/react'
+import GameCanvas from '../components/game/GameCanvas'
+
+// Mock PixiJS
+const mockDestroy = vi.fn()
+const mockInit = vi.fn().mockResolvedValue(undefined)
+const mockApp = {
+  init: mockInit,
+  destroy: mockDestroy,
+  canvas: document.createElement('canvas'),
+  stage: { addChild: vi.fn() },
+  ticker: { add: vi.fn(), remove: vi.fn(), stop: vi.fn(), start: vi.fn() },
+}
+
+vi.mock('pixi.js', () => ({
+  Application: vi.fn().mockImplementation(() => mockApp),
+  Container: vi.fn().mockImplementation(() => ({
+    addChild: vi.fn(),
+    removeChild: vi.fn(),
+  })),
+  Graphics: vi.fn().mockImplementation(() => ({
+    rect: vi.fn().mockReturnThis(),
+    fill: vi.fn().mockReturnThis(),
+    clear: vi.fn().mockReturnThis(),
+  })),
+  Text: vi.fn().mockImplementation(() => ({
+    style: {},
+  })),
+}))
 
 // Mock Convex
 vi.mock('convex/react', () => ({
-  useQuery: vi.fn().mockImplementation((fn) => {
-    if (fn === 'agents:getAll') return [
-      { _id: 'agent_1', name: 'Builder', gridX: 10, gridY: 10, archetype: 'builder' },
-    ];
-    if (fn === 'world:getPois') return [
-      { _id: 'poi_1', name: 'Library', gridX: 32, gridY: 32, type: 'library' },
-    ];
-    return [];
-  }),
+  useQuery: vi.fn().mockReturnValue([]),
   useMutation: vi.fn().mockReturnValue(vi.fn()),
 }))
 
@@ -29,215 +49,43 @@ vi.mock('../../convex/_generated/api', () => ({
   },
 }))
 
-// Mock Excalibur dependencies with proper class constructors
-vi.mock('excalibur', () => {
-  class MockEngine {
-    addScene = vi.fn()
-    goToScene = vi.fn()
-    start = vi.fn()
-    stop = vi.fn()
-    input = {
-      pointers: {
-        primary: {
-          lastWorldPos: { x: 0, y: 0 },
-        },
-      },
-    }
-    camera = { pos: { x: 0, y: 0 } }
-    screenToWorld = vi.fn().mockImplementation((vec) => vec)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    constructor(_options?: unknown) {}
-  }
-  
-  class MockScene {
-    add = vi.fn()
-    remove = vi.fn()
-    camera = { pos: { x: 0, y: 0 } }
-    world = {
-      entityManager: {
-        getById: vi.fn().mockImplementation(() => ({ id: 'test-agent' })),
-      },
-    }
-  }
-  
-  const actorInstances: unknown[] = []
-  class MockActor {
-    graphics: Record<string, unknown> = { 
-      onPostDraw: vi.fn(), 
-      visible: true, 
-      show: vi.fn(), 
-      hide: vi.fn(),
-      add: vi.fn(),
-      current: [{ graphic: {} }]
-    }
-    onPreUpdate = vi.fn()
-    id = 'test-actor'
-    pos = { x: 0, y: 0 }
-    z = 0
-    constructor() {
-      actorInstances.push(this)
-    }
-    addChild() {}
-  }
-
-  class MockCircle {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    constructor(_options?: unknown) {}
-  }
-
-  class MockRectangle {
-    rotation = 0
-    width = 0
-    height = 0
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    constructor(_options?: unknown) {}
-  }
-  
-  class MockLabel {
-    font = { size: 0, textAlign: '', bold: false }
-    graphics: Record<string, unknown> = { 
-      visible: true, 
-      onPostDraw: vi.fn(), 
-      show: vi.fn(), 
-      hide: vi.fn(),
-      add: vi.fn()
-    }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    constructor(_options?: unknown) {}
-  }
-  
-  return {
-    Engine: MockEngine,
-    Scene: MockScene,
-    Actor: MockActor,
-    Circle: MockCircle,
-    Rectangle: MockRectangle,
-    Label: MockLabel,
-    TextAlign: { Center: 'center' },
-    actorInstances,
-    Color: {
-      fromHex: vi.fn().mockReturnValue({ clone: () => ({}) }),
-    },
-    Vector: vi.fn().mockImplementation((x, y) => ({ x, y })),
-    BoundingBox: vi.fn().mockImplementation(() => ({
-      left: 0,
-      right: 100,
-      top: 0,
-      bottom: 100,
-    })),
-  }
-})
-
-// Mock IsometricGrid as a class
-vi.mock('../components/game/IsometricGrid', () => {
-  return {
-    IsometricGrid: vi.fn().mockImplementation(() => {
-      const mockInstance = {
-        getBoundingBox: vi.fn().mockImplementation(() => {
-          return { left: 0, right: 100, top: 0, bottom: 100 }
-        }),
-        render: vi.fn(),
-        setMousePosition: vi.fn(),
-      }
-      return mockInstance
-    }),
-  }
-})
-
-// Mock CameraController
-vi.mock('../components/game/Camera', () => ({
-  CameraController: vi.fn().mockImplementation(() => ({
-    update: vi.fn(),
-  })),
-}))
-
-// Mock AgentSprite
-vi.mock('../components/game/AgentSprite', () => ({
-  AgentSprite: vi.fn().mockImplementation(() => ({
-    updateAgentData: vi.fn(),
-    id: 'test-agent',
-  })),
-}))
-
-// Import GameCanvas after mocking
-import GameCanvas from '../components/game/GameCanvas'
-import * as excalibur from 'excalibur'
-
-const { actorInstances } = excalibur as unknown as { actorInstances: unknown[] }
-
-
-describe('GameCanvas', () => {
+describe('GameCanvas (PixiJS)', () => {
   beforeEach(() => {
-    // Mock getBoundingClientRect
-    HTMLElement.prototype.getBoundingClientRect = vi.fn().mockReturnValue({
-      width: 800,
-      height: 600,
-      top: 0,
-      left: 0,
-      bottom: 600,
-      right: 800,
-    })
-  })
-
-  afterEach(() => {
     vi.clearAllMocks()
   })
 
-  it('should render canvas element', () => {
-    render(<GameCanvas />)
-    const canvas = document.querySelector('canvas')
-    expect(canvas).toBeTruthy()
+  it('should initialize PixiJS Application and destroy it on unmount', async () => {
+    const { unmount } = render(<GameCanvas />)
+    
+    // Check if Application constructor was called
+    const { Application } = await import('pixi.js')
+    expect(Application).toHaveBeenCalled()
+    
+    // Check if init was called
+    expect(mockInit).toHaveBeenCalled()
+    
+    // Unmount and check destroy
+    unmount()
+    expect(mockDestroy).toHaveBeenCalledWith(true, { children: true, texture: true, baseTexture: true })
   })
 
-  it('should render container div', () => {
+  it('should handle visibility change', async () => {
     render(<GameCanvas />)
-    const canvas = document.querySelector('canvas')
-    const container = canvas?.parentElement
-    expect(container).toBeTruthy()
-    expect(container?.className).toContain('w-full')
-    expect(container?.className).toContain('h-full')
-  })
+    
+    const mockTickerStop = vi.spyOn(mockApp.ticker, 'stop')
+    const mockTickerStart = vi.spyOn(mockApp.ticker, 'start')
+    
+    // Wait for init to complete
+    await waitFor(() => expect(mockInit).toHaveBeenCalled())
 
-  it('should have canvas with correct className', () => {
-    render(<GameCanvas />)
-    const canvas = document.querySelector('canvas')
-    expect(canvas?.className).toContain('block')
-  })
-
-  it('should verify IsometricGrid mock', () => {
-    expect(true).toBe(true)
-  })
-
-  it('should call graphics.onPostDraw when actor is rendered', () => {
-    render(<GameCanvas />)
-    const actor = actorInstances[0] as { graphics: { onPostDraw: (ctx: unknown) => void } }
-    expect(actor).toBeTruthy()
-    const mockContext = {} as unknown
-    actor.graphics.onPostDraw(mockContext)
-  })
-
-  it('should call onPreUpdate when actor updates', () => {
-    render(<GameCanvas />)
-    const actor = actorInstances[0] as { onPreUpdate: (engine: unknown, elapsed: number) => void }
-    expect(actor).toBeTruthy()
-    const mockEngine = {} as unknown
-    const elapsed = 16
-    actor.onPreUpdate(mockEngine, elapsed)
-  })
-
-  it('should trigger mousemove event', () => {
-    render(<GameCanvas />)
-    const canvas = document.querySelector('canvas')
-    expect(canvas).toBeTruthy()
-    const mouseEvent = new MouseEvent('mousemove', { clientX: 100, clientY: 200 })
-    canvas?.dispatchEvent(mouseEvent)
-  })
-
-  it('should trigger visibility change event', () => {
-    render(<GameCanvas />)
+    // Simulate hidden
     Object.defineProperty(document, 'hidden', { value: true, configurable: true })
     document.dispatchEvent(new Event('visibilitychange'))
+    expect(mockTickerStop).toHaveBeenCalled()
+    
+    // Simulate visible
     Object.defineProperty(document, 'hidden', { value: false, configurable: true })
     document.dispatchEvent(new Event('visibilitychange'))
+    expect(mockTickerStart).toHaveBeenCalled()
   })
 })
