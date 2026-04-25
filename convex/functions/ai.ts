@@ -95,7 +95,25 @@ export const decision = action({
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
-        { responseFormat: { type: "json_object" } }
+        {
+          responseFormat: {
+            type: "json_schema",
+            json_schema: {
+              name: "agent-decision",
+              schema: {
+                type: "object",
+                properties: {
+                  thought: { type: "string" },
+                  action: { type: "string", enum: ["idle", "walking", "eating", "sleeping", "talking", "working", "exploring"] },
+                  target: { type: "string" },
+                  speech: { type: "string" },
+                  confidence: { type: "number" },
+                },
+                required: ["thought", "action", "target", "speech", "confidence"],
+              },
+            },
+          },
+        }
       );
 
       try {
@@ -248,7 +266,33 @@ export const reflect = action({
           { role: "system", content: REFLECTION_SYSTEM_PROMPT },
           { role: "user", content: userPrompt },
         ],
-        { responseFormat: { type: "json_object" } }
+        {
+          responseFormat: {
+            type: "json_schema",
+            json_schema: {
+              name: "agent-reflection",
+              schema: {
+                type: "object",
+                properties: {
+                  memories: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        content: { type: "string" },
+                        importance: { type: "number" },
+                      },
+                      required: ["content", "importance"],
+                    },
+                  },
+                  evolutionTraits: { type: "array", items: { type: "string" } },
+                  thought: { type: "string" },
+                },
+                required: ["memories", "evolutionTraits", "thought"],
+              },
+            },
+          },
+        }
       );
 
       const reflection = typeof content === "string" ? JSON.parse(content) : content;

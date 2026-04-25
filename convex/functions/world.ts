@@ -151,12 +151,13 @@ export const advanceWorldState = internalMutation({
     const state = await ctx.db.query("world_state").first();
     if (!state) return;
 
-    // 1. Advance Time (Assume 1 tick = 50 units (~30 mins))
-    let newTime = (state.timeOfDay || 0) + 50;
+    // 1. Advance Time (Assume 1 tick = 30 simulated minutes)
+    // 30 mins * 48 ticks = 1440 mins (24 hours)
+    let newTime = (state.timeOfDay || 0) + 30;
     let newDayCount = state.dayCount || 1;
 
-    if (newTime >= 2400) {
-      newTime = newTime % 2400;
+    if (newTime >= 1440) {
+      newTime = newTime % 1440;
       newDayCount += 1;
     }
 

@@ -14,10 +14,10 @@ export default function WorldHUD() {
     stormy: <Zap className="w-4 h-4 text-purple-400" />,
   };
 
-  const formatTime = (time: number) => {
-    const hour = Math.floor(time);
-    const minute = Math.floor((time % 1) * 60);
-    return `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
+  const formatTime = (totalMinutes: number) => {
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = Math.floor(totalMinutes % 60);
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
   };
 
   return (

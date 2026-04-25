@@ -10,19 +10,17 @@ test("advanceWorldState increments time and wraps day", async () => {
   
   // 1. Initial state
   await t.mutation(api.functions.world.updateState, {
-    timeOfDay: 2390,
+    timeOfDay: 1420,
     dayCount: 1,
   });
 
-  // 2. Advance time (Assume 1 tick = 30 minutes in simulated time, SCALE = 10x real time)
-  // Logic will be in an internal mutation
+  // 2. Advance time (Assume 1 tick = 30 minutes)
   await t.mutation(internal.functions.world.advanceWorldState as any, {});
 
   const state = await t.query(api.functions.world.getState, {});
   
-  // Should wrap to next day if time exceeds 2400
-  // (Specific logic depends on implementation)
-  expect(state?.timeOfDay).toBeLessThan(2300);
+  // Should wrap to next day if time exceeds 1440
+  expect(state?.timeOfDay).toBe(10); // 1420 + 30 = 1450, 1450 % 1440 = 10
   expect(state?.dayCount).toBe(2);
 });
 

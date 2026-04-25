@@ -17,12 +17,27 @@ export interface AiConfig {
   model: string;
 }
 
+/**
+ * Pick a random model from a comma-separated pool, or fall back to a single model.
+ * Set OPENAI_MODEL_POOL="gemma-4-27b-it,gemma-4-12b-it" to rotate across models.
+ */
+function pickModel(pool: string | undefined, single: string | undefined, fallback: string): string {
+  if (pool) {
+    const models = pool.split(",").map((m) => m.trim()).filter(Boolean);
+    if (models.length > 0) {
+      return models[Math.floor(Math.random() * models.length)];
+    }
+  }
+  return single || fallback;
+}
+
 export async function getAiConfig(ctx: ActionCtx, modelOverride?: string): Promise<AiConfig> {
   const config = await ctx.runQuery(internal.functions.config.getInternal);
   return {
     apiKey: process.env.OPENAI_API_KEY,
     baseUrl: config?.llmBaseUrl || process.env.OPENAI_API_BASE_URL || "https://api.openai.com/v1",
-    model: modelOverride || config?.llmModel || process.env.OPENAI_MODEL || "gpt-3.5-turbo",
+    model: modelOverride
+      || pickModel(process.env.OPENAI_MODEL_POOL, config?.llmModel || process.env.OPENAI_MODEL, "gpt-3.5-turbo"),
   };
 }
 
@@ -33,7 +48,7 @@ export async function getAiConfig(ctx: ActionCtx, modelOverride?: string): Promi
 export async function chatCompletion(
   config: AiConfig,
   messages: { role: string; content: string }[],
-  options?: { responseFormat?: { type: string } }
+  options?: { responseFormat?: any }
 ): Promise<string> {
   const { apiKey, baseUrl, model } = config;
   if (!apiKey) throw new Error("No API key configured");
@@ -60,8 +75,17 @@ export async function chatCompletion(
     if (systemParts.length > 0) {
       body.systemInstruction = { parts: systemParts };
     }
-    if (options?.responseFormat?.type === "json_object") {
-      body.generationConfig = { responseMimeType: "application/json" };
+    if (options?.responseFormat) {
+      const fmt = options.responseFormat;
+      if (fmt.type === "json_schema" && fmt.json_schema?.schema) {
+        // Map OpenAI json_schema to Gemini's responseSchema
+        body.generationConfig = {
+          responseMimeType: "application/json",
+          responseSchema: fmt.json_schema.schema,
+        };
+      } else if (fmt.type === "json_object") {
+        body.generationConfig = { responseMimeType: "application/json" };
+      }
     }
 
     const response = await fetchWithRetry(url, {
@@ -109,7 +133,11 @@ export async function getEmbeddingConfig(ctx: ActionCtx): Promise<AiConfig> {
   return {
     apiKey: process.env.EMBEDDING_API_KEY || process.env.OPENAI_API_KEY,
     baseUrl: process.env.EMBEDDING_API_BASE_URL || config?.llmBaseUrl || process.env.OPENAI_API_BASE_URL || "https://api.openai.com/v1",
-    model: process.env.EMBEDDING_MODEL || process.env.OPENAI_EMBEDDING_MODEL || "text-embedding-3-small",
+    model: pickModel(
+      process.env.EMBEDDING_MODEL_POOL, 
+      process.env.EMBEDDING_MODEL || process.env.OPENAI_EMBEDDING_MODEL, 
+      "text-embedding-3-small"
+    ),
   };
 }
 
@@ -137,6 +165,102 @@ export async function fetchWithRetry(
   }
   throw lastError || new Error("Max retries exceeded");
 }
+
+/**
+ * Action: List available models from the configured AI provider.
+ * Supports both native Gemini API and OpenAI-compatible endpoints.
+ */
+export const listModels = action({
+  args: {
+    filter: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const { apiKey, baseUrl } = await getAiConfig(ctx);
+
+    if (!apiKey) {
+      return { models: [], error: "No API key configured" };
+    }
+
+    const isGoogleNative = baseUrl.includes("googleapis.com") && !baseUrl.includes("/openai");
+
+    try {
+      if (isGoogleNative) {
+        // --- Native Gemini ListModels API ---
+        const version = baseUrl.includes("v1beta") ? "v1beta" : "v1";
+        const url = `https://generativelanguage.googleapis.com/${version}/models?key=${apiKey}&pageSize=100`;
+
+        const response = await fetch(url, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Gemini ListModels error (${response.status}): ${errorText}`);
+        }
+
+        const data = await response.json();
+        const models = (data.models || [])
+          .map((m: any) => ({
+            id: m.name?.replace("models/", "") || m.name,
+            name: m.displayName || m.name,
+            methods: m.supportedGenerationMethods || [],
+          }))
+          .filter((m: any) => {
+            // If filter provided, match against id or name
+            if (args.filter) {
+              const f = args.filter.toLowerCase();
+              return m.id.toLowerCase().includes(f) || m.name.toLowerCase().includes(f);
+            }
+            return true;
+          });
+
+        return {
+          provider: "google-native",
+          models,
+          chatModels: models.filter((m: any) => m.methods.includes("generateContent")),
+          embedModels: models.filter((m: any) => m.methods.includes("embedContent")),
+        };
+      } else {
+        // --- OpenAI-compatible /models endpoint ---
+        const url = `${baseUrl.replace(/\/$/, "")}/models`;
+
+        const response = await fetch(url, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Models API error (${response.status}): ${errorText}`);
+        }
+
+        const data = await response.json();
+        const models = (data.data || data.models || [])
+          .map((m: any) => ({
+            id: m.id || m.name,
+            name: m.id || m.name,
+            owned_by: m.owned_by || "unknown",
+          }))
+          .filter((m: any) => {
+            if (args.filter) {
+              const f = args.filter.toLowerCase();
+              return m.id.toLowerCase().includes(f) || m.name.toLowerCase().includes(f);
+            }
+            return true;
+          });
+
+        return { provider: "openai-compatible", models };
+      }
+    } catch (error) {
+      console.error("[AI] ListModels error:", error);
+      return { models: [], error: String(error) };
+    }
+  },
+});
 
 export const chat = action({
   args: {
@@ -180,7 +304,7 @@ export const embed = action({
 
       if (isGoogle) {
         const version = baseUrl.includes("v1beta") ? "v1beta" : "v1";
-        url = `https://generativelanguage.googleapis.com/${version}/${model}:embedContent?key=${apiKey}`;
+        url = `https://generativelanguage.googleapis.com/${version}/models/${model}:embedContent?key=${apiKey}`;
         body = { content: { parts: [{ text: args.text }] }, outputDimensionality: 768 };
       } else {
         url = `${baseUrl.replace(/\/$/, "")}/embeddings`;
