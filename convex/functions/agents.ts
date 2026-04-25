@@ -228,7 +228,7 @@ export const updateNeeds = internalMutation({
 });
 
 /**
- * Internal Mutation: Update agent action
+ * Internal Mutation: Update agent action and target
  */
 export const updateAction = internalMutation({
   args: {
@@ -239,19 +239,54 @@ export const updateAction = internalMutation({
       v.literal("eating"),
       v.literal("sleeping"),
       v.literal("talking"),
+      v.literal("listening"),
       v.literal("working"),
       v.literal("exploring")
     ),
     targetX: v.optional(v.number()),
     targetY: v.optional(v.number()),
+    interactionPartnerId: v.optional(v.id("agents")),
+    lastThought: v.optional(v.string()),
+    speech: v.optional(v.string()),
+    lastSpeechAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.agentId, {
-      currentAction: args.action,
-      targetX: args.targetX,
-      targetY: args.targetY,
+    const { agentId, action, ...updates } = args;
+    await ctx.db.patch(agentId, {
+      currentAction: action,
+      ...updates,
       lastActiveAt: Date.now(),
     });
+  },
+});
+
+/**
+ * Internal Mutation: Record passive perception (sighting nearby agents)
+ */
+export const recordPassivePerception = internalMutation({
+  args: {
+    agentId: v.id("agents"),
+  },
+  handler: async (ctx, args) => {
+    const agent = await ctx.db.get(args.agentId);
+    if (!agent) return;
+
+    const allAgents = await ctx.db.query("agents").collect();
+    const nearbyAgents = allAgents.filter(a => 
+      a._id !== agent._id && 
+      Math.sqrt(Math.pow(a.gridX - agent.gridX, 2) + Math.pow(a.gridY - agent.gridY, 2)) < 5
+    );
+
+    for (const nearby of nearbyAgents) {
+      // Add a sensory event to the buffer
+      await ctx.db.insert("events", {
+        agentId: agent._id,
+        type: "movement",
+        description: `I saw ${nearby.name} nearby.`,
+        gridX: agent.gridX,
+        gridY: agent.gridY,
+      });
+    }
   },
 });
 

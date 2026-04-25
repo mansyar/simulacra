@@ -1,6 +1,7 @@
 import { query, mutation, action } from "../_generated/server";
 import { v } from "convex/values";
 import { api, internal } from "../_generated/api";
+import type { Id } from "../_generated/dataModel";
 
 /**
  * Query: Get the current world state
@@ -174,12 +175,27 @@ export const tick = action({
       const batch = agents.slice(i, i + BATCH_SIZE);
       
       await Promise.all(batch.map(async (agent) => {
-        // 2.1 Update needs based on current action
+        // 2.1 Safety Layer: Check for critical needs (Survival overrides)
+        if (agent.hunger > 90 || agent.energy < 10) {
+          const survivalAction = agent.hunger > 90 ? "eating" : "sleeping";
+          await ctx.runMutation(internal.functions.agents.updateAction, {
+            agentId: agent._id,
+            action: survivalAction,
+          });
+          return;
+        }
+
+        // 2.2 Social Handshaking: Skip if listening (someone is talking to us)
+        if (agent.currentAction === "listening") {
+          return;
+        }
+
+        // 2.3 Update needs based on current action
         await ctx.runMutation(internal.functions.agents.updateNeeds, {
           agentId: agent._id,
         });
 
-        // 2.2 Movement Resolution
+        // 2.4 Movement Resolution
         if (agent.targetX !== undefined && agent.targetY !== undefined) {
           const result = await ctx.runMutation(internal.functions.agents.resolveMovement, {
             agentId: agent._id,
@@ -197,7 +213,12 @@ export const tick = action({
           }
         }
 
-        // 2.3 Get nearby agents for decision making
+        // 2.5 Passive Perception: Record nearby sightings
+        await ctx.runMutation(internal.functions.agents.recordPassivePerception, {
+          agentId: agent._id,
+        });
+
+        // 2.6 Get nearby agents for decision making
         const nearbyAgents = agents
           .filter((a: any) => a._id !== agent._id)
           .filter((a: any) => {
@@ -218,9 +239,7 @@ export const tick = action({
         const decision = await ctx.runAction(api.functions.ai.decision, {
           agentState: {
             name: agent.name,
-            hunger: agent.hunger, // Values are already updated via updateNeeds in DB, but agent object is stale. 
-            // Better to use current agent values or fetch again.
-            // For now, let's use what we have, it's close enough for one tick.
+            hunger: agent.hunger, 
             energy: agent.energy,
             social: agent.social,
             model: agent.model,
@@ -232,10 +251,26 @@ export const tick = action({
         // Normalize action to ensure it matches schema literals
         const normalizedAction = normalizeAction(decision.action);
 
+        // 2.7 Social Handshaking: Handle Talking/Listening states
+        let targetAgentId: Id<"agents"> | undefined;
+        if (normalizedAction === "talking") {
+          const targetAgent = agents.find((a: any) => a.name === decision.target);
+          if (targetAgent && targetAgent._id !== agent._id) {
+            targetAgentId = targetAgent._id;
+            
+            // Set partner to listening
+            await ctx.runMutation(internal.functions.agents.updateAction, {
+              agentId: targetAgentId,
+              action: "listening",
+              interactionPartnerId: agent._id,
+            });
+          }
+        }
+
         // Update action
         let targetX: number | undefined;
         let targetY: number | undefined;
-        if (decision.target && decision.target !== "none") {
+        if (decision.target && decision.target !== "none" && normalizedAction !== "talking") {
           const coords = decision.target.split(",");
           if (coords.length === 2) {
             const x = parseFloat(coords[0]);
@@ -259,6 +294,10 @@ export const tick = action({
           action: normalizedAction,
           targetX,
           targetY,
+          interactionPartnerId: targetAgentId,
+          lastThought: decision.thought,
+          speech: decision.speech,
+          lastSpeechAt: decision.speech ? Date.now() : undefined,
         });
 
         // Add event to sensory buffer with thought and speech
