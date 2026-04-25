@@ -42,5 +42,5 @@
 
 ## Phase 5: Master Controls & Admin API
 1. - [x] Task: Create `world:admin` functions for `manualTick`, `manualReflect`, and `resetAgentBrain`. 5919ddd
-2. - [~] Task: Implement TanStack Start Server Functions (`createServerFn`) to bridge these to the UI.
+2. - [x] Task: Implement TanStack Start Server Functions (`createServerFn`) to bridge these to the UI. 13f83c4
 3. - [ ] Task: Conductor - User Manual Verification 'Phase 5: God Mode API' (Protocol in workflow.md)
