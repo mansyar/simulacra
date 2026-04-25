@@ -107,26 +107,37 @@ export const embed = action({
     if (!apiKey) return new Array(768).fill(0).map(() => Math.random());
 
     try {
-      const isGoogle = baseUrl.includes("googleapis.com");
+      const isGoogle = baseUrl.includes("googleapis.com") && !baseUrl.includes("/openai");
       let url: string;
       let body: any;
+      let headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
 
       if (isGoogle) {
         const version = baseUrl.includes("v1beta") ? "v1beta" : "v1";
-        url = `https://generativelanguage.googleapis.com/${version}/models/${model}:embedContent?key=${apiKey}`;
+        url = `https://generativelanguage.googleapis.com/${version}/${model}:embedContent?key=${apiKey}`;
         body = { content: { parts: [{ text: args.text }] }, outputDimensionality: 768 };
       } else {
         url = `${baseUrl.replace(/\/$/, "")}/embeddings`;
-        body = { model, input: args.text, dimensions: 768 };
+        body = { model, input: args.text };
+        if (!baseUrl.includes("googleapis.com")) {
+          body.dimensions = 768;
+        }
+        headers["Authorization"] = `Bearer ${apiKey}`;
       }
 
       const response = await fetchWithRetry(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: headers,
         body: JSON.stringify(body),
       });
 
-      if (!response.ok) throw new Error(`AI API error: ${await response.text()}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[AI] Embed API Error: ${response.status} - ${errorText} | URL: ${url}`);
+        throw new Error(`AI API error (${response.status}): ${errorText}`);
+      }
       const data = await response.json();
       if (data.embedding) return data.embedding.values;
       if (data.data && data.data[0] && data.data[0].embedding) return data.data[0].embedding;
