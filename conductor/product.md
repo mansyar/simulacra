@@ -28,13 +28,14 @@
 - **Coordinate System**: Iso coordinates (x, y) ↔ Screen coordinates conversion
 - **Camera**: Centered on world, zoomable (0.5x - 3x), pan via drag
 - **Background**: Procedural sky gradient (day/night cycle optional)
+- **Environmental Effects**: Stochastic weather transitions (Sunny, Cloudy, Rainy, Stormy) affecting agent movement speed.
 
 ### 2. The Agent System
-- **Count**: 6 agents (optimized for free tier AI limits)
+- **Count**: 10 agents (optimized for free tier AI limits)
 - **Visuals**: Sprite-based, 16×16 base size, 4-frame idle animation
 - **Name Tags**: Floating above agent, pixel font
 - **Movement**: Smooth interpolation between state updates (lerp)
-- **Archetypes**: Builder, Socialite, Philosopher, Explorer, Nurturer (10 agents total)
+- **Archetypes**: Builder, Socialite, Philosopher, Explorer, Nurturer (10 agents total). Each has unique base prompts and speech patterns.
 
 ### 3. The AI Architecture
 - **Heartbeat**: Convex Cron every 180 seconds (3 minutes, configurable via `WORLD_TICK_INTERVAL`)
@@ -44,7 +45,7 @@
   2. Semantic Memory: Long-term facts (Convex Vector Index)
   3. Reflection: Daily summary → Core Traits
 - **Decision Logic**:
-  - Deterministic: Hunger → Food, Sleep → Bed (code-based)
+  - Deterministic: Hunger → Food, Sleep → Bed (Safety Layer overrides)
   - Generative: Social interactions (LLM-based)
 - **Decision Schema**:
   - `thought`: Internal reasoning
@@ -58,12 +59,12 @@
 | Role | Permissions |
 |------|-------------|
 | **Observer** | Watch world, click agents to view details |
-| **Master** | Weather control, spawn items, force events, world restart |
+| **Master** | Manual ticks, Manual reflection, Agent brain resets, Weather control |
 
 ### 5. Persistence
 - World state persists indefinitely
 - Master key required for world restart (password-protected)
-- All agent memories persist across sessions
+- All agent memories and relationships persist across sessions
 
 ---
 
@@ -94,6 +95,7 @@
 - **Palette**: Earthy tones (forest green, warm brown, sky blue)
 - **Font**: Pixel-style (VT323 or similar)
 - **Animations**: Subtle bounce on agent idle, smooth pan/zoom
+- **Feedback**: Speech bubbles with backgrounds and action emojis.
 
 ---
 
@@ -125,24 +127,25 @@
 - Placeholder agents render on grid
 - Agents move smoothly (interpolated)
 
-### Phase 2 - The Heart [COMPLETE]
+### Phase 2 - The Heart [COMPLETE: 2026-04-25]
 - Convex schema deployed with `agents` and `world_state` tables
 - Real-time sync functional via `useQuery`
 - Agent positions and needs persist to database
 - World state management (Weather, Time, Day count) implemented
 - Integrated WorldHUD for real-time state display
 
-### Phase 3 - The Brain [COMPLETE]
+### Phase 3 - The Brain [COMPLETE: 2026-04-25]
 - Provider-agnostic LLM integration via Convex Actions
 - Vector index configured for memory storage
 - Agents make decisions based on memory
 - Sensory buffer stores recent events
 
-### Phase 4 - The Social
+### Phase 4 - The Social [COMPLETE: 2026-04-25]
 - Proximity detection (Euclidean distance)
 - Chat interactions trigger when agents are near
 - Relationship tracking (likes/dislikes)
 - Thought stream displays agent thoughts
+- Cognitive Loop: Reflection and Memory RAG context.
 
 ### Phase 5 - The Polish
 - Master panel with password protection

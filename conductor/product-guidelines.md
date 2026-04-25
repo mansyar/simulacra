@@ -61,8 +61,8 @@ All LLM responses must follow this JSON structure:
 ```json
 {
   "thought": "Internal monologue describing reasoning",
-  "action": "idle | walk_to | talk_to | work | explore | eat | sleep",
-  "target": "Target agent ID or location",
+  "action": "idle | walking | eating | sleeping | talking | listening | working | exploring",
+  "target": "Target name or coordinates 'x,y' or 'none'",
   "speech": "What the agent says (if talking)",
   "confidence": 0.0 - 1.0
 }

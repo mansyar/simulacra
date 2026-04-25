@@ -100,18 +100,21 @@ simulacra/
 │   │   │   ├── GameCanvas.tsx      # Excalibur game canvas
 │   │   │   ├── IsometricGrid.ts   # 64x64 grid renderer
 │   │   │   ├── AgentSprite.ts     # Agent visual component
+│   │   │   ├── POISprite.ts       # Fixed location component
 │   │   │   └── Camera.ts          # Pan/zoom controller
 │   │   ├── ui/
 │   │   │   ├── Header.tsx          # Weather + Master toggle
 │   │   │   ├── ThoughtStream.tsx  # AI thought sidebar
-│   │   │   ├── MasterPanel.tsx    # God-mode controls
+│   │   │   ├── AdminPanel.tsx     # God-mode controls
 │   │   │   └── AgentDetail.tsx    # Agent overlay
 │   │   └── index.ts
 │   ├── convex/
-│   │   ├── schema.ts               # Convex table definitions
+│   │   ├── admin.ts               # God-mode triggers
+│   │   ├── ai_helpers.ts          # Core LLM/Embedding logic
+│   │   ├── schema.ts              # Convex table definitions
 │   │   ├── agents.ts              # Agent CRUD operations
 │   │   ├── world.ts               # World tick logic
-│   │   ├── ai.ts                  # LLM integration
+│   │   ├── ai.ts                  # High-level agent brain logic
 │   │   └── memories.ts            # Memory system
 │   ├── lib/
 │   │   ├── isometric.ts           # Iso coords conversion
