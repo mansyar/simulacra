@@ -1,7 +1,7 @@
 # Implementation Plan: Guideline Alignment and Archetype Migration
 
 ### Phase 1: Documentation and Schema (The Foundation)
-1.  - [ ] Task: Update `conductor/product-guidelines.md` sleep mode section to match `convex/functions/world.ts` logic.
+1.  - [x] Task: Update `conductor/product-guidelines.md` sleep mode section to match `convex/functions/world.ts` logic. (067df7c)
 2.  - [ ] Task: Update `convex/schema.ts` to restrict `AgentArchetype` to the 5 primary types.
 3.  - [ ] Task: Write migration test for existing agents with deprecated archetypes.
 4.  - [ ] Task: Conductor - User Manual Verification 'Phase 1: Foundation' (Protocol in workflow.md)
