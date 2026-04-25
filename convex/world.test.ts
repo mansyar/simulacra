@@ -44,9 +44,10 @@ test("world tick updates agents needs and triggers decisions", async () => {
   expect(agent?.hunger).toBeGreaterThan(50);
   expect(agent?.energy).toBeLessThan(50);
 
-  // Check that events were created with the new format
+  // Check that events were recorded (could be multiple due to perception + decision)
   const events = await t.query(api.functions.memory.getEvents, { agentId });
   expect(events.length).toBeGreaterThan(0);
-  expect(events[0].description).toContain("Thought:");
-  expect(events[0].description).toContain("Action:");
-});
+
+  const hasDecision = events.some(e => e.description.includes("Thought:") && e.description.includes("Action:"));
+  expect(hasDecision).toBe(true);
+  });

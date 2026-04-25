@@ -14,7 +14,7 @@
 3. - [x] Task: Implement 'Safety Layer' with Narrative Survival and Social Handshaking (Talking/Listening states). 2ba23ea
 4. - [x] Task: Implement Passive Perception logic to record proximity sightings in the sensory buffer. 2ba23ea
 5. - [x] Task: Implement movement advance logic with weather multipliers and "Arrival" events. 2ba23ea
-6. - [ ] Task: Refactor and verify test coverage (>80%).
+6. - [~] Task: Refactor and verify test coverage (>80%).
 
 ## Phase 1.1: POI & Feedback UI
 1. - [ ] Task: Create `POISprite.ts` to render fixed locations.
