@@ -10,6 +10,8 @@ import { IsometricGrid } from './IsometricGrid'
 import { CameraController } from './Camera'
 import { AgentSprite } from './AgentSprite'
 import type { AgentData } from './AgentSprite'
+import { POISprite } from './POISprite'
+import type { POIData } from './POISprite'
 import { screenToGrid } from '../../lib/isometric'
 
 export default function GameCanvas() {
@@ -20,11 +22,46 @@ export default function GameCanvas() {
   const gridRef = useRef<IsometricGrid | null>(null)
   const [isEngineReady, setIsEngineReady] = useState(false)
   const agentsMapRef = useRef<Map<string, AgentSprite>>(new Map())
+  const poisMapRef = useRef<Map<string, POISprite>>(new Map())
   const gridActorRef = useRef<Actor | null>(null)
   const isVisibleRef = useRef(true)
 
   const agentsData = useQuery(api.functions.agents.getAll)
+  const poisData = useQuery(api.functions.world.getPois)
   const updatePosition = useMutation(api.functions.agents.updatePosition)
+
+  // Sync POIs from database
+  useEffect(() => {
+    if (!isEngineReady || !sceneRef.current || !poisData) return
+
+    const scene = sceneRef.current
+    const currentPoisMap = poisMapRef.current
+    const dataIds = new Set(poisData.map((p: { _id: Id<'pois'> }) => p._id))
+
+    // Remove POIs that are no longer in the data
+    for (const [id, sprite] of currentPoisMap.entries()) {
+      if (!dataIds.has(id as Id<'pois'>)) {
+        scene.remove(sprite)
+        currentPoisMap.delete(id)
+      }
+    }
+
+    // Add POIs
+    for (const poi of poisData) {
+      if (!currentPoisMap.has(poi._id)) {
+        const poiData: POIData = {
+          id: poi._id,
+          name: poi.name,
+          gridX: poi.gridX,
+          gridY: poi.gridY,
+          type: poi.type,
+        }
+        const newSprite = new POISprite(poiData)
+        scene.add(newSprite)
+        currentPoisMap.set(poi._id, newSprite)
+      }
+    }
+  }, [poisData, isEngineReady])
 
   // Sync agents from database
   useEffect(() => {
@@ -136,6 +173,13 @@ export default function GameCanvas() {
           currentScene.remove(gridActorRef.current)
           gridActorRef.current = null
         }
+
+        // Clean up POIs
+        const currentPoisMap = poisMapRef.current
+        for (const sprite of currentPoisMap.values()) {
+          currentScene.remove(sprite)
+        }
+        currentPoisMap.clear()
       }
 
       if (engineRef.current) {
