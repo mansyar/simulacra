@@ -16,7 +16,7 @@
 5. - [x] Task: Implement movement advance logic with weather multipliers and "Arrival" events. 2ba23ea
 6. - [x] Task: Refactor and verify test coverage (>80%). 7fae67f
 
-## Phase 1.1: POI & Feedback UI
+## Phase 1.1: POI & Feedback UI [checkpoint: bdf3218]
 1. - [x] Task: Create `POISprite.ts` to render fixed locations. d8acd78
 2. - [x] Task: Update `AgentSprite.ts` to render speech bubbles and action icons. d1cd3f3
 
