@@ -9,7 +9,6 @@ import type { PresenceState } from "@convex-dev/presence/react";
  * Wraps a function to single-flight invocations, using the latest args.
  * (Copied from @convex-dev/presence internal utility)
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function useSingleFlight<F extends (...args: any[]) => Promise<any>>(fn: F): (...args: Parameters<F>) => ReturnType<F> {
   const flightStatus = useRef({
     inFlight: false,
@@ -57,7 +56,7 @@ export default function usePresenceWithSessionStorage(
 ): PresenceState[] | undefined {
   const hasMounted = useRef(false);
   const convex = useConvex();
-  const baseUrl = convexUrl ?? (convex ? convex.url : "");
+  const baseUrl = convexUrl ?? (convex ? (convex as any).url : "");
 
   // Generate or retrieve session ID from sessionStorage
   const [sessionId, setSessionId] = useState(() => {

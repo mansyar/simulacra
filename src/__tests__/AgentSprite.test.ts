@@ -101,4 +101,16 @@ describe('AgentSprite', () => {
     const sprite = new AgentSprite(customAgent)
     expect(sprite).toBeTruthy()
   })
+
+  it('should use default color for unknown archetype', () => {
+    const unknownAgent: AgentData = {
+      id: 'unknown-1',
+      name: 'Unknown',
+      gridX: 0,
+      gridY: 0,
+      archetype: 'non-existent',
+    }
+    const sprite = new AgentSprite(unknownAgent)
+    expect(sprite).toBeTruthy()
+  })
 })

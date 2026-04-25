@@ -61,4 +61,12 @@ describe('ActiveUserCount', () => {
     const text = screen.getByText(/1 observer \(connecting\.\.\.\)/)
     expect(text).toBeTruthy()
   })
+
+  it('handles null presence state', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.mocked(usePresenceWithSessionStorage).mockReturnValue(null as any)
+    render(<ActiveUserCount />)
+    const text = screen.getByText(/0 observers/)
+    expect(text).toBeTruthy()
+  })
 })

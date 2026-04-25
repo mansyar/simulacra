@@ -70,4 +70,29 @@ describe('CameraController', () => {
     // Zoom should increase (deltaY negative => zoom in)
     expect(mockCamera.zoom).toBeGreaterThan(initialZoom)
   })
+
+  it('should handle null primary pointer during drag', () => {
+    mockPointers.isDragging = vi.fn().mockReturnValue(true)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mockPointers.primary = null as any
+    controller.update(16)
+    expect(controller).toBeDefined()
+  })
+
+  it('should clamp position to specified bounds', () => {
+    const bounds = new BoundingBox({ left: 0, right: 100, top: 0, bottom: 100 })
+    const limitedController = new CameraController(mockCamera, mockInput, mockEngine, bounds)
+    
+    // Simulate position outside bounds
+    mockPointers.isDragging = vi.fn().mockReturnValue(true)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mockPointers.primary = { lastWorldPos: new Vector(500, 500) } as any
+    
+    limitedController.update(16)
+    limitedController.update(16)
+    
+    // Position should be clamped
+    expect(mockCamera.pos.x).toBeLessThanOrEqual(100)
+    expect(mockCamera.pos.y).toBeLessThanOrEqual(100)
+  })
 })

@@ -74,7 +74,7 @@ describe('ThemeToggle', () => {
 
   it('should render with default "Auto" text', () => {
     render(<ThemeToggle />)
-    expect(screen.getByText(/Auto/i)).toBeTruthy()
+    expect(screen.getByText('Auto')).toBeDefined()
   })
 
   it('should have button with aria-label', () => {

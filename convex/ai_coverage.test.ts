@@ -1,0 +1,237 @@
+/// <reference types="vite/client" />
+import { convexTest } from "convex-test";
+import { expect, test, vi } from "vitest";
+import { api } from "./_generated/api";
+import schema from "./schema";
+
+const modules = import.meta.glob("./**/*.ts");
+
+test("ai:chat returns mock response when API key is missing", async () => {
+  const t = convexTest(schema, modules);
+  const response = await t.action(api.functions.ai.chat, {
+    message: "Hello",
+    archetype: "builder",
+  });
+  expect(response.content).toContain("[MOCK]");
+});
+
+test("ai:chat success path", async () => {
+  const t = convexTest(schema, modules);
+
+  const mockFetch = vi.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({
+      choices: [{ message: { content: "Real AI response" } }],
+    }),
+  });
+  vi.stubGlobal("fetch", mockFetch);
+
+  process.env.OPENAI_API_KEY = "sk-test-key";
+
+  const response = await t.action(api.functions.ai.chat, {
+    message: "Hello",
+    archetype: "philosopher",
+  });
+
+  expect(response.content).toBe("Real AI response");
+
+  delete process.env.OPENAI_API_KEY;
+  vi.unstubAllGlobals();
+});
+
+test("ai:chat handles JSON parse error by returning mock", async () => {
+  const t = convexTest(schema, modules);
+
+  const mockFetch = vi.fn().mockResolvedValue({
+    ok: true,
+    json: async () => { throw new Error("JSON Parse Error"); },
+  });
+  vi.stubGlobal("fetch", mockFetch);
+
+  process.env.OPENAI_API_KEY = "sk-test-key";
+
+  const response = await t.action(api.functions.ai.chat, {
+    message: "Hello",
+    archetype: "socialite",
+  });
+
+  expect(response.content).toContain("[MOCK]");
+
+  delete process.env.OPENAI_API_KEY;
+  vi.unstubAllGlobals();
+});
+
+test("ai:chat handles non-ok response by returning mock", async () => {
+  const t = convexTest(schema, modules);
+
+  const mockFetch = vi.fn().mockResolvedValue({
+    ok: false,
+    text: async () => "API Error",
+  });
+  vi.stubGlobal("fetch", mockFetch);
+
+  process.env.OPENAI_API_KEY = "sk-test-key";
+
+  const response = await t.action(api.functions.ai.chat, {
+    message: "Hello",
+    archetype: "explorer",
+  });
+
+  expect(response.content).toContain("[MOCK]");
+
+  delete process.env.OPENAI_API_KEY;
+  vi.unstubAllGlobals();
+});
+
+
+test("ai:embed success path", async () => {
+  const t = convexTest(schema, modules);
+
+  const mockEmbedding = new Array(768).fill(0.1);
+  const mockFetch = vi.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({
+      data: [{ embedding: mockEmbedding }],
+    }),
+  });
+  vi.stubGlobal("fetch", mockFetch);
+
+  process.env.OPENAI_API_KEY = "sk-test-key";
+
+  const response = await t.action(api.functions.ai.embed, {
+    text: "Hello",
+  });
+
+  expect(response).toEqual(mockEmbedding);
+
+  delete process.env.OPENAI_API_KEY;
+  vi.unstubAllGlobals();
+});
+
+test("ai:embed handles API error", async () => {
+  const t = convexTest(schema, modules);
+
+  const mockFetch = vi.fn().mockResolvedValue({
+    ok: false,
+    text: async () => "API Error",
+  });
+  vi.stubGlobal("fetch", mockFetch);
+
+  process.env.OPENAI_API_KEY = "sk-test-key";
+
+  const response = await t.action(api.functions.ai.embed, {
+    text: "Hello",
+  });
+
+  // Should return mock on error
+  expect(response.length).toBe(768);
+
+  delete process.env.OPENAI_API_KEY;
+  vi.unstubAllGlobals();
+});
+
+test("ai:decision retry on 429", async () => {
+  const t = convexTest(schema, modules);
+  process.env.OPENAI_API_KEY = "sk-test-key";
+
+  // Mock fetch to return 429 then 200
+  const mockDecision = {
+    thought: "Test",
+    action: "idle",
+    target: "none",
+    speech: "",
+    confidence: 1.0,
+  };
+
+  const mockFetch = vi.fn()
+    .mockResolvedValueOnce({
+      status: 429,
+      ok: false,
+      text: async () => "Rate limit",
+    })
+    .mockResolvedValueOnce({
+      status: 200,
+      ok: true,
+      json: async () => ({
+        choices: [{ message: { content: JSON.stringify(mockDecision) } }],
+      }),
+    });
+  vi.stubGlobal("fetch", mockFetch);
+
+  // We need to speed up the test by reducing the base delay if possible, 
+  // but ai.ts has a hardcoded baseDelay of 1000ms. 
+  // We can mock setTimeout to resolve immediately.
+  vi.spyOn(global, "setTimeout").mockImplementation((handler: any) => {
+    if (typeof handler === "function") handler();
+    return 0 as any;
+  });
+
+  const response = await t.action(api.functions.ai.decision, {
+    agentState: { name: "Test", hunger: 50, energy: 50, social: 50 },
+    nearbyAgents: [],
+    archetype: "builder",
+  });
+
+  expect(mockFetch).toHaveBeenCalledTimes(2);
+  expect(response.action).toBe("idle");
+
+  delete process.env.OPENAI_API_KEY;
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
+
+test("ai:decision failure after retries", async () => {
+  const t = convexTest(schema, modules);
+  process.env.OPENAI_API_KEY = "sk-test-key";
+
+  const mockFetch = vi.fn().mockResolvedValue({
+    status: 429,
+    ok: false,
+    text: async () => "Rate limit",
+  });
+  vi.stubGlobal("fetch", mockFetch);
+
+  vi.spyOn(global, "setTimeout").mockImplementation((handler: any) => {
+    if (typeof handler === "function") handler();
+    return 0 as any;
+  });
+
+  const response = await t.action(api.functions.ai.decision, {
+    agentState: { name: "Test", hunger: 50, energy: 50, social: 50 },
+    nearbyAgents: [],
+    archetype: "builder",
+  });
+
+  // Should return mock on error after retries
+  expect(response.thought).toContain("[MOCK] Rate limited");
+
+  delete process.env.OPENAI_API_KEY;
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
+
+test("ai:decision handles JSON parse error from API", async () => {
+  const t = convexTest(schema, modules);
+  process.env.OPENAI_API_KEY = "sk-test-key";
+
+  const mockFetch = vi.fn().mockResolvedValue({
+    status: 200,
+    ok: true,
+    json: async () => ({
+      choices: [{ message: { content: "invalid json" } }],
+    }),
+  });
+  vi.stubGlobal("fetch", mockFetch);
+
+  const response = await t.action(api.functions.ai.decision, {
+    agentState: { name: "Test", hunger: 50, energy: 50, social: 50 },
+    nearbyAgents: [],
+    archetype: "builder",
+  });
+
+  expect(response.action).toBe("idle");
+  expect(response.thought).toBe("I am having trouble thinking clearly.");
+
+  delete process.env.OPENAI_API_KEY;
+  vi.unstubAllGlobals();
+});

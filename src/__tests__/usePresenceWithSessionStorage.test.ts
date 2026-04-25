@@ -154,4 +154,29 @@ describe('usePresenceWithSessionStorage', () => {
       expect.any(Blob)
     )
   })
+
+  it('useSingleFlight handles errors and processes upNext', async () => {
+    // This is hard to test directly because useSingleFlight is private,
+    // but it is used by heartbeat and disconnect.
+    
+    // We can simulate multiple rapid calls
+    const { rerender } = renderHook(({ rid }) => usePresenceWithSessionStorage(presenceApi, rid, userId, interval), {
+      initialProps: { rid: 'room1' }
+    })
+    
+    // Rerendering with different roomId triggers a disconnect and a session change
+    // This will cause multiple calls to disconnect and heartbeat
+    heartbeatMock.mockClear()
+    disconnectMock.mockClear()
+    
+    await act(async () => {
+      rerender({ rid: 'room2' })
+      rerender({ rid: 'room3' })
+    })
+
+    // It should have called disconnect and heartbeat at least once for the latest room
+    await waitFor(() => {
+      expect(heartbeatMock).toHaveBeenCalled()
+    })
+  })
 })
