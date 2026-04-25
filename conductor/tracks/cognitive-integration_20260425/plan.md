@@ -34,7 +34,7 @@
 4. - [x] Task: Refactor and verify test coverage (>80%). 7fae67f
 
 ## Phase 4: World State & Final Integration
-1. - [ ] Task: Write unit tests for world-state advancement logic using `TIME_SCALE`.
+1. - [~] Task: Write unit tests for world-state advancement logic using `TIME_SCALE`.
 2. - [ ] Task: Implement automatic `timeOfDay` increment and stochastic `weather` transitions.
 3. - [ ] Task: Final integration testing of the complete decision loop.
 4. - [ ] Task: Refactor and verify test coverage (>80%).
