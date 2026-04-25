@@ -28,8 +28,8 @@
 5. - [ ] Task: Conductor - User Manual Verification 'Phase 2: RAG & Evolution' (Protocol in workflow.md)
 
 ## Phase 3: Reflection & Memory Encoding
-1. - [~] Task: Write unit tests for reflection, importance scoring, and relationship delta logic.
-2. - [ ] Task: Implement `reflect` action to summarize events into `coreTraits` and encode high-importance memories.
+1. - [x] Task: Write unit tests for reflection, importance scoring, and relationship delta logic. f30b70f
+2. - [~] Task: Implement `reflect` action to summarize events into `coreTraits` and encode high-importance memories.
 3. - [ ] Task: Update tick to trigger reflection every 24 simulated hours with staggered jitter.
 4. - [ ] Task: Refactor and verify test coverage (>80%).
 

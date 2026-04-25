@@ -8,7 +8,7 @@ const modules = import.meta.glob("./**/*.ts");
 
 test("ai:chat returns mock response when API key is missing", async () => {
   const t = convexTest(schema, modules);
-  const response = await t.action(api.functions.ai.chat, {
+  const response = await t.action(api.functions.ai_helpers.chat, {
     message: "Hello",
     archetype: "builder",
   });
@@ -28,7 +28,7 @@ test("ai:chat success path", async () => {
 
   process.env.OPENAI_API_KEY = "sk-test-key";
 
-  const response = await t.action(api.functions.ai.chat, {
+  const response = await t.action(api.functions.ai_helpers.chat, {
     message: "Hello",
     archetype: "philosopher",
   });
@@ -50,7 +50,7 @@ test("ai:chat handles JSON parse error by returning mock", async () => {
 
   process.env.OPENAI_API_KEY = "sk-test-key";
 
-  const response = await t.action(api.functions.ai.chat, {
+  const response = await t.action(api.functions.ai_helpers.chat, {
     message: "Hello",
     archetype: "socialite",
   });
@@ -72,7 +72,7 @@ test("ai:chat handles non-ok response by returning mock", async () => {
 
   process.env.OPENAI_API_KEY = "sk-test-key";
 
-  const response = await t.action(api.functions.ai.chat, {
+  const response = await t.action(api.functions.ai_helpers.chat, {
     message: "Hello",
     archetype: "explorer",
   });
@@ -98,7 +98,7 @@ test("ai:embed success path", async () => {
 
   process.env.OPENAI_API_KEY = "sk-test-key";
 
-  const response = await t.action(api.functions.ai.embed, {
+  const response = await t.action(api.functions.ai_helpers.embed, {
     text: "Hello",
   });
 
@@ -119,7 +119,7 @@ test("ai:embed handles API error", async () => {
 
   process.env.OPENAI_API_KEY = "sk-test-key";
 
-  const response = await t.action(api.functions.ai.embed, {
+  const response = await t.action(api.functions.ai_helpers.embed, {
     text: "Hello",
   });
 

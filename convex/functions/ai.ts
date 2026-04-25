@@ -1,15 +1,11 @@
 import { action, internalQuery } from "../_generated/server";
-import type { ActionCtx } from "../_generated/server";
 import { v } from "convex/values";
 import { api, internal } from "../_generated/api";
-
-const ARCHETYPE_PROMPTS = {
-  builder: "You are a builder. You are organized, productive, and detail-oriented. You love creating and improving things. Your tone is practical and focused.",
-  socialite: "You are a socialite. You are friendly, charming, and love talking to others. You prioritize building relationships and learning about people. Your tone is warm and engaging.",
-  philosopher: "You are a philosopher. You are thoughtful, introspective, and wise. You love contemplating deep questions and sharing insights. Your tone is calm and reflective.",
-  explorer: "You are an explorer. You are adventurous, restless, and curious. You love discovering new things and seeking novelty. Your tone is excited and inquisitive.",
-  nurturer: "You are a nurturer. You are caring, protective, and generous. You love helping others and ensuring their well-being. Your tone is kind and supportive.",
-};
+import { 
+  getAiConfig, 
+  fetchWithRetry, 
+  ARCHETYPE_PROMPTS 
+} from "./ai_helpers";
 
 const DECISION_SYSTEM_PROMPT = `
 You are an AI brain for an agent in a simulated world. 
@@ -25,132 +21,22 @@ You MUST return your decision in the following JSON format:
 }
 `;
 
-interface AiConfig {
-  apiKey: string | undefined;
-  baseUrl: string;
-  model: string;
-}
+const REFLECTION_SYSTEM_PROMPT = `
+You are the subconscious of an AI agent. 
+Review the agent's recent sensory events and identify significant patterns or important memories.
 
-async function getAiConfig(ctx: ActionCtx, modelOverride?: string): Promise<AiConfig> {
-  const config = await ctx.runQuery(internal.functions.config.getInternal);
-  return {
-    apiKey: process.env.OPENAI_API_KEY,
-    baseUrl: config?.llmBaseUrl || process.env.OPENAI_API_BASE_URL || "https://api.openai.com/v1",
-    model: modelOverride || config?.llmModel || process.env.OPENAI_MODEL || "gpt-3.5-turbo",
-  };
-}
-
-async function getEmbeddingConfig(ctx: ActionCtx): Promise<AiConfig> {
-  const config = await ctx.runQuery(internal.functions.config.getInternal);
-  // Prioritize EMBEDDING_ specific env vars, then config table, then OPENAI_ fallbacks
-  return {
-    apiKey: process.env.EMBEDDING_API_KEY || process.env.OPENAI_API_KEY,
-    baseUrl: process.env.EMBEDDING_API_BASE_URL || config?.llmBaseUrl || process.env.OPENAI_API_BASE_URL || "https://api.openai.com/v1",
-    model: process.env.EMBEDDING_MODEL || process.env.OPENAI_EMBEDDING_MODEL || "text-embedding-3-small",
-  };
-}
-
-/**
- * Retry wrapper with exponential backoff for rate-limited requests
- */
-async function fetchWithRetry(
-  url: string,
-  options: RequestInit,
-  maxRetries: number = 3,
-  baseDelay: number = 1000
-): Promise<Response> {
-  let lastError: Error | null = null;
-
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      const response = await fetch(url, options);
-
-      // If not a rate limit error, return immediately
-      if (response.status !== 429) {
-        return response;
-      }
-
-      // Rate limit error - check if we should retry
-      if (attempt === maxRetries) {
-        // Last attempt, return the rate limit response
-        return response;
-      }
-
-      // Calculate delay with exponential backoff
-      const delay = baseDelay * Math.pow(2, attempt);
-      console.log(`[AI] Rate limited, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries + 1})`);
-      
-      // Wait before retrying
-      await new Promise(resolve => setTimeout(resolve, delay));
-    } catch (error) {
-      lastError = error as Error;
-      
-      if (attempt === maxRetries) {
-        throw lastError;
-      }
-      
-      const delay = baseDelay * Math.pow(2, attempt);
-      console.log(`[AI] Error, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries + 1})`);
-      await new Promise(resolve => setTimeout(resolve, delay));
+You MUST return your reflection in the following JSON format:
+{
+  "memories": [
+    {
+      "content": "A concise summary of an important event or insight",
+      "importance": 1 to 10 (how significant this is for the agent's personality)
     }
-  }
-
-  throw lastError || new Error("Max retries exceeded");
+  ],
+  "evolutionTraits": ["new_trait1", "new_trait2"],
+  "thought": "Your reasoning for these reflections"
 }
-
-export const chat = action({
-  args: {
-    message: v.string(),
-    archetype: v.union(v.literal("builder"), v.literal("socialite"), v.literal("philosopher"), v.literal("explorer"), v.literal("nurturer")),
-    model: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    const { apiKey, baseUrl, model } = await getAiConfig(ctx, args.model);
-
-    if (!apiKey) {
-      return {
-        content: `[MOCK] ${ARCHETYPE_PROMPTS[args.archetype]} Response to: ${args.message} (Model: ${model})`,
-      };
-    }
-
-    try {
-      const url = `${baseUrl.replace(/\/$/, "")}/chat/completions`;
-      const response = await fetchWithRetry(
-        url,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({
-            model: model,
-            messages: [
-              { role: "system", content: ARCHETYPE_PROMPTS[args.archetype] },
-              { role: "user", content: args.message },
-            ],
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`AI API error: ${error}`);
-      }
-
-      const data = await response.json();
-      return {
-        content: data.choices[0].message.content,
-      };
-    } catch (error) {
-      console.error("[AI] Chat error:", error);
-      // Return mock response on error
-      return {
-        content: `[MOCK] ${ARCHETYPE_PROMPTS[args.archetype]} Response to: ${args.message} (Model: ${model})`,
-      };
-    }
-  },
-});
+`;
 
 export const decision = action({
   args: {
@@ -244,7 +130,6 @@ export const decision = action({
       }
     } catch (error) {
       console.error("[AI] Decision error:", error);
-      // Return mock decision on error
       let action = "idle";
       let speech = "";
       if (args.agentState.hunger > 70) action = "eating";
@@ -262,76 +147,6 @@ export const decision = action({
         speech,
         confidence: 0.5,
       };
-    }
-  },
-});
-
-export const embed = action({
-  args: {
-    text: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const { apiKey, baseUrl, model } = await getEmbeddingConfig(ctx);
-
-    if (!apiKey) {
-      // Mock embedding (768 dimensions)
-      const embedding = new Array(768).fill(0).map(() => Math.random());
-      return embedding;
-    }
-
-    try {
-      const isGoogle = baseUrl.includes("googleapis.com");
-      
-      let url: string;
-      let body: any;
-
-      if (isGoogle) {
-        const version = baseUrl.includes("v1beta") ? "v1beta" : "v1";
-        const modelName = model.startsWith("models/") ? model : `models/${model}`;
-        url = `https://generativelanguage.googleapis.com/${version}/${modelName}:embedContent?key=${apiKey}`;
-        body = {
-          content: {
-            parts: [{ text: args.text }]
-          },
-          outputDimensionality: 768
-        };
-      } else {
-        url = `${baseUrl.replace(/\/$/, "")}/embeddings`;
-        body = {
-          model: model,
-          input: args.text,
-          dimensions: 768,
-        };
-      }
-
-      const response = await fetchWithRetry(
-        url,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(body),
-        }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`AI API error (${response.status}): ${errorText}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.embedding) {
-        return data.embedding.values;
-      } else if (data.data && data.data[0] && data.data[0].embedding) {
-        return data.data[0].embedding;
-      } else {
-        return data.values;
-      }
-    } catch (error) {
-      console.error("[AI] Embed error:", error);
-      return new Array(768).fill(0).map(() => Math.random());
     }
   },
 });
@@ -395,5 +210,100 @@ export const buildFullContext = action({
     }
 
     return fullContext;
+  },
+});
+
+/**
+ * Action: Reflect on recent experiences and update identity
+ */
+export const reflect = action({
+  args: {
+    agentId: v.id("agents"),
+  },
+  handler: async (ctx, args): Promise<{ success: boolean }> => {
+    const { apiKey, baseUrl, model } = await getAiConfig(ctx);
+
+    const context = await ctx.runQuery(internal.functions.ai.buildAgentContext, {
+      agentId: args.agentId,
+    });
+
+    const events = await ctx.runQuery(api.functions.memory.getEvents, {
+      agentId: args.agentId,
+    });
+
+    if (!apiKey) {
+      // Mock reflection
+      await ctx.runMutation(internal.functions.agents.updateIdentity, {
+        agentId: args.agentId,
+        newTraits: ["reflective"],
+      });
+      // Add a mock memory
+      await ctx.runMutation(internal.functions.memory.insertMemory, {
+        agentId: args.agentId,
+        content: "Mock reflection memory",
+        embedding: new Array(768).fill(0),
+        type: "reflection",
+        importance: 8,
+      });
+      return { success: true };
+    }
+
+    const eventLog = events.map(e => `- ${e.description}`).join("\n");
+    const userPrompt = `
+    Agent Context:
+    ${context}
+
+    Recent Events:
+    ${eventLog}
+
+    Reflect on these experiences. What is worth remembering? Has the agent changed?
+    `;
+
+    try {
+      const url = `${baseUrl.replace(/\/$/, "")}/chat/completions`;
+      const response = await fetchWithRetry(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: [
+            { role: "system", content: REFLECTION_SYSTEM_PROMPT },
+            { role: "user", content: userPrompt },
+          ],
+          response_format: { type: "json_object" },
+        }),
+      });
+
+      const data = await response.json();
+      const reflection = JSON.parse(data.choices[0].message.content);
+
+      // 1. Update identity traits
+      if (reflection.evolutionTraits && reflection.evolutionTraits.length > 0) {
+        await ctx.runMutation(internal.functions.agents.updateIdentity, {
+          agentId: args.agentId,
+          newTraits: reflection.evolutionTraits,
+        });
+      }
+
+      // 2. Save high-importance memories
+      if (reflection.memories) {
+        for (const memory of reflection.memories) {
+          if (memory.importance >= 5) {
+            await ctx.runAction(api.functions.memory.addSemanticMemory, {
+              agentId: args.agentId,
+              content: memory.content,
+            });
+          }
+        }
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error("[AI] Reflection error:", error);
+      return { success: false };
+    }
   },
 });

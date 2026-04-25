@@ -291,6 +291,67 @@ export const recordPassivePerception = internalMutation({
 });
 
 /**
+ * Internal Mutation: Update relationship affinity between two agents
+ */
+export const updateRelationship = internalMutation({
+  args: {
+    agentAId: v.id("agents"),
+    agentBId: v.id("agents"),
+    delta: v.number(),
+  },
+  handler: async (ctx, args) => {
+    // Ensure consistent ordering to avoid duplicate pairs
+    const [id1, id2] = args.agentAId < args.agentBId 
+      ? [args.agentAId, args.agentBId] 
+      : [args.agentBId, args.agentAId];
+
+    const relationship = await ctx.db
+      .query("relationships")
+      .withIndex("by_agents", (q) => q.eq("agentAId", id1).eq("agentBId", id2))
+      .first();
+
+    if (relationship) {
+      await ctx.db.patch(relationship._id, {
+        affinity: Math.max(-100, Math.min(100, relationship.affinity + args.delta)),
+        interactionsCount: relationship.interactionsCount + 1,
+        lastInteractionAt: Date.now(),
+      });
+    } else {
+      await ctx.db.insert("relationships", {
+        agentAId: id1,
+        agentBId: id2,
+        affinity: args.delta,
+        interactionsCount: 1,
+        lastInteractionAt: Date.now(),
+        lastInteractionType: args.delta > 0 ? "positive" : (args.delta < 0 ? "negative" : "neutral"),
+      });
+    }
+  },
+});
+
+/**
+ * Internal Mutation: Update agent identity traits
+ */
+export const updateIdentity = internalMutation({
+  args: {
+    agentId: v.id("agents"),
+    newTraits: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const agent = await ctx.db.get(args.agentId);
+    if (!agent) return;
+
+    // Merge traits and keep unique ones, limited to 5
+    const combinedTraits = Array.from(new Set([...agent.coreTraits, ...args.newTraits])).slice(0, 5);
+
+    await ctx.db.patch(args.agentId, {
+      coreTraits: combinedTraits,
+      lastReflectedTick: 1, // Will be updated by world state logic later
+    });
+  },
+});
+
+/**
  * Mutation: Migrate deprecated archetypes to supported ones
  */
 export const migrateArchetypes = mutation({

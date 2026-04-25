@@ -98,7 +98,7 @@ export const addSemanticMemory = action({
     content: v.string(),
   },
   handler: async (ctx, args) => {
-    const embedding = await ctx.runAction(api.functions.ai.embed, { text: args.content });
+    const embedding = await ctx.runAction(api.functions.ai_helpers.embed, { text: args.content });
 
     await ctx.runMutation(internal.functions.memory.insertMemory, {
       agentId: args.agentId,
@@ -120,6 +120,7 @@ export const insertMemory = internalMutation({
       v.literal("reflection"),
       v.literal("interaction")
     ),
+    importance: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     await ctx.db.insert("memories", {
@@ -128,7 +129,7 @@ export const insertMemory = internalMutation({
       embedding: args.embedding,
       type: args.type,
       timestamp: Date.now(),
-      importance: 5, // Default importance
+      importance: args.importance ?? 5,
       tags: [],
     });
   },
@@ -141,7 +142,7 @@ export const searchSemanticMemory = action({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args): Promise<Doc<"memories">[]> => {
-    const embedding = await ctx.runAction(api.functions.ai.embed, { text: args.query });
+    const embedding = await ctx.runAction(api.functions.ai_helpers.embed, { text: args.query });
 
     const results = await ctx.vectorSearch("memories", "by_embedding", {
       vector: embedding,
@@ -185,7 +186,7 @@ export const retrieveMemoriesAction = action({
     const limit = args.limit ?? 5;
 
     // 1. Generate embedding for the search query
-    const embedding = await ctx.runAction(api.functions.ai.embed, {
+    const embedding = await ctx.runAction(api.functions.ai_helpers.embed, {
       text: args.query,
     });
 
