@@ -14,7 +14,7 @@
 5.  - [x] Task: Conductor - User Manual Verification 'Phase 2: AI Brain' (Protocol in workflow.md) (b6084a2)
 
 ### Phase 3: Visual and Technical Polish (The Skin)
-1.  - [ ] Task: Map guideline hex codes to agent archetypes in `src/components/game/AgentSprite.ts`.
-2.  - [ ] Task: Update `normalizeAction` in `convex/functions/world.ts` to handle any new action mapping needs.
-3.  - [ ] Task: Run full test suite and verify coverage for migration and AI logic.
+1.  - [x] Task: Map guideline hex codes to agent archetypes in `src/components/game/AgentSprite.ts`. (b6084a2)
+2.  - [x] Task: Update `normalizeAction` in `convex/functions/world.ts` to handle any new action mapping needs. (b6084a2)
+3.  - [~] Task: Run full test suite and verify coverage for migration and AI logic.
 4.  - [ ] Task: Conductor - User Manual Verification 'Phase 3: Visuals & Polish' (Protocol in workflow.md)
