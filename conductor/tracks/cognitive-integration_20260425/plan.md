@@ -33,11 +33,12 @@
 3. - [x] Task: Update tick to trigger reflection every 24 simulated hours with staggered jitter. f5697ab
 4. - [x] Task: Refactor and verify test coverage (>80%). 7fae67f
 
-## Phase 4: World State & Final Integration
+## Phase 4: World State & Final Integration [checkpoint: 5b1a252]
 1. - [x] Task: Write unit tests for world-state advancement logic using `TIME_SCALE`. cda25c6
 2. - [x] Task: Implement automatic `timeOfDay` increment and stochastic `weather` transitions. 9f34857
 3. - [x] Task: Final integration testing of the complete decision loop. ed146e7
 4. - [x] Task: Refactor and verify test coverage (>80%). 7fae67f
+5. - [x] Task: Standardize timeOfDay logic and HUD formatting. 5b1a252
 
 ## Phase 5: Master Controls & Admin API
 1. - [ ] Task: Create `world:admin` functions for `manualTick`, `manualReflect`, and `resetAgentBrain`.
