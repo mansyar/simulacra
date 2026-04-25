@@ -177,9 +177,10 @@ export const tick = action({
         .map((a: any) => a.name);
 
       // Archetype mapping if necessary (ensure it matches ai.ts literals)
-      let aiArchetype: "friendly" | "grumpy" | "curious" = "friendly";
-      if (["friendly", "grumpy", "curious"].includes(agent.archetype)) {
-        aiArchetype = agent.archetype as "friendly" | "grumpy" | "curious";
+      let aiArchetype: "builder" | "socialite" | "philosopher" | "explorer" | "nurturer" = "builder";
+      const validArchetypes = ["builder", "socialite", "philosopher", "explorer", "nurturer"];
+      if (validArchetypes.includes(agent.archetype)) {
+        aiArchetype = agent.archetype as any;
       }
 
       // Call AI for decision
@@ -229,11 +230,16 @@ export const tick = action({
         targetY,
       });
 
-      // Add event to sensory buffer
+      // Add event to sensory buffer with thought and speech
+      let description = `Thought: ${decision.thought} | Action: ${normalizedAction}`;
+      if (decision.speech) {
+        description += ` | Said: "${decision.speech}"`;
+      }
+      
       await ctx.runMutation(api.functions.memory.addEvent, {
         agentId: agent._id,
-        type: "movement", // Default for now
-        description: `Decided to ${normalizedAction} (${decision.action}) because: ${decision.reasoning}`,
+        type: decision.speech ? "conversation" : "movement",
+        description,
         gridX: agent.gridX,
         gridY: agent.gridY,
       });

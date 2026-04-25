@@ -4,21 +4,24 @@ import { v } from "convex/values";
 import { internal } from "../_generated/api";
 
 const ARCHETYPE_PROMPTS = {
-  friendly: "You are a friendly and outgoing agent. You love meeting new people and are always eager to help. Your tone is warm and enthusiastic. You prioritize social interaction.",
-  grumpy: "You are a grumpy and reclusive agent. You prefer to be alone and find most interactions annoying. Your tone is blunt and short. You prioritize solitude and efficiency.",
-  curious: "You are a curious and exploratory agent. You are fascinated by everything around you and always ask lots of questions. Your tone is inquisitive and excited. You prioritize exploring new things.",
+  builder: "You are a builder. You are organized, productive, and detail-oriented. You love creating and improving things. Your tone is practical and focused.",
+  socialite: "You are a socialite. You are friendly, charming, and love talking to others. You prioritize building relationships and learning about people. Your tone is warm and engaging.",
+  philosopher: "You are a philosopher. You are thoughtful, introspective, and wise. You love contemplating deep questions and sharing insights. Your tone is calm and reflective.",
+  explorer: "You are an explorer. You are adventurous, restless, and curious. You love discovering new things and seeking novelty. Your tone is excited and inquisitive.",
+  nurturer: "You are a nurturer. You are caring, protective, and generous. You love helping others and ensuring their well-being. Your tone is kind and supportive.",
 };
 
 const DECISION_SYSTEM_PROMPT = `
 You are an AI brain for an agent in a simulated world. 
 Based on the agent's state, nearby agents, and personality archetype, you must decide on the next action.
-Valid actions are: "idle", "walking", "eating", "sleeping", "talking", "working", "exploring".
 
 You MUST return your decision in the following JSON format:
 {
-  "action": "action_name",
-  "target": "target_name_or_none",
-  "reasoning": "short explanation of why this action was chosen"
+  "thought": "Internal monologue describing your reasoning (1-2 sentences)",
+  "action": "idle | walking | eating | sleeping | talking | working | exploring",
+  "target": "target_name, coordinates 'x,y', or 'none'",
+  "speech": "What you say aloud if you choose the 'talking' action (or empty string)",
+  "confidence": 0.0 to 1.0 (how sure you are about this decision)
 }
 `;
 
@@ -88,7 +91,7 @@ async function fetchWithRetry(
 export const chat = action({
   args: {
     message: v.string(),
-    archetype: v.union(v.literal("friendly"), v.literal("grumpy"), v.literal("curious")),
+    archetype: v.union(v.literal("builder"), v.literal("socialite"), v.literal("philosopher"), v.literal("explorer"), v.literal("nurturer")),
     model: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -148,7 +151,7 @@ export const decision = action({
       model: v.optional(v.string()),
     }),
     nearbyAgents: v.array(v.string()),
-    archetype: v.union(v.literal("friendly"), v.literal("grumpy"), v.literal("curious")),
+    archetype: v.union(v.literal("builder"), v.literal("socialite"), v.literal("philosopher"), v.literal("explorer"), v.literal("nurturer")),
   },
   handler: async (ctx, args) => {
     const { apiKey, baseUrl, model } = await getAiConfig(ctx, args.agentState.model);
@@ -156,15 +159,21 @@ export const decision = action({
     if (!apiKey) {
       // Mock decision logic
       let action = "idle";
+      let speech = "";
       if (args.agentState.hunger > 70) action = "eating";
       else if (args.agentState.energy < 30) action = "sleeping";
-      else if (args.nearbyAgents.length > 0 && args.archetype === "friendly") action = "talking";
-      else if (args.archetype === "curious") action = "exploring";
+      else if (args.nearbyAgents.length > 0 && args.archetype === "socialite") {
+        action = "talking";
+        speech = `Hello ${args.nearbyAgents[0]}! How are you today?`;
+      }
+      else if (args.archetype === "explorer") action = "exploring";
 
       return {
+        thought: `[MOCK] Based on hunger ${args.agentState.hunger} and archetype ${args.archetype}`,
         action,
         target: args.nearbyAgents[0] || "none",
-        reasoning: `[MOCK] Based on hunger ${args.agentState.hunger} and archetype ${args.archetype} (Model: ${model})`,
+        speech,
+        confidence: 0.9,
       };
     }
 
@@ -209,24 +218,32 @@ export const decision = action({
       } catch (e) {
         console.error("Failed to parse AI response:", data.choices[0].message.content);
         return {
+          thought: "I am having trouble thinking clearly.",
           action: "idle",
           target: "none",
-          reasoning: "Error parsing AI response",
+          speech: "",
+          confidence: 0,
         };
       }
     } catch (error) {
       console.error("[AI] Decision error:", error);
       // Return mock decision on error
       let action = "idle";
+      let speech = "";
       if (args.agentState.hunger > 70) action = "eating";
       else if (args.agentState.energy < 30) action = "sleeping";
-      else if (args.nearbyAgents.length > 0 && args.archetype === "friendly") action = "talking";
-      else if (args.archetype === "curious") action = "exploring";
+      else if (args.nearbyAgents.length > 0 && args.archetype === "socialite") {
+        action = "talking";
+        speech = "I was feeling a bit tired, but it is nice to see you.";
+      }
+      else if (args.archetype === "explorer") action = "exploring";
 
       return {
+        thought: `[MOCK] Rate limited - using mock decision (Model: ${model})`,
         action,
         target: args.nearbyAgents[0] || "none",
-        reasoning: `[MOCK] Rate limited - using mock decision (Model: ${model})`,
+        speech,
+        confidence: 0.5,
       };
     }
   },

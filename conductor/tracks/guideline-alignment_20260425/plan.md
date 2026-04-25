@@ -7,10 +7,10 @@
 4.  - [x] Task: Conductor - User Manual Verification 'Phase 1: Foundation' (Protocol in workflow.md) (e200693)
 
 ### Phase 2: AI Brain Upgrade (The Logic)
-1.  - [ ] Task: Update `ARCHETYPE_PROMPTS` and `DECISION_SYSTEM_PROMPT` in `convex/functions/ai.ts` to include the 5 primary archetypes and the new JSON schema.
-2.  - [ ] Task: Update `decision` action in `convex/functions/ai.ts` to return the full schema (`thought`, `speech`, `confidence`).
-3.  - [ ] Task: Update `tick` action in `convex/functions/world.ts` to parse and handle the upgraded AI response.
-4.  - [ ] Task: Write unit tests for the new AI decision parsing and agent migration logic.
+1.  - [x] Task: Update `ARCHETYPE_PROMPTS` and `DECISION_SYSTEM_PROMPT` in `convex/functions/ai.ts` to include the 5 primary archetypes and the new JSON schema.
+2.  - [x] Task: Update `decision` action in `convex/functions/ai.ts` to return the full schema (`thought`, `speech`, `confidence`).
+3.  - [~] Task: Update `tick` action in `convex/functions/world.ts` to parse and handle the upgraded AI response.
+4.  - [~] Task: Write unit tests for the new AI decision parsing and agent migration logic.
 5.  - [ ] Task: Conductor - User Manual Verification 'Phase 2: AI Brain' (Protocol in workflow.md)
 
 ### Phase 3: Visual and Technical Polish (The Skin)
