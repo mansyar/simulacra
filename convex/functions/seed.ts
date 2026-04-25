@@ -16,11 +16,13 @@ export const agents = mutation({
       }
     }
 
-    // OPTIMIZED: Reduced to 6 agents for token limits
+    // OPTIMIZED: Reduced to 10 agents for token limits
     const archetypes = [
       { type: "builder", traits: ["diligent", "practical"], names: ["Bob", "Wendy"] },
       { type: "socialite", traits: ["outgoing", "charming"], names: ["Paris", "Kim"] },
       { type: "philosopher", traits: ["thoughtful", "analytical"], names: ["Socrates", "Plato"] },
+      { type: "explorer", traits: ["adventurous", "curious"], names: ["Indiana", "Lara"] },
+      { type: "nurturer", traits: ["caring", "protective"], names: ["Florence", "Clara"] },
     ] as const;
 
     let count = 0;

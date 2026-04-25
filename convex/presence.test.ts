@@ -27,6 +27,6 @@ test.skip("presence heartbeat and list", async () => {
     interval,
   });
 
-  const users = await t.query(api.presence.list, { roomId });
+  const users = await t.query(api.presence.list, { roomToken: roomId });
   expect(users.length).toBeGreaterThanOrEqual(0);
 });

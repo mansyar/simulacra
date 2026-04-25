@@ -72,7 +72,7 @@ export const checkSleepMode = action({
     const roomId = process.env.PRESENCE_ROOM_ID || "main-app";
     
     // Check real-time presence
-    const activeUsers = await ctx.runQuery(api.presence.list, { roomId });
+    const activeUsers = await ctx.runQuery(api.presence.list, { roomToken: roomId });
     const userCount = activeUsers.length;
 
     if (userCount > 0) {
@@ -110,6 +110,26 @@ export const checkSleepMode = action({
     };
   },
 });
+
+/**
+ * Normalizes an action string from the AI to a valid AgentAction
+ */
+function normalizeAction(action: string): "idle" | "walking" | "eating" | "sleeping" | "talking" | "working" | "exploring" {
+  const validActions = ["idle", "walking", "eating", "sleeping", "talking", "working", "exploring"];
+  if (validActions.includes(action)) {
+    return action as any;
+  }
+
+  // Map common hallucinations
+  if (action.includes("food") || action.includes("eat")) return "eating";
+  if (action.includes("sleep") || action.includes("rest") || action.includes("bed")) return "sleeping";
+  if (action.includes("walk") || action.includes("move") || action.includes("go")) return "walking";
+  if (action.includes("talk") || action.includes("chat") || action.includes("greet")) return "talking";
+  if (action.includes("work") || action.includes("build")) return "working";
+  if (action.includes("explore") || action.includes("look")) return "exploring";
+
+  return "idle";
+}
 
 /**
  * Action: Process a world tick
@@ -175,6 +195,9 @@ export const tick = action({
         archetype: aiArchetype,
       });
 
+      // Normalize action to ensure it matches schema literals
+      const normalizedAction = normalizeAction(decision.action);
+
       // Update action
       // decision.target is a string: "none", agent name, or coordinates "x,y"
       let targetX: number | undefined;
@@ -201,7 +224,7 @@ export const tick = action({
       }
       await ctx.runMutation(internal.functions.agents.updateAction, {
         agentId: agent._id,
-        action: decision.action,
+        action: normalizedAction,
         targetX,
         targetY,
       });
@@ -210,11 +233,12 @@ export const tick = action({
       await ctx.runMutation(api.functions.memory.addEvent, {
         agentId: agent._id,
         type: "movement", // Default for now
-        description: `Decided to ${decision.action} because: ${decision.reasoning}`,
+        description: `Decided to ${normalizedAction} (${decision.action}) because: ${decision.reasoning}`,
         gridX: agent.gridX,
         gridY: agent.gridY,
       });
     }
+
 
     // 3. Update world state (total ticks, etc.)
     const state = await ctx.runQuery(api.functions.world.getState);

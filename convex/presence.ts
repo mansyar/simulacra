@@ -13,23 +13,18 @@ export const heartbeat = mutation({
     interval: v.number(),
   },
   handler: async (ctx, { roomId, userId, sessionId, interval }) => {
-    // Auth check: ensure user is authenticated
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Authentication required");
-    }
-    // Optionally verify that the provided userId matches the authenticated user's tokenIdentifier
-    // but for now we just ensure authentication.
+    // Note: Authentication check removed for prototype stage.
+    // In production, you would typically use ctx.auth.getUserIdentity() here.
     return await presence.heartbeat(ctx, roomId, userId, sessionId, interval);
   },
 });
 
 export const list = query({
-  args: { roomId: v.string() },
-  handler: async (ctx, { roomId }) => {
+  args: { roomToken: v.string() },
+  handler: async (ctx, { roomToken }) => {
     // Avoid adding per-user reads so all subscriptions can share same cache.
     // In many cases roomId can be used as roomToken if not using signed tokens.
-    return await presence.list(ctx, roomId);
+    return await presence.list(ctx, roomToken);
   },
 });
 
