@@ -6,7 +6,7 @@
 3. - [x] Task: Update `AgentAction` schema to include the `"listening"` state. 91b0aca
 4. - [x] Task: Implement dynamic Metabolism and Weather Multiplier logic in `updateNeeds` and movement helpers. 21fbf95
 5. - [x] Task: Implement `getGlobalEvents` query for the world-wide sidebar. 8517854
-6. - [ ] Task: Implement "Batch Processor" to stay within RPM/TPM limits.
+6. - [x] Task: Implement "Batch Processor" to stay within RPM/TPM limits. e3ddf22
 
 ## Phase 1: Simulation Logic & Perception
 1. - [ ] Task: Create data migration/seed function for new schema fields, POIs, and Full Archetype profiles.
