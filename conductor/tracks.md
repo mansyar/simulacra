@@ -5,6 +5,3 @@ This file tracks all major tracks for the project. Each track has its own detail
 ---
 
 ---
-
-- [x] **Track: Guideline Alignment and Archetype Migration**
-*Link: [./tracks/guideline-alignment_20260425/](./tracks/guideline-alignment_20260425/)*
