@@ -83,7 +83,13 @@ export default function GameCanvas() {
     for (const agent of agentsData) {
       const existingSprite = currentAgentsMap.get(agent._id)
       if (existingSprite) {
-        existingSprite.updateGridPosition(agent.gridX, agent.gridY)
+        existingSprite.updateAgentData({
+          gridX: agent.gridX,
+          gridY: agent.gridY,
+          currentAction: agent.currentAction,
+          speech: agent.speech,
+          lastSpeechAt: agent.lastSpeechAt,
+        })
       } else {
         const agentData: AgentData = {
           id: agent._id,
@@ -91,6 +97,9 @@ export default function GameCanvas() {
           gridX: agent.gridX,
           gridY: agent.gridY,
           archetype: agent.archetype,
+          currentAction: agent.currentAction,
+          speech: agent.speech,
+          lastSpeechAt: agent.lastSpeechAt,
         }
         const newSprite = new AgentSprite(agentData)
         scene.add(newSprite)

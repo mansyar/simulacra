@@ -7,20 +7,36 @@ export interface AgentData {
   gridX: number
   gridY: number
   archetype: string
+  currentAction?: string
+  speech?: string
+  lastSpeechAt?: number
+}
+
+const ACTION_EMOJIS: Record<string, string> = {
+  idle: '😴',
+  walking: '🚶',
+  eating: '🍱',
+  sleeping: '💤',
+  talking: '💬',
+  listening: '👂',
+  working: '🛠️',
+  exploring: '🔍',
 }
 
 const ARCHETYPE_COLORS: Record<string, string> = {
-  builder: '#8B4513',
-  socialite: '#FF69B4',
-  philosopher: '#9370DB',
-  explorer: '#228B22',
-  nurturer: '#FFA07A',
+  builder: '#3b82f6',
+  socialite: '#ec4899',
+  philosopher: '#8b5cf6',
+  explorer: '#f59e0b',
+  nurturer: '#10b981',
 }
 
 export class AgentSprite extends Actor {
   private agent: AgentData
   private circleGraphic: Circle
   private nameLabel: Label
+  private speechLabel: Label
+  private actionLabel: Label
   private targetGridX: number
   private targetGridY: number
   private lerpSpeed: number = 0.1 // adjust as needed
@@ -45,11 +61,41 @@ export class AgentSprite extends Actor {
     // Create a name label floating above
     this.nameLabel = new Label({
       text: agent.name,
-      pos: new Vector(0, -12), // above the circle
+      pos: new Vector(0, -12), 
       color: Color.White,
     })
-    this.nameLabel.font.size = 10 // small font
+    this.nameLabel.font.size = 10
     this.addChild(this.nameLabel)
+
+    // Create an action emoji label
+    this.actionLabel = new Label({
+      text: ACTION_EMOJIS[agent.currentAction || 'idle'] || '❓',
+      pos: new Vector(0, 8),
+      color: Color.White,
+    })
+    this.actionLabel.font.size = 12
+    this.addChild(this.actionLabel)
+
+    // Create a speech bubble label
+    this.speechLabel = new Label({
+      text: '',
+      pos: new Vector(0, -30),
+      color: Color.fromHex('#f1f5f9'),
+      maxWidth: 120,
+    })
+    this.speechLabel.font.size = 11
+    this.speechLabel.font.bold = true
+    this.addChild(this.speechLabel)
+  }
+
+  public updateAgentData(data: Partial<AgentData>) {
+    Object.assign(this.agent, data)
+    this.targetGridX = data.gridX ?? this.targetGridX
+    this.targetGridY = data.gridY ?? this.targetGridY
+    
+    if (data.currentAction) {
+      this.actionLabel.text = ACTION_EMOJIS[data.currentAction] || '❓'
+    }
   }
 
   public updateGridPosition(gridX: number, gridY: number) {
@@ -69,5 +115,14 @@ export class AgentSprite extends Actor {
     // Update screen position
     const screenPos = gridToScreen(newGridX, newGridY)
     this.pos = new Vector(screenPos.x, screenPos.y)
+
+    // Update speech visibility
+    const now = Date.now()
+    if (this.agent.speech && this.agent.lastSpeechAt && (now - this.agent.lastSpeechAt < 8000)) {
+      this.speechLabel.text = `"${this.agent.speech}"`
+      this.speechLabel.graphics.visible = true
+    } else {
+      this.speechLabel.graphics.visible = false
+    }
   }
 }
