@@ -1,10 +1,10 @@
 # Implementation Plan: Guideline Alignment and Archetype Migration
 
-### Phase 1: Documentation and Schema (The Foundation)
+### Phase 1: Documentation and Schema (The Foundation) [checkpoint: e200693]
 1.  - [x] Task: Update `conductor/product-guidelines.md` sleep mode section to match `convex/functions/world.ts` logic. (067df7c)
 2.  - [x] Task: Update `convex/schema.ts` to restrict `AgentArchetype` to the 5 primary types. (2435c05)
 3.  - [x] Task: Write migration test for existing agents with deprecated archetypes. (2435c05)
-4.  - [ ] Task: Conductor - User Manual Verification 'Phase 1: Foundation' (Protocol in workflow.md)
+4.  - [x] Task: Conductor - User Manual Verification 'Phase 1: Foundation' (Protocol in workflow.md) (e200693)
 
 ### Phase 2: AI Brain Upgrade (The Logic)
 1.  - [ ] Task: Update `ARCHETYPE_PROMPTS` and `DECISION_SYSTEM_PROMPT` in `convex/functions/ai.ts` to include the 5 primary archetypes and the new JSON schema.
