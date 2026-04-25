@@ -59,6 +59,39 @@ export const getEvents = query({
   },
 });
 
+/**
+ * Query: Get the most recent global events for the world-wide sidebar
+ */
+export const getGlobalEvents = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit ?? 20;
+    const events = await ctx.db
+      .query("events")
+      .order("desc")
+      .take(limit);
+
+    // Populate agent names for the UI
+    const eventsWithAgents = await Promise.all(
+      events.map(async (event) => {
+        let agentName = "Unknown";
+        if (event.agentId) {
+          const agent = await ctx.db.get(event.agentId);
+          if (agent) agentName = agent.name;
+        }
+        return {
+          ...event,
+          agentName,
+        };
+      })
+    );
+
+    return eventsWithAgents;
+  },
+});
+
 export const addSemanticMemory = action({
   args: {
     agentId: v.id("agents"),
