@@ -4,4 +4,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
----
+- [ ] **Track: Cognitive Integration & Memory Loop**
+*Link: [./tracks/cognitive-integration_20260425/](./tracks/cognitive-integration_20260425/)*
