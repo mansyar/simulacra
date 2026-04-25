@@ -301,6 +301,13 @@ export const tick = action({
               action: "listening",
               interactionPartnerId: agent._id,
             });
+
+            // UPDATE RELATIONSHIP AFFINITY
+            await ctx.runMutation(internal.functions.agents.updateRelationship, {
+              agentAId: agent._id,
+              agentBId: targetAgentId,
+              delta: 2, // Small positive boost for talking
+            });
           }
         }
 
