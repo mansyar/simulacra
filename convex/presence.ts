@@ -25,10 +25,11 @@ export const heartbeat = mutation({
 });
 
 export const list = query({
-  args: { roomToken: v.string() },
-  handler: async (ctx, { roomToken }) => {
+  args: { roomId: v.string() },
+  handler: async (ctx, { roomId }) => {
     // Avoid adding per-user reads so all subscriptions can share same cache.
-    return await presence.list(ctx, roomToken);
+    // In many cases roomId can be used as roomToken if not using signed tokens.
+    return await presence.list(ctx, roomId);
   },
 });
 

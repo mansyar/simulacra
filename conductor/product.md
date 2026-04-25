@@ -38,7 +38,7 @@
 
 ### 3. The AI Architecture
 - **Heartbeat**: Convex Cron every 180 seconds (3 minutes, configurable via `WORLD_TICK_INTERVAL`)
-- **Sleep Mode**: Pauses world tick after 30 minutes of inactivity (enabled via `ENABLE_SLEEP_MODE=true`)
+- **Sleep Mode**: Pauses world tick when no active observers are present, after a 30-second grace period (enabled via `ENABLE_SLEEP_MODE=true`)
 - **Memory Tiers**:
   1. Sensory Buffer: Last 10 events (Convex table)
   2. Semantic Memory: Long-term facts (Convex Vector Index)
@@ -164,7 +164,7 @@
 - **Request Usage**: 2,880 requests/day (20% of 14.4K daily limit)
 - Lazy LLM: Only call when agents are within interaction radius
 - Context pruning: Vector search retrieves only relevant memories
-- Sleep mode: Pause crons after 30 min of no active users
+- Sleep mode: Pause crons when no active observers are present (with 30s grace period)
 - Rate limit handling: Exponential backoff retry with graceful fallback to mock responses
 
 ---

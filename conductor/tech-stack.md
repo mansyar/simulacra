@@ -139,6 +139,7 @@ simulacra/
 ```json
 {
   "@tanstack/start": "^1.0.0",
+  "@convex-dev/presence": "^0.1.0",
   "convex": "^1.0.0",
   "excalibur": "^0.30.0",
   "framer-motion": "^11.0.0",
@@ -214,4 +215,4 @@ The implementation supports any OpenAI-compatible API endpoint. Models used incl
 ### Cost Optimization
 - Only call LLM when agents within interaction radius
 - Context pruning via vector similarity search
-- Sleep mode: pause crons after 30 min inactive
+- Sleep mode: pause crons when no active users are present (with 30s grace period)

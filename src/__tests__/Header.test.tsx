@@ -5,11 +5,21 @@ import Header from '../components/Header'
 
 // Mock Convex
 vi.mock('convex/react', () => ({
-  useQuery: vi.fn().mockReturnValue({
-    weather: 'sunny',
-    timeOfDay: 12,
-    dayCount: 1,
+  useQuery: vi.fn().mockImplementation((fn) => {
+    // Return appropriate data based on the function
+    if (fn && fn.name === 'list') {
+      return []; // Return empty array for presence list query
+    }
+    return {
+      weather: 'sunny',
+      timeOfDay: 12,
+      dayCount: 1,
+    };
   }),
+  useConvex: vi.fn().mockReturnValue({
+    url: 'http://localhost:8080',
+  }),
+  useMutation: vi.fn().mockReturnValue(vi.fn()),
 }))
 
 vi.mock('../convex/_generated/api', () => ({
@@ -35,6 +45,11 @@ vi.mock('@tanstack/react-router', () => ({
 // Mock ThemeToggle
 vi.mock('../components/ThemeToggle', () => ({
   default: () => <button data-testid="theme-toggle">Theme</button>,
+}))
+
+// Mock ActiveUserCount
+vi.mock('../components/ui/ActiveUserCount', () => ({
+  default: () => <div data-testid="active-user-count">👁 1 observer</div>,
 }))
 
 // Mock @convex-dev/presence/react

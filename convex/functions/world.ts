@@ -29,6 +29,7 @@ export const updateState = mutation({
     tickIntervalSeconds: v.optional(v.number()),
     totalTicks: v.optional(v.number()),
     lastTickAt: v.optional(v.number()),
+    lastUserActivityAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const existingState = await ctx.db.query("world_state").first();
@@ -43,6 +44,7 @@ export const updateState = mutation({
         tickIntervalSeconds: args.tickIntervalSeconds ?? 60,
         totalTicks: args.totalTicks ?? 0,
         lastTickAt: args.lastTickAt ?? Date.now(),
+        lastUserActivityAt: args.lastUserActivityAt ?? Date.now(),
       });
     }
     return { success: true };
@@ -67,21 +69,44 @@ export const checkSleepMode = action({
     }
 
     const now = Date.now();
+    const roomId = process.env.PRESENCE_ROOM_ID || "main-app";
+    
+    // Check real-time presence
+    const activeUsers = await ctx.runQuery(api.presence.list, { roomId });
+    const userCount = activeUsers.length;
+
+    if (userCount > 0) {
+      // Users are present, update activity timestamp
+      await ctx.runMutation(api.functions.world.updateState, {
+        lastUserActivityAt: now,
+      });
+      return { 
+        sleeping: false, 
+        reason: `${userCount} active users present` 
+      };
+    }
+
+    // No users present, check grace period
+    const lastActivity = state.lastUserActivityAt || state.lastTickAt || 0;
+    const timeSinceLastActivity = now - lastActivity;
+    const gracePeriod = parseInt(process.env.SLEEP_MODE_GRACE_PERIOD || "30000");
+
+    if (timeSinceLastActivity < gracePeriod) {
+      return { 
+        sleeping: false, 
+        reason: `No users, but within grace period (${Math.round((gracePeriod - timeSinceLastActivity) / 1000)}s left)` 
+      };
+    }
+
+    // Beyond grace period, check legacy inactivity timeout as well
     const lastTick = state.lastTickAt || now;
     const timeSinceLastTick = now - lastTick;
     const sleepTimeout = 30 * 60 * 1000; // 30 minutes
 
-    if (timeSinceLastTick > sleepTimeout) {
-      return { 
-        sleeping: true, 
-        reason: `Inactive for ${Math.round(timeSinceLastTick / 60000)} minutes`,
-        timeSinceLastTick 
-      };
-    }
-
     return { 
-      sleeping: false, 
-      reason: `Active (last tick ${Math.round(timeSinceLastTick / 60000)} minutes ago)` 
+      sleeping: timeSinceLastTick > sleepTimeout, 
+      reason: `Inactive for ${Math.round(timeSinceLastActivity / 1000)}s (grace period: ${gracePeriod/1000}s)`,
+      timeSinceLastTick 
     };
   },
 });

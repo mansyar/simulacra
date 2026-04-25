@@ -104,6 +104,7 @@ export default defineSchema({
     tickIntervalSeconds: v.number(),
     totalTicks: v.number(),
     lastTickAt: v.number(),
+    lastUserActivityAt: v.optional(v.number()),
   }),
 
   events: defineTable({

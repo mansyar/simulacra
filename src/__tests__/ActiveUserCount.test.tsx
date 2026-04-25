@@ -1,34 +1,64 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import ActiveUserCount from '../components/ui/ActiveUserCount'
-import usePresence from '@convex-dev/presence/react'
+import usePresenceWithSessionStorage from '../lib/usePresenceWithSessionStorage'
 
-// Mock @convex-dev/presence/react
-vi.mock('@convex-dev/presence/react', () => ({
+// Mock ../lib/usePresenceWithSessionStorage
+vi.mock('../lib/usePresenceWithSessionStorage', () => ({
   default: vi.fn().mockReturnValue([]),
 }))
 
 // Mock convex/_generated/api
 vi.mock('../../../convex/_generated/api', () => ({
   api: {
-    presence: {},
+    presence: {
+      heartbeat: 'presence:heartbeat',
+      list: 'presence:list',
+      disconnect: 'presence:disconnect',
+    },
   },
 }))
 
 describe('ActiveUserCount', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    localStorage.clear()
+    sessionStorage.clear()
+  })
+
   it('renders with zero observers', () => {
+    vi.mocked(usePresenceWithSessionStorage).mockReturnValue([])
     render(<ActiveUserCount />)
     const text = screen.getByText(/0 observers/)
     expect(text).toBeTruthy()
   })
 
   it('renders with plural observers', () => {
-    vi.mocked(usePresence).mockReturnValue([
+    vi.mocked(usePresenceWithSessionStorage).mockReturnValue([
       { userId: 'user1', online: true, lastDisconnected: 0 },
       { userId: 'user2', online: true, lastDisconnected: 0 },
     ])
     render(<ActiveUserCount />)
     const text = screen.getByText(/2 observers/)
+    expect(text).toBeTruthy()
+  })
+
+  it('generates and persists a user ID in localStorage', () => {
+    render(<ActiveUserCount />)
+    const userId = localStorage.getItem('simulacra_user_id')
+    expect(userId).toMatch(/^user_\d+$/)
+    
+    // Rerender should use the same ID
+    const { unmount } = render(<ActiveUserCount />)
+    unmount()
+    render(<ActiveUserCount />)
+    expect(localStorage.getItem('simulacra_user_id')).toBe(userId)
+  })
+
+  it('shows connecting state when presence is loading (undefined)', () => {
+    vi.mocked(usePresenceWithSessionStorage).mockReturnValue(undefined)
+    render(<ActiveUserCount />)
+    const text = screen.getByText(/1 observer \(connecting\.\.\.\)/)
     expect(text).toBeTruthy()
   })
 })
