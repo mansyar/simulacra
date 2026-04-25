@@ -73,3 +73,35 @@ test("pois table exists with correct fields", async () => {
     gridY: 32,
   });
 });
+
+test("AgentAction supports listening state", async () => {
+  const t = convexTest(schema, modules);
+
+  const agentId = await t.run(async (ctx) => {
+    return await ctx.db.insert("agents", {
+      name: "Listener",
+      archetype: "socialite",
+      gridX: 10,
+      gridY: 10,
+      spriteVariant: 0,
+      currentAction: "listening",
+      hunger: 50,
+      energy: 50,
+      social: 50,
+      coreTraits: [],
+      isActive: true,
+      lastActiveAt: Date.now(),
+      bio: "",
+      inventory: [],
+      currentGoal: "",
+      lastReflectedTick: 0,
+      actionStartedAt: Date.now(),
+    });
+  });
+
+  const agent = await t.run(async (ctx) => {
+    return await ctx.db.get(agentId);
+  });
+
+  expect(agent?.currentAction).toBe("listening");
+});

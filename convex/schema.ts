@@ -16,6 +16,7 @@ const AgentAction = v.union(
   v.literal("eating"),
   v.literal("sleeping"),
   v.literal("talking"),
+  v.literal("listening"),
   v.literal("working"),
   v.literal("exploring")
 );
