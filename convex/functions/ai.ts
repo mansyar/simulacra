@@ -3,7 +3,7 @@ import { v } from "convex/values";
 import { api, internal } from "../_generated/api";
 import { 
   getAiConfig, 
-  fetchWithRetry, 
+  chatCompletion,
   ARCHETYPE_PROMPTS 
 } from "./ai_helpers";
 
@@ -89,37 +89,19 @@ export const decision = action({
     `;
 
     try {
-      const url = `${baseUrl.replace(/\/$/, "")}/chat/completions`;
-      const response = await fetchWithRetry(
-        url,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({
-            model: model,
-            messages: [
-              { role: "system", content: systemPrompt },
-              { role: "user", content: userPrompt },
-            ],
-            response_format: { type: "json_object" },
-          }),
-        }
+      const content = await chatCompletion(
+        { apiKey, baseUrl, model },
+        [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        { responseFormat: { type: "json_object" } }
       );
 
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`AI API error: ${error}`);
-      }
-
-      const data = await response.json();
       try {
-        const content = data.choices[0].message.content;
         return typeof content === "string" ? JSON.parse(content) : content;
       } catch (e) {
-        console.error("Failed to parse AI response:", data.choices[0].message.content);
+        console.error("Failed to parse AI response:", content);
         return {
           thought: "I am having trouble thinking clearly.",
           action: "idle",
@@ -260,25 +242,16 @@ export const reflect = action({
     `;
 
     try {
-      const url = `${baseUrl.replace(/\/$/, "")}/chat/completions`;
-      const response = await fetchWithRetry(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: model,
-          messages: [
-            { role: "system", content: REFLECTION_SYSTEM_PROMPT },
-            { role: "user", content: userPrompt },
-          ],
-          response_format: { type: "json_object" },
-        }),
-      });
+      const content = await chatCompletion(
+        { apiKey, baseUrl, model },
+        [
+          { role: "system", content: REFLECTION_SYSTEM_PROMPT },
+          { role: "user", content: userPrompt },
+        ],
+        { responseFormat: { type: "json_object" } }
+      );
 
-      const data = await response.json();
-      const reflection = JSON.parse(data.choices[0].message.content);
+      const reflection = typeof content === "string" ? JSON.parse(content) : content;
 
       // 1. Update identity traits
       if (reflection.evolutionTraits && reflection.evolutionTraits.length > 0) {

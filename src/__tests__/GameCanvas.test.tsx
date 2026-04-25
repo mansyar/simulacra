@@ -3,9 +3,15 @@ import { render } from '@testing-library/react'
 
 // Mock Convex
 vi.mock('convex/react', () => ({
-  useQuery: vi.fn().mockReturnValue([
-    { _id: 'agent_1', name: 'Builder', gridX: 10, gridY: 10, archetype: 'builder' },
-  ]),
+  useQuery: vi.fn().mockImplementation((fn) => {
+    if (fn === 'agents:getAll') return [
+      { _id: 'agent_1', name: 'Builder', gridX: 10, gridY: 10, archetype: 'builder' },
+    ];
+    if (fn === 'world:getPois') return [
+      { _id: 'poi_1', name: 'Library', gridX: 32, gridY: 32, type: 'library' },
+    ];
+    return [];
+  }),
   useMutation: vi.fn().mockReturnValue(vi.fn()),
 }))
 
@@ -14,6 +20,10 @@ vi.mock('../../convex/_generated/api', () => ({
     functions: {
       agents: {
         getAll: 'agents:getAll',
+        updatePosition: 'agents:updatePosition',
+      },
+      world: {
+        getPois: 'world:getPois',
       },
     },
   },
@@ -50,23 +60,63 @@ vi.mock('excalibur', () => {
     }
   }
   
-  const actorInstances: MockActor[] = []
+  const actorInstances: unknown[] = []
   class MockActor {
-    graphics = { onPostDraw: vi.fn() }
+    graphics: Record<string, unknown> = { 
+      onPostDraw: vi.fn(), 
+      visible: true, 
+      show: vi.fn(), 
+      hide: vi.fn(),
+      add: vi.fn(),
+      current: [{ graphic: {} }]
+    }
     onPreUpdate = vi.fn()
     id = 'test-actor'
+    pos = { x: 0, y: 0 }
+    z = 0
     constructor() {
       actorInstances.push(this)
     }
+    addChild() {}
+  }
+
+  class MockCircle {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    constructor(_options?: unknown) {}
+  }
+
+  class MockRectangle {
+    rotation = 0
+    width = 0
+    height = 0
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    constructor(_options?: unknown) {}
+  }
+  
+  class MockLabel {
+    font = { size: 0, textAlign: '', bold: false }
+    graphics: Record<string, unknown> = { 
+      visible: true, 
+      onPostDraw: vi.fn(), 
+      show: vi.fn(), 
+      hide: vi.fn(),
+      add: vi.fn()
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    constructor(_options?: unknown) {}
   }
   
   return {
     Engine: MockEngine,
     Scene: MockScene,
     Actor: MockActor,
+    Circle: MockCircle,
+    Rectangle: MockRectangle,
+    Label: MockLabel,
+    TextAlign: { Center: 'center' },
     actorInstances,
     Color: {
-      fromHex: vi.fn().mockReturnValue({}),
+      fromHex: vi.fn().mockReturnValue({ clone: () => ({}) }),
     },
     Vector: vi.fn().mockImplementation((x, y) => ({ x, y })),
     BoundingBox: vi.fn().mockImplementation(() => ({
@@ -79,22 +129,16 @@ vi.mock('excalibur', () => {
 })
 
 // Mock IsometricGrid as a class
-let callCount = 0
 vi.mock('../components/game/IsometricGrid', () => {
-  console.log('IsometricGrid mock factory called')
   return {
-    IsometricGrid: vi.fn().mockImplementation((options: unknown) => {
-      callCount++
-      console.log(`IsometricGrid constructor called #${callCount} with options:`, options)
+    IsometricGrid: vi.fn().mockImplementation((_options: unknown) => {
       const mockInstance = {
         getBoundingBox: vi.fn().mockImplementation(() => {
-          console.log(`getBoundingBox called #${callCount}`)
           return { left: 0, right: 100, top: 0, bottom: 100 }
         }),
         render: vi.fn(),
         setMousePosition: vi.fn(),
       }
-      console.log('Returning mock instance:', mockInstance)
       return mockInstance
     }),
   }
@@ -110,7 +154,7 @@ vi.mock('../components/game/Camera', () => ({
 // Mock AgentSprite
 vi.mock('../components/game/AgentSprite', () => ({
   AgentSprite: vi.fn().mockImplementation(() => ({
-    updateGridPosition: vi.fn(),
+    updateAgentData: vi.fn(),
     id: 'test-agent',
   })),
 }))
@@ -118,12 +162,8 @@ vi.mock('../components/game/AgentSprite', () => ({
 // Import GameCanvas after mocking
 import GameCanvas from '../components/game/GameCanvas'
 import * as excalibur from 'excalibur'
-interface MockActorType {
-  graphics: { onPostDraw: (ctx: unknown) => void }
-  onPreUpdate: (engine: unknown, elapsed: number) => void
-  id: string
-}
-const { actorInstances } = excalibur as unknown as { actorInstances: MockActorType[] }
+
+const { actorInstances } = excalibur as unknown as { actorInstances: any[] }
 
 describe('GameCanvas', () => {
   beforeEach(() => {
@@ -143,15 +183,12 @@ describe('GameCanvas', () => {
   })
 
   it('should render canvas element', () => {
-    console.log('Test 1: rendering GameCanvas')
     render(<GameCanvas />)
-    // Canvas may not have a role, query by tag name
     const canvas = document.querySelector('canvas')
     expect(canvas).toBeTruthy()
   })
 
   it('should render container div', () => {
-    console.log('Test 2: rendering GameCanvas')
     render(<GameCanvas />)
     const canvas = document.querySelector('canvas')
     const container = canvas?.parentElement
@@ -161,37 +198,30 @@ describe('GameCanvas', () => {
   })
 
   it('should have canvas with correct className', () => {
-    console.log('Test 3: rendering GameCanvas')
     render(<GameCanvas />)
     const canvas = document.querySelector('canvas')
     expect(canvas?.className).toContain('block')
   })
 
   it('should verify IsometricGrid mock', () => {
-    // Skip this test as it's not essential for coverage
-    // The mock is working as demonstrated by other tests
     expect(true).toBe(true)
   })
 
   it('should call graphics.onPostDraw when actor is rendered', () => {
     render(<GameCanvas />)
-    const actor = actorInstances[0]
+    const actor = actorInstances[0] as { graphics: { onPostDraw: (ctx: unknown) => void } }
     expect(actor).toBeTruthy()
     const mockContext = {} as unknown
-    // The component overwrites graphics.onPostDraw with its own callback; call it
     actor.graphics.onPostDraw(mockContext)
-    // No assertion needed; just ensure no error
   })
 
   it('should call onPreUpdate when actor updates', () => {
     render(<GameCanvas />)
-    const actor = actorInstances[0]
+    const actor = actorInstances[0] as { onPreUpdate: (engine: unknown, elapsed: number) => void }
     expect(actor).toBeTruthy()
     const mockEngine = {} as unknown
     const elapsed = 16
-    // The component overwrites onPreUpdate with its own callback; call it
     actor.onPreUpdate(mockEngine, elapsed)
-    // No assertion needed
   })
 
   it('should trigger mousemove event', () => {
@@ -200,17 +230,12 @@ describe('GameCanvas', () => {
     expect(canvas).toBeTruthy()
     const mouseEvent = new MouseEvent('mousemove', { clientX: 100, clientY: 200 })
     canvas?.dispatchEvent(mouseEvent)
-    // The grid's setMousePosition should have been called (mocked)
-    // We can't assert because the grid mock is internal
   })
 
   it('should trigger visibility change event', () => {
     render(<GameCanvas />)
-    // Simulate document.hidden change
     Object.defineProperty(document, 'hidden', { value: true, configurable: true })
     document.dispatchEvent(new Event('visibilitychange'))
-    // The engine's stop should have been called (mocked)
-    // Reset hidden
     Object.defineProperty(document, 'hidden', { value: false, configurable: true })
     document.dispatchEvent(new Event('visibilitychange'))
   })

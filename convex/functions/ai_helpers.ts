@@ -26,6 +26,84 @@ export async function getAiConfig(ctx: ActionCtx, modelOverride?: string): Promi
   };
 }
 
+/**
+ * Shared chat completion helper that supports both native Gemini and OpenAI-compatible APIs.
+ * Detects Google native endpoints the same way `embed` does.
+ */
+export async function chatCompletion(
+  config: AiConfig,
+  messages: { role: string; content: string }[],
+  options?: { responseFormat?: { type: string } }
+): Promise<string> {
+  const { apiKey, baseUrl, model } = config;
+  if (!apiKey) throw new Error("No API key configured");
+
+  const isGoogleNative = baseUrl.includes("googleapis.com") && !baseUrl.includes("/openai");
+
+  if (isGoogleNative) {
+    // --- Native Gemini generateContent API ---
+    const version = baseUrl.includes("v1beta") ? "v1beta" : "v1";
+    const url = `https://generativelanguage.googleapis.com/${version}/models/${model}:generateContent?key=${apiKey}`;
+
+    // Convert OpenAI-style messages to Gemini format
+    const systemParts = messages
+      .filter((m) => m.role === "system")
+      .map((m) => ({ text: m.content }));
+    const contents = messages
+      .filter((m) => m.role !== "system")
+      .map((m) => ({
+        role: m.role === "assistant" ? "model" : "user",
+        parts: [{ text: m.content }],
+      }));
+
+    const body: any = { contents };
+    if (systemParts.length > 0) {
+      body.systemInstruction = { parts: systemParts };
+    }
+    if (options?.responseFormat?.type === "json_object") {
+      body.generationConfig = { responseMimeType: "application/json" };
+    }
+
+    const response = await fetchWithRetry(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Gemini API error (${response.status}): ${errorText}`);
+    }
+
+    const data = await response.json();
+    return data.candidates[0].content.parts[0].text;
+  } else {
+    // --- OpenAI-compatible API ---
+    const url = `${baseUrl.replace(/\/$/, "")}/chat/completions`;
+    const body: any = { model, messages };
+    if (options?.responseFormat) {
+      body.response_format = options.responseFormat;
+    }
+
+    const response = await fetchWithRetry(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`AI API error (${response.status}): ${errorText}`);
+    }
+
+    const data = await response.json();
+    return data.choices[0].message.content;
+  }
+}
+
 export async function getEmbeddingConfig(ctx: ActionCtx): Promise<AiConfig> {
   const config = await ctx.runQuery(internal.functions.config.getInternal);
   return {
@@ -67,35 +145,21 @@ export const chat = action({
     model: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { apiKey, baseUrl, model } = await getAiConfig(ctx, args.model);
+    const config = await getAiConfig(ctx, args.model);
 
-    if (!apiKey) {
-      return { content: `[MOCK] ${ARCHETYPE_PROMPTS[args.archetype]} Response to: ${args.message} (Model: ${model})` };
+    if (!config.apiKey) {
+      return { content: `[MOCK] ${ARCHETYPE_PROMPTS[args.archetype]} Response to: ${args.message} (Model: ${config.model})` };
     }
 
     try {
-      const url = `${baseUrl.replace(/\/$/, "")}/chat/completions`;
-      const response = await fetchWithRetry(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: model,
-          messages: [
-            { role: "system", content: ARCHETYPE_PROMPTS[args.archetype] },
-            { role: "user", content: args.message },
-          ],
-        }),
-      });
-
-      if (!response.ok) throw new Error(`AI API error: ${await response.text()}`);
-      const data = await response.json();
-      return { content: data.choices[0].message.content };
+      const content = await chatCompletion(config, [
+        { role: "system", content: ARCHETYPE_PROMPTS[args.archetype] },
+        { role: "user", content: args.message },
+      ]);
+      return { content };
     } catch (error) {
       console.error("[AI] Chat error:", error);
-      return { content: `[MOCK] ${ARCHETYPE_PROMPTS[args.archetype]} Response to: ${args.message} (Model: ${model})` };
+      return { content: `[MOCK] ${ARCHETYPE_PROMPTS[args.archetype]} Response to: ${args.message} (Model: ${config.model})` };
     }
   },
 });

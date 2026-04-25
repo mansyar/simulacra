@@ -7,6 +7,11 @@ vi.mock('@tanstack/react-router', () => ({
   createFileRoute: vi.fn().mockImplementation(() => (config: unknown) => config),
 }))
 
+// Mock components
+vi.mock('../components', () => ({
+  GlobalThoughtStream: () => <div data-testid="thought-stream" />,
+}))
+
 // Import after mocking
 import { Route } from '../routes/index'
 
