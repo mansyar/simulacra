@@ -17,7 +17,7 @@
 6. - [x] Task: Refactor and verify test coverage (>80%). 7fae67f
 
 ## Phase 1.1: POI & Feedback UI
-1. - [ ] Task: Create `POISprite.ts` to render fixed locations.
+1. - [~] Task: Create `POISprite.ts` to render fixed locations.
 2. - [ ] Task: Update `AgentSprite.ts` to render speech bubbles and action icons.
 
 ## Phase 2: RAG Context & Identity Evolution

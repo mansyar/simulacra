@@ -15,6 +15,16 @@ export const getState = query({
 });
 
 /**
+ * Query: Get all points of interest
+ */
+export const getPois = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("pois").collect();
+  },
+});
+
+/**
  * Mutation: Update the world state
  */
 export const updateState = mutation({
