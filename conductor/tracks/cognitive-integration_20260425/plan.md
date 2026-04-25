@@ -21,8 +21,8 @@
 2. - [x] Task: Update `AgentSprite.ts` to render speech bubbles and action icons. d1cd3f3
 
 ## Phase 2: RAG Context & Identity Evolution
-1. - [~] Task: Write unit tests for full-archetype context building and re-ranked memory retrieval.
-2. - [ ] Task: Update `tick` to fetch `affinity`, `bio`, and `inventory` for context payload.
+1. - [x] Task: Write unit tests for full-archetype context building and re-ranked memory retrieval. 2858508
+2. - [~] Task: Update `tick` to fetch `affinity`, `bio`, and `inventory` for context payload.
 3. - [ ] Task: Modify AI decision prompt to use compressed evolution context.
 4. - [ ] Task: Refactor and verify test coverage (>80%).
 5. - [ ] Task: Conductor - User Manual Verification 'Phase 2: RAG & Evolution' (Protocol in workflow.md)

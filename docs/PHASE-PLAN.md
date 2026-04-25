@@ -7,8 +7,9 @@
 | 1 | The Body | Setup + Rendering | ✅ Complete | 1-2 weeks |
 | 2 | The Heart | Convex + Real-time Sync | ✅ Complete | 1-2 weeks |
 | 3 | The Brain | LLM Integration + Memory | ⚙️ In Progress | 2-3 weeks |
-| 4 | The Social | Proximity + Chat | ⏳ Not Started | 1-2 weeks |
-| 5 | The Polish | Master Panel + Deploy | ⏳ Not Started | 1 week |
+| 4 | The Eyes | Excalibur → PixiJS Migration | ⏳ Not Started | 3-4 days |
+| 5 | The Social | Proximity + Chat | ⏳ Not Started | 1-2 weeks |
+| 6 | The Polish | Master Panel + Deploy | ⏳ Not Started | 1 week |
 
 ---
 
@@ -148,13 +149,73 @@
 
 ---
 
-## Phase 4: The Social
+## Phase 4: The Eyes
 
-**Goal:** Proximity interactions and chat
+**Goal:** Migrate rendering layer from Excalibur.js to PixiJS for GPU-accelerated 2D rendering, viewport culling, and future visual effects support
 
 **Status:** ⏳ NOT STARTED (Depends on Phase 3)
 
-### Week 7: Proximity System
+**Why:** Excalibur's full game-engine overhead (scene graph, ECS, physics pipeline) runs every frame despite only using ~5% of its features. The 64×64 grid generates 8,320 line segments per frame with no viewport culling. PixiJS provides WebGL/WebGPU batch rendering, native sprite sheet support, and GPU-powered visual effects (tinting, filters, particles) needed for later phases.
+
+### Days 1-2: Core Migration
+
+#### PixiJS Setup
+- [ ] Install PixiJS v8: `pnpm add pixi.js`
+- [ ] Remove Excalibur: `pnpm remove excalibur`
+- [ ] Create new `GameCanvas.tsx` with PixiJS `Application`
+- [ ] Wire up React lifecycle (init/destroy) with `useEffect`
+
+#### Isometric Grid
+- [ ] Rewrite `IsometricGrid.ts` using PixiJS `Graphics`
+- [ ] Implement viewport culling (only draw visible grid lines)
+- [ ] Preserve existing `gridToScreen` / `screenToGrid` math (no changes needed)
+- [ ] Render hover highlight tile
+
+#### Camera Controller
+- [ ] Rewrite `Camera.ts` using PixiJS `Container` transform (translate + scale)
+- [ ] Implement drag-to-pan with pointer events
+- [ ] Implement scroll-to-zoom with wheel events
+- [ ] Preserve camera bounds clamping
+
+### Days 3-4: Sprites & Polish
+
+#### Agent Sprites
+- [ ] Rewrite `AgentSprite.ts` using PixiJS `Container` + `Graphics` + `Text`
+- [ ] Implement archetype-colored circles (same visual as current)
+- [ ] Add name labels and action emoji rendering
+- [ ] Implement speech bubble with background
+- [ ] Preserve smooth grid-position lerping (`onPreUpdate` → ticker callback)
+
+#### POI Sprites
+- [ ] Rewrite `POISprite.ts` using PixiJS `Container` + `Graphics` + `Text`
+- [ ] Match existing visual style
+
+#### Integration & Cleanup
+- [ ] Verify Convex real-time sync still works (agents appear/update/remove)
+- [ ] Verify click-to-move interaction
+- [ ] Verify tab visibility pause/resume
+- [ ] Update/add Vitest tests for new rendering layer
+- [ ] Remove all Excalibur imports and types from codebase
+
+### Phase 4 Checkpoints
+
+- [ ] PixiJS renders identical isometric grid to previous Excalibur version
+- [ ] All agents display with correct colors, names, actions, and speech
+- [ ] Camera pan/zoom works identically
+- [ ] No Excalibur references remain in codebase
+- [ ] Performance improvement confirmed (measure FPS before/after)
+- [ ] Bundle size reduced (~200KB Excalibur → ~150KB PixiJS)
+- [ ] Existing tests pass or are updated
+
+---
+
+## Phase 5: The Social
+
+**Goal:** Proximity interactions and chat
+
+**Status:** ⏳ NOT STARTED (Depends on Phase 4)
+
+### Week 8: Proximity System
 
 #### Day 1-2: Distance Calculation
 - [ ] Implement Euclidean distance function
@@ -171,14 +232,14 @@
 - [ ] Track affinity scores
 - [ ] Update relationships after interactions
 
-### Week 8: UI Updates
+### Week 9: UI Updates
 
 - [ ] Create Thought Stream sidebar
 - [ ] Display agent thoughts in real-time
 - [ ] Add agent detail panel
 - [ ] Connect `/agent/:id` route
 
-### Phase 4 Checkpoints
+### Phase 5 Checkpoints
 
 - [ ] Agents chat when near each other
 - [ ] Relationship scores update correctly
@@ -187,13 +248,13 @@
 
 ---
 
-## Phase 5: The Polish
+## Phase 6: The Polish
 
 **Goal:** Master panel and deployment
 
-**Status:** ⏳ NOT STARTED (Depends on Phase 4)
+**Status:** ⏳ NOT STARTED (Depends on Phase 5)
 
-### Week 9: Master Panel
+### Week 10: Master Panel
 
 #### Day 1-2: Authentication
 - [ ] Create password input component
@@ -212,7 +273,7 @@
 - [ ] Add loading states
 - [ ] Error handling and toasts
 
-### Week 10: Deployment
+### Week 11: Deployment
 
 - [ ] Configure Vercel deployment
 - [ ] Set environment variables
@@ -220,7 +281,7 @@
 - [ ] Deploy frontend to Vercel
 - [ ] Test production build
 
-### Phase 5 Checkpoints
+### Phase 6 Checkpoints
 
 - [ ] Master password protects admin actions
 - [ ] Weather changes reflect in world
@@ -253,14 +314,21 @@ Phase 3 (Brain)
     └──► Memory system
             │
             ▼
-Phase 4 (Social)
+Phase 4 (Eyes)
+    │
+    ├──► Remove Excalibur
+    ├──► PixiJS renderer
+    └──► Viewport culling
+            │
+            ▼
+Phase 5 (Social)
     │
     ├──► Proximity detection
     ├──► Chat system
     └──► Relationships
             │
             ▼
-Phase 5 (Polish)
+Phase 6 (Polish)
     │
     ├──► Master panel
     └──► Deployment
@@ -291,14 +359,15 @@ Phase 5 (Polish)
 
 ## Recommended Development Order
 
-### Current Status: Phase 2 Complete ✅
+### Current Status: Phase 3 In Progress ⚙️
 
 1. ✅ **Start simple:** Grid rendering complete with Excalibur.js
 2. ✅ **Add one thing at a time:** Agent sprites, camera controls, tests
-3. ✅ **Next:** Install and configure Convex (Phase 2)
-4. ⏳ **Then:** Implement LLM integration (Phase 3)
-5. ⏳ **Then:** Add proximity and chat (Phase 4)
-6. ⏳ **Finally:** Master panel and deployment (Phase 5)
+3. ✅ **Done:** Install and configure Convex (Phase 2)
+4. ⚙️ **Current:** Implement LLM integration (Phase 3)
+5. ⏳ **Then:** Migrate Excalibur → PixiJS (Phase 4)
+6. ⏳ **Then:** Add proximity and chat (Phase 5)
+7. ⏳ **Finally:** Master panel and deployment (Phase 6)
 
 ---
 

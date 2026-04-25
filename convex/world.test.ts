@@ -38,7 +38,7 @@ test("world tick updates agents needs and triggers decisions", async () => {
 
   // Verify needs were updated
   const agents = await t.query(api.functions.agents.getAll, {});
-  const agent = agents.find(a => a._id === agentId);
+  const agent = agents.find((a: any) => a._id === agentId);
   
   // Hunger should increase, Energy should decrease
   expect(agent?.hunger).toBeGreaterThan(50);
@@ -48,6 +48,6 @@ test("world tick updates agents needs and triggers decisions", async () => {
   const events = await t.query(api.functions.memory.getEvents, { agentId });
   expect(events.length).toBeGreaterThan(0);
 
-  const hasDecision = events.some(e => e.description.includes("Thought:") && e.description.includes("Action:"));
+  const hasDecision = events.some((e: any) => e.description.includes("Thought:") && e.description.includes("Action:"));
   expect(hasDecision).toBe(true);
   });

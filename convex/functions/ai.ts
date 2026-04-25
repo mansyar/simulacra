@@ -1,7 +1,7 @@
-import { action } from "../_generated/server";
+import { action, internalQuery } from "../_generated/server";
 import type { ActionCtx } from "../_generated/server";
 import { v } from "convex/values";
-import { internal } from "../_generated/api";
+import { api, internal } from "../_generated/api";
 
 const ARCHETYPE_PROMPTS = {
   builder: "You are a builder. You are organized, productive, and detail-oriented. You love creating and improving things. Your tone is practical and focused.",
@@ -163,6 +163,7 @@ export const decision = action({
     }),
     nearbyAgents: v.array(v.string()),
     archetype: v.union(v.literal("builder"), v.literal("socialite"), v.literal("philosopher"), v.literal("explorer"), v.literal("nurturer")),
+    contextOverride: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { apiKey, baseUrl, model } = await getAiConfig(ctx, args.agentState.model);
@@ -188,6 +189,10 @@ export const decision = action({
       };
     }
 
+    const systemPrompt = args.contextOverride 
+      ? `${DECISION_SYSTEM_PROMPT}\n\nCURRENT AGENT CONTEXT:\n${args.contextOverride}`
+      : `${DECISION_SYSTEM_PROMPT}\n${ARCHETYPE_PROMPTS[args.archetype]}`;
+
     const userPrompt = `
     Agent Name: ${args.agentState.name}
     Archetype: ${args.archetype}
@@ -210,7 +215,7 @@ export const decision = action({
           body: JSON.stringify({
             model: model,
             messages: [
-              { role: "system", content: DECISION_SYSTEM_PROMPT + "\n" + ARCHETYPE_PROMPTS[args.archetype] },
+              { role: "system", content: systemPrompt },
               { role: "user", content: userPrompt },
             ],
             response_format: { type: "json_object" },
@@ -281,8 +286,6 @@ export const embed = action({
       let body: any;
 
       if (isGoogle) {
-        // Native Google AI format (most robust for Gemini Free Tier)
-        // Ensure version is in the URL, usually v1beta or v1
         const version = baseUrl.includes("v1beta") ? "v1beta" : "v1";
         const modelName = model.startsWith("models/") ? model : `models/${model}`;
         url = `https://generativelanguage.googleapis.com/${version}/${modelName}:embedContent?key=${apiKey}`;
@@ -293,7 +296,6 @@ export const embed = action({
           outputDimensionality: 768
         };
       } else {
-        // OpenAI-compatible format
         url = `${baseUrl.replace(/\/$/, "")}/embeddings`;
         body = {
           model: model,
@@ -320,21 +322,78 @@ export const embed = action({
 
       const data = await response.json();
       
-      // Handle both OpenAI and Google Gemini response formats
       if (data.embedding) {
-        // Native Google format (sometimes)
         return data.embedding.values;
       } else if (data.data && data.data[0] && data.data[0].embedding) {
-        // OpenAI format
         return data.data[0].embedding;
       } else {
-        // Google Gemini native format
         return data.values;
       }
     } catch (error) {
       console.error("[AI] Embed error:", error);
-      // Return mock embedding on error
       return new Array(768).fill(0).map(() => Math.random());
     }
+  },
+});
+
+/**
+ * Internal Query: Build prompt context for an agent
+ */
+export const buildAgentContext = internalQuery({
+  args: {
+    agentId: v.id("agents"),
+  },
+  handler: async (ctx, args): Promise<string> => {
+    const agent = await ctx.db.get(args.agentId);
+    if (!agent) return "";
+
+    const archetype = await ctx.db
+      .query("archetypes")
+      .withIndex("by_name", (q) => q.eq("name", agent.archetype))
+      .first();
+
+    const basePrompt = archetype?.basePrompt ?? "";
+    const traits = agent.coreTraits.join(", ");
+    const inventory = agent.inventory.length > 0 ? agent.inventory.join(", ") : "None";
+
+    let context = `Name: ${agent.name}\n`;
+    context += `Archetype: ${agent.archetype}\n`;
+    context += `Biography: ${agent.bio}\n`;
+    context += `Traits: ${traits}\n`;
+    context += `Inventory: ${inventory}\n`;
+    context += `Current Goal: ${agent.currentGoal}\n\n`;
+    context += `Personality & Instructions: ${basePrompt}\n`;
+
+    return context;
+  },
+});
+
+/**
+ * Action: Build full context with identity and memories
+ */
+export const buildFullContext = action({
+  args: {
+    agentId: v.id("agents"),
+    query: v.string(),
+  },
+  handler: async (ctx, args): Promise<string> => {
+    const agentContext = await ctx.runQuery(internal.functions.ai.buildAgentContext, {
+      agentId: args.agentId,
+    });
+
+    const memories = await ctx.runAction(api.functions.memory.retrieveMemoriesAction, {
+      agentId: args.agentId,
+      query: args.query,
+    });
+
+    let fullContext: string = agentContext;
+    if (memories && (memories as any[]).length > 0) {
+      fullContext += "\nRelevant Memories:\n";
+      (memories as any[]).forEach((m: any) => {
+        fullContext += `- ${m.content}\n`;
+      });
+    }
+
+    return fullContext;
   },
 });

@@ -59,7 +59,7 @@ test("passive perception records nearby agents", async () => {
   });
 
   const events = await t.query(api.functions.memory.getEvents, { agentId: agent1Id });
-  const sighting = events.find(e => e.description.includes("saw Bob"));
+  const sighting = events.find((e: any) => e.description.includes("saw Bob"));
   
   expect(sighting).toBeDefined();
   expect(sighting?.type).toBe("movement");

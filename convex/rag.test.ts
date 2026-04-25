@@ -86,13 +86,13 @@ test("retrieveMemories returns relevant results", async () => {
     });
   });
 
-  // 2. Call retrieveMemories
-  const results = await t.query(api.functions.memory.retrieveMemories as any, {
+  // 2. Call retrieveMemoriesAction
+  const results = await t.action(api.functions.memory.retrieveMemoriesAction, {
     agentId,
     query: "Who did I meet?",
     limit: 5,
   });
 
   expect(results.length).toBeGreaterThan(0);
-  expect(results[0].description).toContain("Bob");
+  expect(results[0].content).toContain("Bob");
 });

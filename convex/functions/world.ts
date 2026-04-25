@@ -184,7 +184,7 @@ export const tick = action({
     for (let i = 0; i < agents.length; i += BATCH_SIZE) {
       const batch = agents.slice(i, i + BATCH_SIZE);
       
-      await Promise.all(batch.map(async (agent) => {
+      await Promise.all(batch.map(async (agent: any) => {
         // 2.1 Safety Layer: Check for critical needs (Survival overrides)
         if (agent.hunger > 90 || agent.energy < 10) {
           const survivalAction = agent.hunger > 90 ? "eating" : "sleeping";
@@ -246,6 +246,12 @@ export const tick = action({
         }
 
         // Call AI for decision
+        // FETCH FULL CONTEXT (Identity + RAG Memories)
+        const fullContext = await ctx.runAction(api.functions.ai.buildFullContext, {
+          agentId: agent._id,
+          query: `What should I do next given my goal ${agent.currentGoal} and current state?`,
+        });
+
         const decision = await ctx.runAction(api.functions.ai.decision, {
           agentState: {
             name: agent.name,
@@ -256,6 +262,7 @@ export const tick = action({
           },
           nearbyAgents,
           archetype: aiArchetype,
+          contextOverride: fullContext, // New field to support RAG
         });
 
         // Normalize action to ensure it matches schema literals

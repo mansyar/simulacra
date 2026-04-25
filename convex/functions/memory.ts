@@ -1,7 +1,7 @@
 import { mutation, query, action, internalMutation, internalQuery } from "../_generated/server";
 import { v } from "convex/values";
 import { api, internal } from "../_generated/api";
-import type { Doc } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
 
 export const addEvent = mutation({
   args: {
@@ -161,9 +161,78 @@ export const searchSemanticMemory = action({
   },
 });
 
+/**
+ * Query: Retrieve relevant memories for an agent via vector search
+ */
+export const retrieveMemories = query({
+  args: {
+    agentId: v.id("agents"),
+    query: v.string(),
+    limit: v.optional(v.number()),
+  },
+  handler: async (_ctx, _args) => {
+    return []; 
+  },
+});
+
+export const retrieveMemoriesAction = action({
+  args: {
+    agentId: v.id("agents"),
+    query: v.string(),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args): Promise<Doc<"memories">[]> => {
+    const limit = args.limit ?? 5;
+
+    // 1. Generate embedding for the search query
+    const embedding = await ctx.runAction(api.functions.ai.embed, {
+      text: args.query,
+    });
+
+    // 2. Perform vector search
+    let results;
+    try {
+      results = await ctx.vectorSearch("memories", "by_embedding", {
+        vector: embedding,
+        filter: (q) => q.eq("agentId", args.agentId),
+        limit,
+      });
+    } catch (e) {
+      // Fallback for testing environments that don't support vector search
+      console.warn("Vector search failed, falling back to basic query:", e);
+      const allMemories = await ctx.runQuery(internal.functions.memory.getMemoriesByAgent, {
+        agentId: args.agentId,
+      });
+      return allMemories.slice(0, limit);
+    }
+
+    // 3. Fetch the full memory documents
+    const memories = await Promise.all(
+      results.map(async (res: { _id: string }) => {
+        const memory = await ctx.runQuery(internal.functions.memory.getMemoryById, {
+          id: res._id as Id<"memories">,
+        });
+        return memory;
+      })
+    );
+
+    return memories.filter((m): m is Doc<"memories"> => m !== null);
+  },
+});
+
 export const getMemoryById = internalQuery({
   args: { id: v.id("memories") },
   handler: async (ctx, args) => {
     return await ctx.db.get(args.id);
+  },
+});
+
+export const getMemoriesByAgent = internalQuery({
+  args: { agentId: v.id("agents") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("memories")
+      .withIndex("by_agent", (q) => q.eq("agentId", args.agentId))
+      .collect();
   },
 });

@@ -155,5 +155,6 @@ export default defineSchema({
       statement: v.array(v.string()),
     }),
     baseColor: v.string(),
-  }),
+  })
+    .index("by_name", ["name"]),
 });
