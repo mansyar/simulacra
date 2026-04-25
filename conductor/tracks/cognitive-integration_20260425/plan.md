@@ -44,3 +44,7 @@
 1. - [x] Task: Create `world:admin` functions for `manualTick`, `manualReflect`, and `resetAgentBrain`. 5919ddd
 2. - [x] Task: Implement TanStack Start Server Functions (`createServerFn`) to bridge these to the UI. 13f83c4
 3. - [x] Task: Conductor - User Manual Verification 'Phase 5: God Mode API' (Protocol in workflow.md) 80ea0c3
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions 14e89bc
+
