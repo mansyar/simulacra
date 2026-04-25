@@ -8,7 +8,7 @@
 5. - [x] Task: Implement `getGlobalEvents` query for the world-wide sidebar. 8517854
 6. - [x] Task: Implement "Batch Processor" to stay within RPM/TPM limits. e3ddf22
 
-## Phase 1: Simulation Logic & Perception
+## Phase 1: Simulation Logic & Perception [checkpoint: c45db00]
 1. - [x] Task: Create data migration/seed function for new schema fields, POIs, and Full Archetype profiles. 8a303d6
 2. - [x] Task: Write unit tests for Passive Perception (seeing nearby agents) and Weather-based speed multipliers. 7ede330
 3. - [x] Task: Implement 'Safety Layer' with Narrative Survival and Social Handshaking (Talking/Listening states). 2ba23ea
