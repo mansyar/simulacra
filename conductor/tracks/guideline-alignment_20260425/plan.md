@@ -2,8 +2,8 @@
 
 ### Phase 1: Documentation and Schema (The Foundation)
 1.  - [x] Task: Update `conductor/product-guidelines.md` sleep mode section to match `convex/functions/world.ts` logic. (067df7c)
-2.  - [ ] Task: Update `convex/schema.ts` to restrict `AgentArchetype` to the 5 primary types.
-3.  - [ ] Task: Write migration test for existing agents with deprecated archetypes.
+2.  - [x] Task: Update `convex/schema.ts` to restrict `AgentArchetype` to the 5 primary types. (2435c05)
+3.  - [x] Task: Write migration test for existing agents with deprecated archetypes. (2435c05)
 4.  - [ ] Task: Conductor - User Manual Verification 'Phase 1: Foundation' (Protocol in workflow.md)
 
 ### Phase 2: AI Brain Upgrade (The Logic)
