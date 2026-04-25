@@ -97,6 +97,44 @@ export const create = mutation({
 });
 
 /**
+ * Internal Mutation: Resolve movement toward target based on speed and weather
+ */
+export const resolveMovement = internalMutation({
+  args: {
+    agentId: v.id("agents"),
+    speedMultiplier: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const agent = await ctx.db.get(args.agentId);
+    if (!agent) return;
+
+    if (agent.targetX === undefined || agent.targetY === undefined) return;
+
+    const AGENT_SPEED = 2; // grid units per tick
+    const dx = agent.targetX - agent.gridX;
+    const dy = agent.targetY - agent.gridY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance > 0.1) {
+      const moveDistance = AGENT_SPEED * args.speedMultiplier;
+      const ratio = Math.min(1, moveDistance / distance);
+      
+      const newX = agent.gridX + dx * ratio;
+      const newY = agent.gridY + dy * ratio;
+
+      await ctx.db.patch(args.agentId, {
+        gridX: newX,
+        gridY: newY,
+        lastActiveAt: Date.now(),
+      });
+
+      return { arrived: ratio === 1, newX, newY };
+    }
+    return { arrived: true, newX: agent.gridX, newY: agent.gridY };
+  },
+});
+
+/**
  * Mutation: Update agent position
  */
 export const updatePosition = mutation({
@@ -122,23 +160,68 @@ export const updatePosition = mutation({
 });
 
 /**
- * Internal Mutation: Update agent needs
+ * Internal Mutation: Update agent needs based on current action
  */
 export const updateNeeds = internalMutation({
   args: {
     agentId: v.id("agents"),
-    hungerDelta: v.number(),
-    energyDelta: v.number(),
-    socialDelta: v.number(),
   },
   handler: async (ctx, args) => {
     const agent = await ctx.db.get(args.agentId);
     if (!agent) return;
 
+    const action = agent.currentAction;
+    let hungerDelta = 0;
+    let energyDelta = 0;
+    let socialDelta = 0;
+
+    switch (action) {
+      case "idle":
+        hungerDelta = 1;
+        energyDelta = -1;
+        socialDelta = -1;
+        break;
+      case "walking":
+        hungerDelta = 2;
+        energyDelta = -2;
+        socialDelta = -1;
+        break;
+      case "eating":
+        hungerDelta = -20;
+        energyDelta = 5;
+        socialDelta = 1;
+        break;
+      case "sleeping":
+        hungerDelta = 1;
+        energyDelta = 20;
+        socialDelta = -2;
+        break;
+      case "talking":
+        hungerDelta = 1;
+        energyDelta = -1;
+        socialDelta = 10;
+        break;
+      case "listening":
+        hungerDelta = 1;
+        energyDelta = -1;
+        socialDelta = 5;
+        break;
+      case "working":
+        hungerDelta = 5;
+        energyDelta = -5;
+        socialDelta = -2;
+        break;
+      case "exploring":
+        hungerDelta = 3;
+        energyDelta = -3;
+        socialDelta = 2;
+        break;
+    }
+
     await ctx.db.patch(args.agentId, {
-      hunger: Math.max(0, Math.min(100, agent.hunger + args.hungerDelta)),
-      energy: Math.max(0, Math.min(100, agent.energy + args.energyDelta)),
-      social: Math.max(0, Math.min(100, agent.social + args.socialDelta)),
+      hunger: Math.max(0, Math.min(100, agent.hunger + hungerDelta)),
+      energy: Math.max(0, Math.min(100, agent.energy + energyDelta)),
+      social: Math.max(0, Math.min(100, agent.social + socialDelta)),
       lastActiveAt: Date.now(),
     });
   },

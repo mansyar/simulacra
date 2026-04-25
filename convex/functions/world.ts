@@ -157,16 +157,41 @@ export const tick = action({
     const agents = await ctx.runQuery(api.functions.agents.getAll);
     
     // 2. Process each agent
+    const worldState = await ctx.runQuery(api.functions.world.getState);
+    const weather = worldState?.weather || "sunny";
+    const weatherMultipliers: Record<string, number> = {
+      sunny: 1.0,
+      cloudy: 1.0,
+      rainy: 0.8,
+      stormy: 0.5,
+    };
+    const speedMultiplier = weatherMultipliers[weather] || 1.0;
+
     for (const agent of agents) {
-      // Update needs
+      // 2.1 Update needs based on current action
       await ctx.runMutation(internal.functions.agents.updateNeeds, {
         agentId: agent._id,
-        hungerDelta: 5,
-        energyDelta: -2,
-        socialDelta: -1,
       });
 
-      // Get nearby agents for decision making
+      // 2.2 Movement Resolution
+      if (agent.targetX !== undefined && agent.targetY !== undefined) {
+        const result = await ctx.runMutation(internal.functions.agents.resolveMovement, {
+          agentId: agent._id,
+          speedMultiplier,
+        });
+
+        if (result?.arrived) {
+          await ctx.runMutation(api.functions.memory.addEvent, {
+            agentId: agent._id,
+            type: "movement",
+            description: `Arrived at destination (${Math.round(result.newX)}, ${Math.round(result.newY)})`,
+            gridX: result.newX,
+            gridY: result.newY,
+          });
+        }
+      }
+
+      // 2.3 Get nearby agents for decision making
       const nearbyAgents = agents
         .filter((a: any) => a._id !== agent._id)
         .filter((a: any) => {
