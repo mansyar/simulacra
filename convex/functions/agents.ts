@@ -85,6 +85,11 @@ export const create = mutation({
       coreTraits: [],
       isActive: true,
       lastActiveAt: Date.now(),
+      bio: "",
+      inventory: [],
+      currentGoal: "Wandering around",
+      lastReflectedTick: 0,
+      actionStartedAt: Date.now(),
     };
     const agentId = await ctx.db.insert("agents", newAgent);
     return agentId;

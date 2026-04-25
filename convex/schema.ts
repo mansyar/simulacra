@@ -60,6 +60,15 @@ export default defineSchema({
     model: v.optional(v.string()), // per-agent model override
     isActive: v.boolean(),
     lastActiveAt: v.number(),
+    bio: v.string(),
+    inventory: v.array(v.string()),
+    currentGoal: v.string(),
+    lastReflectedTick: v.number(),
+    actionStartedAt: v.number(),
+    interactionPartnerId: v.optional(v.id("agents")),
+    lastThought: v.optional(v.string()),
+    speech: v.optional(v.string()),
+    lastSpeechAt: v.optional(v.number()),
   })
     .index("by_active", ["isActive"])
     .index("by_position", ["gridX", "gridY"])

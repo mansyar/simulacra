@@ -41,6 +41,11 @@ export const agents = mutation({
           currentAction: "idle",
           spriteVariant: Math.floor(Math.random() * 4),
           lastActiveAt: Date.now(),
+          bio: "",
+          inventory: [],
+          currentGoal: "Wandering around",
+          lastReflectedTick: 0,
+          actionStartedAt: Date.now(),
         });
         count++;
       }

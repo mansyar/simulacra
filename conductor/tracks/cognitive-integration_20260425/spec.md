@@ -1,34 +1,50 @@
 # Specification: Cognitive Integration & Memory Loop
 
 ## Overview
-This track implements the "Brain" architecture as defined in the PRD, transforming agents from static entities into context-aware autonomous actors. It introduces a Retrieval-Augmented Generation (RAG) loop, deterministic survival safeguards, and a simulated reflection cycle to consolidate memories into core traits.
+This track implements the "Brain" architecture as defined in the PRD, transforming agents from static entities into context-aware autonomous actors. It introduces a Retrieval-Augmented Generation (RAG) loop, Character Backgrounds, Dynamic Metabolism, Narrative Survival, and robust simulation physics to ensure persistent roleplay and high-fidelity autonomous behavior.
 
 ## Functional Requirements
-1.  **Deterministic Survival Safeguards:**
-    *   Implement a "Safety Layer" in the `tick` function.
-    *   If `hunger > 80`, bypass LLM and force `action: "eating"`.
-    *   If `energy < 20`, bypass LLM and force `action: "sleeping"`.
-2.  **RAG Context Augmentation:**
-    *   For every tick (where survival isn't forced), retrieve the **last 10 events** from the `events` table (Sensory Buffer).
-    *   Perform a vector search to retrieve the **3 most relevant semantic memories** from the `memories` table.
-    *   Inject both into the LLM prompt.
-3.  **Reflection Layer:**
-    *   Implement a `reflect` action that triggers every **24 ticks** (1 simulated day).
-    *   The action will summarize the agent's last 24 sensory events and update the `coreTraits` field in the `agents` table.
-4.  **World Awareness:**
-    *   The `tick` action must fetch the current `weather` and `timeOfDay` from the `world_state` table.
-    *   This context must be passed to the LLM so agents can react to environmental changes.
+1.  **Identity & Social Intelligence (PRD Alignment):**
+    *   **Character Bio:** Persistent personality baseline via the `bio` field.
+    *   **Full Archetype Injection:** AI prompts include full archetype profiles (Goal Priorities, Interaction Style).
+    *   **Relationship Initialization:** Auto-create relationship records with 0 affinity on first meeting.
+    *   **Goal Tracking:** Persistent `currentGoal` across multiple ticks.
 
-## Non-Functional Requirements
-*   **Token Optimization:** Only call the LLM if survival thresholds are NOT met and the agent is not "Idle" (as per PRD Section 6).
-*   **Latency:** Ensure vector search and LLM calls for multiple agents are handled efficiently within the Convex action timeout.
+2.  **Physics, Metabolism & Environment:**
+    *   **Action-Based Metabolism:** `energyDelta` and `hungerDelta` calculated based on `currentAction`.
+    *   **Dynamic Weather Speed:** Apply movement multipliers based on weather (e.g., Sunny = 1.0x, Stormy = 0.5x, Rainy = 0.8x) to ensure the environment has physical consequences.
+    *   **Social Handshaking & Listening:** When Alice talks to Bob, Alice enters `"talking"` and Bob enters `"listening"`. Bob's movement pauses until the interaction ends.
+    *   **Movement Resolution:** Advance backend `gridX/Y` toward `targetX/Y` based on `AGENT_SPEED` and weather multipliers.
+
+3.  **Simulation Logic & Perception:**
+    *   **Passive Perception:** The `tick` must record sensory events when agents are near each other but not interacting (e.g., "I saw Alice walking nearby"). This populates memories without consuming LLM tokens.
+    *   **Mutual Perception:** Record social events for both actor and target agents.
+    *   **Arrival & Completion Feedback:** Generate sensory events for arriving at targets and completing actions.
+
+4.  **Administrative API (God Mode):**
+    *   **Master Controls:** Implement Server Functions (`createServerFn`) and Convex mutations for `manualTick`, `manualReflect`, and `resetAgentBrain`.
+    *   **Architect Panel Support:** These endpoints provide the bridge for the "God Mode" UI mentioned in the PRD.
+
+5.  **Infrastructure & Data Flow:**
+    *   **POI Table:** Add `pois` table to store fixed locations (e.g., "Fridge", "Bed", "Library") with coordinates and functionality tags.
+    *   **Global Thought Stream:** Implement `getGlobalEvents` query for the world-wide scrolling log UI.
+    *   **Structured Thought Storage:** `thought` field in the `events` table.
+    *   **Live State Storage:** `lastThought`, `speech`, and `lastSpeechAt` in the `agents` schema.
+    *   **Robust AI Parsing:** Validation layer for Llama-3.1 output.
+
+6.  **RAG & Memory Re-ranking:**
+    *   **Recency-Weighted Retrieval:** Re-rank vector search results by `timestamp` to prioritize recent significant events.
+
+7.  **Memory Encoding & Reflection:**
+    *   **Sensory → Semantic Migration:** AI identifies high-importance events during reflection.
+    *   **Trait Distillation:** Update permanent `coreTraits` every 24 simulated hours.
+
+8.  **Performance & API Stability:**
+    *   **Request Batching:** Process AI calls in batches of 3 with delays to respect 30 RPM/6K TPM limits.
 
 ## Acceptance Criteria
-*   Agents automatically go to eat/sleep when stats are critical without LLM intervention.
-*   LLM "thoughts" reflect knowledge of past events (retrieved from memory).
-*   Agents' `coreTraits` update every 24 ticks based on their experiences.
-*   Agents mention the weather or time in their "speech" or "thoughts" when prompted.
-
-## Out of Scope
-*   Multi-agent conversation coordination (Social proximity is handled in Phase 4).
-*   Visual UI for the "Memory Graph" (handled in Phase 4/5).
+*   Agents move slower during bad weather.
+*   Agents record "seeing" others in their sensory buffer without calling the LLM.
+*   The "listening" state correctly pauses agents being spoken to.
+*   The Master user can manually trigger ticks and reflections via the Admin API.
+*   Thought Stream displays a world-wide scrolling log of activities.
