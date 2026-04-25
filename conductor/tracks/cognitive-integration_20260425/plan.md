@@ -18,7 +18,7 @@
 
 ## Phase 1.1: POI & Feedback UI
 1. - [x] Task: Create `POISprite.ts` to render fixed locations. d8acd78
-2. - [~] Task: Update `AgentSprite.ts` to render speech bubbles and action icons.
+2. - [x] Task: Update `AgentSprite.ts` to render speech bubbles and action icons. d1cd3f3
 
 ## Phase 2: RAG Context & Identity Evolution
 1. - [ ] Task: Write unit tests for full-archetype context building and re-ranked memory retrieval.
