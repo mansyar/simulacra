@@ -1,8 +1,0 @@
-{
-  "track_id": "cognitive-integration_20260425",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-04-25T15:17:00Z",
-  "updated_at": "2026-04-25T15:17:00Z",
-  "description": "Cognitive Integration & Memory Loop: This track focuses on transforming the agents from reactive LLM instances into persistent, context-aware entities by completing the 'Brain' architecture. It implements RAG, deterministic safeguards, and a simulated reflection cycle."
-}
