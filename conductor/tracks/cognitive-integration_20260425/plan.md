@@ -2,7 +2,7 @@
 
 ## Phase 0: Architectural Refinement (Identity & Physics)
 1. - [x] Task: Update `convex/schema.ts` to add `bio`, `inventory`, `currentGoal`, `lastReflectedTick`, `actionStartedAt`, `interactionPartnerId`, `lastThought`, `speech`, and `lastSpeechAt`. 7a7612a
-2. - [~] Task: Update `convex/schema.ts` to add the `pois` table (name, description, gridX, gridY, type).
+2. - [x] Task: Update `convex/schema.ts` to add the `pois` table (name, description, gridX, gridY, type). 000276f
 3. - [ ] Task: Update `AgentAction` schema to include the `"listening"` state.
 3. - [ ] Task: Implement dynamic Metabolism and Weather Multiplier logic in `updateNeeds` and movement helpers.
 4. - [ ] Task: Implement `getGlobalEvents` query for the world-wide sidebar.
