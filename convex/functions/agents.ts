@@ -12,7 +12,7 @@ export type AgentDoc = Doc<"agents">;
  */
 export interface CreateAgentArgs {
   name: string;
-  archetype: "builder" | "socialite" | "philosopher" | "explorer" | "nurturer" | "friendly" | "grumpy" | "curious";
+  archetype: "builder" | "socialite" | "philosopher" | "explorer" | "nurturer";
   gridX: number;
   gridY: number;
   spriteVariant?: number;
@@ -63,10 +63,7 @@ export const create = mutation({
       v.literal("socialite"),
       v.literal("philosopher"),
       v.literal("explorer"),
-      v.literal("nurturer"),
-      v.literal("friendly"),
-      v.literal("grumpy"),
-      v.literal("curious")
+      v.literal("nurturer")
     ),
     gridX: v.number(),
     gridY: v.number(),
@@ -169,3 +166,31 @@ export const updateAction = internalMutation({
     });
   },
 });
+
+/**
+ * Mutation: Migrate deprecated archetypes to supported ones
+ */
+export const migrateArchetypes = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const agents = await ctx.db.query("agents").collect();
+    const deprecatedMap: Record<string, "socialite" | "philosopher" | "explorer"> = {
+      friendly: "socialite",
+      grumpy: "philosopher",
+      curious: "explorer",
+    };
+
+    let count = 0;
+    for (const agent of agents) {
+      const newArch = deprecatedMap[agent.archetype];
+      if (newArch) {
+        await ctx.db.patch(agent._id, {
+          archetype: newArch,
+        });
+        count++;
+      }
+    }
+    return { migratedCount: count };
+  },
+});
+
