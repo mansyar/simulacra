@@ -6,7 +6,7 @@
 |-------|------|-------|--------|-------------------|
 | 1 | The Body | Setup + Rendering | ✅ Complete | 1-2 weeks |
 | 2 | The Heart | Convex + Real-time Sync | ✅ Complete | 1-2 weeks |
-| 3 | The Brain | LLM Integration + Memory | ⏳ Not Started | 2-3 weeks |
+| 3 | The Brain | LLM Integration + Memory | ⚙️ In Progress | 2-3 weeks |
 | 4 | The Social | Proximity + Chat | ⏳ Not Started | 1-2 weeks |
 | 5 | The Polish | Master Panel + Deploy | ⏳ Not Started | 1 week |
 
@@ -104,41 +104,47 @@
 
 **Goal:** LLM integration with memory system
 
-**Status:** ⏳ NOT STARTED (Depends on Phase 2)
+**Status:** ⚙️ IN PROGRESS (Infrastructure complete, logic integration pending)
 
 ### Week 5: LLM Setup
 
 #### Day 1-2: API Integration
-- [ ] Add OpenAI API key to Convex secrets
-- [ ] Create `convex/functions/ai.ts`
-- [ ] Implement basic LLM call function
-- [ ] Test LLM response parsing
+- [x] Add OpenAI API key to Convex secrets
+- [x] Create `convex/functions/ai.ts`
+- [x] Implement basic LLM call function
+- [x] Test LLM response parsing
 
 #### Day 3-4: Prompt System
-- [ ] Create personality archetype templates
-- [ ] Implement JSON output parsing
-- [ ] Build context prompt generator
-- [ ] Test with single agent decision
+- [x] Create personality archetype templates (`ARCHETYPE_PROMPTS`)
+- [x] Implement JSON output parsing (`DECISION_SYSTEM_PROMPT`)
+- [ ] Build context prompt generator (**Incomplete:** missing memory/sensory context integration)
+- [x] Test with single agent decision
 
 #### Day 5-7: Memory System
-- [ ] Configure Convex Vector Index (768 dimensions)
-- [ ] Create `convex/functions/memory.ts`
-- [ ] Implement sensory buffer (last 10 events)
-- [ ] Implement semantic memory storage
+- [x] Configure Convex Vector Index (768 dimensions)
+- [x] Create `convex/functions/memory.ts`
+- [x] Implement sensory buffer (last 10 events logic in `addEvent`)
+- [x] Implement semantic memory storage (vector search infrastructure)
 
 ### Week 6: Decision Loop
 
-- [ ] Create Convex Cron job for world tick
-- [ ] Implement deterministic needs (hunger, energy)
-- [ ] Connect LLM to social decisions
-- [ ] Test full decision cycle
+- [x] Create Convex Cron job for world tick (`convex/crons.ts`)
+- [ ] Implement deterministic needs (hunger, energy) (**Missing:** currently handled by LLM, violates PRD "deterministic code" rule)
+- [ ] Connect LLM to social decisions (**Incomplete:** proximity detection exists, but lacks retrieved memory context)
+- [x] Test full decision cycle
 
 ### Phase 3 Checkpoints
 
-- [ ] LLM returns valid JSON decisions
-- [ ] Agents remember recent interactions
-- [ ] Vector search returns relevant memories
-- [ ] World tick processes all agents
+- [x] LLM returns valid JSON decisions
+- [x] Agents remember recent interactions (sensory buffer storage)
+- [ ] Vector search returns relevant memories (**Implemented but unused in tick**)
+- [x] World tick processes all agents
+
+### ⚠️ PRD Deviations & Missing Implementation
+- **Deterministic Safeguards:** The PRD requires hunger/energy to be handled by deterministic code (e.g., if hunger > 80, force 'eating'). Current code delegates these critical decisions to the LLM.
+- **Context Gap:** The `tick` function does not yet pull the last 10 events (sensory buffer) or relevant semantic memories (vector search) into the AI prompt.
+- **Reflection Layer:** No logic exists for summarizing days into `coreTraits`.
+- **World Awareness:** Agents are not informed of `weather` or `timeOfDay` during the decision loop.
 
 ---
 

@@ -40,6 +40,16 @@ async function getAiConfig(ctx: ActionCtx, modelOverride?: string): Promise<AiCo
   };
 }
 
+async function getEmbeddingConfig(ctx: ActionCtx): Promise<AiConfig> {
+  const config = await ctx.runQuery(internal.functions.config.getInternal);
+  // Prioritize EMBEDDING_ specific env vars, then config table, then OPENAI_ fallbacks
+  return {
+    apiKey: process.env.EMBEDDING_API_KEY || process.env.OPENAI_API_KEY,
+    baseUrl: process.env.EMBEDDING_API_BASE_URL || config?.llmBaseUrl || process.env.OPENAI_API_BASE_URL || "https://api.openai.com/v1",
+    model: process.env.EMBEDDING_MODEL || process.env.OPENAI_EMBEDDING_MODEL || "text-embedding-3-small",
+  };
+}
+
 /**
  * Retry wrapper with exponential backoff for rate-limited requests
  */
@@ -104,8 +114,9 @@ export const chat = action({
     }
 
     try {
+      const url = `${baseUrl.replace(/\/$/, "")}/chat/completions`;
       const response = await fetchWithRetry(
-        `${baseUrl}/chat/completions`,
+        url,
         {
           method: "POST",
           headers: {
@@ -187,8 +198,9 @@ export const decision = action({
     `;
 
     try {
+      const url = `${baseUrl.replace(/\/$/, "")}/chat/completions`;
       const response = await fetchWithRetry(
-        `${baseUrl}/chat/completions`,
+        url,
         {
           method: "POST",
           headers: {
@@ -254,8 +266,7 @@ export const embed = action({
     text: v.string(),
   },
   handler: async (ctx, args) => {
-    const { apiKey, baseUrl } = await getAiConfig(ctx);
-    const model = process.env.OPENAI_EMBEDDING_MODEL || "text-embedding-3-small";
+    const { apiKey, baseUrl, model } = await getEmbeddingConfig(ctx);
 
     if (!apiKey) {
       // Mock embedding (768 dimensions)
@@ -264,28 +275,62 @@ export const embed = action({
     }
 
     try {
+      const isGoogle = baseUrl.includes("googleapis.com");
+      
+      let url: string;
+      let body: any;
+
+      if (isGoogle) {
+        // Native Google AI format (most robust for Gemini Free Tier)
+        // Ensure version is in the URL, usually v1beta or v1
+        const version = baseUrl.includes("v1beta") ? "v1beta" : "v1";
+        const modelName = model.startsWith("models/") ? model : `models/${model}`;
+        url = `https://generativelanguage.googleapis.com/${version}/${modelName}:embedContent?key=${apiKey}`;
+        body = {
+          content: {
+            parts: [{ text: args.text }]
+          },
+          outputDimensionality: 768
+        };
+      } else {
+        // OpenAI-compatible format
+        url = `${baseUrl.replace(/\/$/, "")}/embeddings`;
+        body = {
+          model: model,
+          input: args.text,
+          dimensions: 768,
+        };
+      }
+
       const response = await fetchWithRetry(
-        `${baseUrl}/embeddings`,
+        url,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
           },
-          body: JSON.stringify({
-            model: model,
-            input: args.text,
-          }),
+          body: JSON.stringify(body),
         }
       );
 
       if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`AI API error: ${error}`);
+        const errorText = await response.text();
+        throw new Error(`AI API error (${response.status}): ${errorText}`);
       }
 
       const data = await response.json();
-      return data.data[0].embedding;
+      
+      // Handle both OpenAI and Google Gemini response formats
+      if (data.embedding) {
+        // Native Google format (sometimes)
+        return data.embedding.values;
+      } else if (data.data && data.data[0] && data.data[0].embedding) {
+        // OpenAI format
+        return data.data[0].embedding;
+      } else {
+        // Google Gemini native format
+        return data.values;
+      }
     } catch (error) {
       console.error("[AI] Embed error:", error);
       // Return mock embedding on error
