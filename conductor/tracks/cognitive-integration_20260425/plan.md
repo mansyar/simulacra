@@ -41,6 +41,6 @@
 5. - [x] Task: Standardize timeOfDay logic and HUD formatting. 5b1a252
 
 ## Phase 5: Master Controls & Admin API
-1. - [ ] Task: Create `world:admin` functions for `manualTick`, `manualReflect`, and `resetAgentBrain`.
-2. - [ ] Task: Implement TanStack Start Server Functions (`createServerFn`) to bridge these to the UI.
+1. - [x] Task: Create `world:admin` functions for `manualTick`, `manualReflect`, and `resetAgentBrain`. 5919ddd
+2. - [~] Task: Implement TanStack Start Server Functions (`createServerFn`) to bridge these to the UI.
 3. - [ ] Task: Conductor - User Manual Verification 'Phase 5: God Mode API' (Protocol in workflow.md)

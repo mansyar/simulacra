@@ -9,6 +9,7 @@
  */
 
 import type * as crons from "../crons.js";
+import type * as functions_admin from "../functions/admin.js";
 import type * as functions_agents from "../functions/agents.js";
 import type * as functions_ai from "../functions/ai.js";
 import type * as functions_ai_helpers from "../functions/ai_helpers.js";
@@ -26,6 +27,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   crons: typeof crons;
+  "functions/admin": typeof functions_admin;
   "functions/agents": typeof functions_agents;
   "functions/ai": typeof functions_ai;
   "functions/ai_helpers": typeof functions_ai_helpers;

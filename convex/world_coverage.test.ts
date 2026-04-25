@@ -65,7 +65,7 @@ test("world:tick uses normalizeAction with hallucinations", async () => {
 
   const agents = await t.query(api.functions.agents.getAll, {});
   // Check if any agent was set to "eating"
-  const anyEating = agents.some(a => a.currentAction === "eating");
+  const anyEating = agents.some((a: any) => a.currentAction === "eating");
   expect(anyEating).toBe(true);
 
   delete process.env.OPENAI_API_KEY;
@@ -97,7 +97,7 @@ test("world:tick parses coordinate targets", async () => {
   await t.action(api.functions.world.tick, {});
 
   const agents = await t.query(api.functions.agents.getAll, {});
-  const anyAgentAtTarget = agents.some(a => a.targetX === 10 && a.targetY === 20);
+  const anyAgentAtTarget = agents.some((a: any) => a.targetX === 10 && a.targetY === 20);
   expect(anyAgentAtTarget).toBe(true);
 
   delete process.env.OPENAI_API_KEY;

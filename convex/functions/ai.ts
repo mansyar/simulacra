@@ -248,7 +248,7 @@ export const reflect = action({
       return { success: true };
     }
 
-    const eventLog = events.map(e => `- ${e.description}`).join("\n");
+    const eventLog = events.map((e: any) => `- ${e.description}`).join("\n");
     const userPrompt = `
     Agent Context:
     ${context}

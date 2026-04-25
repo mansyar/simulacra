@@ -217,7 +217,7 @@ export const retrieveMemoriesAction = action({
       })
     );
 
-    return memories.filter((m): m is Doc<"memories"> => m !== null);
+    return memories.filter((m: any): m is Doc<"memories"> => m !== null);
   },
 });
 
