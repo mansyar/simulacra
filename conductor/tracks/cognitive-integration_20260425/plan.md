@@ -20,7 +20,7 @@
 1. - [x] Task: Create `POISprite.ts` to render fixed locations. d8acd78
 2. - [x] Task: Update `AgentSprite.ts` to render speech bubbles and action icons. d1cd3f3
 
-## Phase 2: RAG Context & Identity Evolution
+## Phase 2: RAG Context & Identity Evolution [checkpoint: 5dd73b5]
 1. - [x] Task: Write unit tests for full-archetype context building and re-ranked memory retrieval. 2858508
 2. - [x] Task: Update `tick` to fetch `affinity`, `bio`, and `inventory` for context payload. 270e243
 3. - [x] Task: Modify AI decision prompt to use compressed evolution context. 270e243
