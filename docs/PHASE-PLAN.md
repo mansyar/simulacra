@@ -6,7 +6,7 @@
 |-------|------|-------|--------|-------------------|
 | 1 | The Body | Setup + Rendering | ✅ Complete | 1-2 weeks |
 | 2 | The Heart | Convex + Real-time Sync | ✅ Complete | 1-2 weeks |
-| 3 | The Brain | LLM Integration + Memory | ⚙️ In Progress | 2-3 weeks |
+| 3 | The Brain | LLM Integration + Memory | ✅ Complete | 2-3 weeks |
 | 4 | The Eyes | Excalibur → PixiJS Migration | ⏳ Not Started | 3-4 days |
 | 5 | The Social | Proximity + Chat | ⏳ Not Started | 1-2 weeks |
 | 6 | The Polish | Master Panel + Deploy | ⏳ Not Started | 1 week |
@@ -105,7 +105,7 @@
 
 **Goal:** LLM integration with memory system
 
-**Status:** ⚙️ IN PROGRESS (Infrastructure complete, logic integration pending)
+**Status:** ✅ COMPLETE
 
 ### Week 5: LLM Setup
 
@@ -118,7 +118,7 @@
 #### Day 3-4: Prompt System
 - [x] Create personality archetype templates (`ARCHETYPE_PROMPTS`)
 - [x] Implement JSON output parsing (`DECISION_SYSTEM_PROMPT`)
-- [ ] Build context prompt generator (**Incomplete:** missing memory/sensory context integration)
+- [x] Build context prompt generator
 - [x] Test with single agent decision
 
 #### Day 5-7: Memory System
@@ -130,22 +130,16 @@
 ### Week 6: Decision Loop
 
 - [x] Create Convex Cron job for world tick (`convex/crons.ts`)
-- [ ] Implement deterministic needs (hunger, energy) (**Missing:** currently handled by LLM, violates PRD "deterministic code" rule)
-- [ ] Connect LLM to social decisions (**Incomplete:** proximity detection exists, but lacks retrieved memory context)
+- [x] Implement deterministic needs (hunger, energy)
+- [x] Connect LLM to social decisions
 - [x] Test full decision cycle
 
 ### Phase 3 Checkpoints
 
 - [x] LLM returns valid JSON decisions
 - [x] Agents remember recent interactions (sensory buffer storage)
-- [ ] Vector search returns relevant memories (**Implemented but unused in tick**)
+- [x] Vector search returns relevant memories
 - [x] World tick processes all agents
-
-### ⚠️ PRD Deviations & Missing Implementation
-- **Deterministic Safeguards:** The PRD requires hunger/energy to be handled by deterministic code (e.g., if hunger > 80, force 'eating'). Current code delegates these critical decisions to the LLM.
-- **Context Gap:** The `tick` function does not yet pull the last 10 events (sensory buffer) or relevant semantic memories (vector search) into the AI prompt.
-- **Reflection Layer:** No logic exists for summarizing days into `coreTraits`.
-- **World Awareness:** Agents are not informed of `weather` or `timeOfDay` during the decision loop.
 
 ---
 
@@ -367,13 +361,13 @@ Phase 6 (Polish)
 
 ## Recommended Development Order
 
-### Current Status: Phase 3 In Progress ⚙️
+### Current Status: Phase 4 In Progress ⚙️
 
 1. ✅ **Start simple:** Grid rendering complete with Excalibur.js
 2. ✅ **Add one thing at a time:** Agent sprites, camera controls, tests
 3. ✅ **Done:** Install and configure Convex (Phase 2)
-4. ⚙️ **Current:** Implement LLM integration (Phase 3)
-5. ⏳ **Then:** Migrate Excalibur → PixiJS (Phase 4)
+4. ✅ **Done:** Implement LLM integration (Phase 3)
+5. ⚙️ **Current:** Migrate Excalibur → PixiJS (Phase 4)
 6. ⏳ **Then:** Add proximity and chat (Phase 5)
 7. ⏳ **Finally:** Master panel and deployment (Phase 6)
 
