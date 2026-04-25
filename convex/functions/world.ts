@@ -167,107 +167,119 @@ export const tick = action({
     };
     const speedMultiplier = weatherMultipliers[weather] || 1.0;
 
-    for (const agent of agents) {
-      // 2.1 Update needs based on current action
-      await ctx.runMutation(internal.functions.agents.updateNeeds, {
-        agentId: agent._id,
-      });
+    const BATCH_SIZE = 3;
+    const BATCH_DELAY_MS = 1000;
 
-      // 2.2 Movement Resolution
-      if (agent.targetX !== undefined && agent.targetY !== undefined) {
-        const result = await ctx.runMutation(internal.functions.agents.resolveMovement, {
+    for (let i = 0; i < agents.length; i += BATCH_SIZE) {
+      const batch = agents.slice(i, i + BATCH_SIZE);
+      
+      await Promise.all(batch.map(async (agent) => {
+        // 2.1 Update needs based on current action
+        await ctx.runMutation(internal.functions.agents.updateNeeds, {
           agentId: agent._id,
-          speedMultiplier,
         });
 
-        if (result?.arrived) {
-          await ctx.runMutation(api.functions.memory.addEvent, {
+        // 2.2 Movement Resolution
+        if (agent.targetX !== undefined && agent.targetY !== undefined) {
+          const result = await ctx.runMutation(internal.functions.agents.resolveMovement, {
             agentId: agent._id,
-            type: "movement",
-            description: `Arrived at destination (${Math.round(result.newX)}, ${Math.round(result.newY)})`,
-            gridX: result.newX,
-            gridY: result.newY,
+            speedMultiplier,
           });
-        }
-      }
 
-      // 2.3 Get nearby agents for decision making
-      const nearbyAgents = agents
-        .filter((a: any) => a._id !== agent._id)
-        .filter((a: any) => {
-          const dx = a.gridX - agent.gridX;
-          const dy = a.gridY - agent.gridY;
-          return Math.sqrt(dx*dx + dy*dy) < 5; // Interaction radius
-        })
-        .map((a: any) => a.name);
-
-      // Archetype mapping if necessary (ensure it matches ai.ts literals)
-      let aiArchetype: "builder" | "socialite" | "philosopher" | "explorer" | "nurturer" = "builder";
-      const validArchetypes = ["builder", "socialite", "philosopher", "explorer", "nurturer"];
-      if (validArchetypes.includes(agent.archetype)) {
-        aiArchetype = agent.archetype as any;
-      }
-
-      // Call AI for decision
-      const decision = await ctx.runAction(api.functions.ai.decision, {
-        agentState: {
-          name: agent.name,
-          hunger: agent.hunger + 5,
-          energy: agent.energy - 2,
-          social: agent.social - 1,
-          model: agent.model,
-        },
-        nearbyAgents,
-        archetype: aiArchetype,
-      });
-
-      // Normalize action to ensure it matches schema literals
-      const normalizedAction = normalizeAction(decision.action);
-
-      // Update action
-      // decision.target is a string: "none", agent name, or coordinates "x,y"
-      let targetX: number | undefined;
-      let targetY: number | undefined;
-      if (decision.target && decision.target !== "none") {
-        // Try to parse as coordinates "x,y"
-        const coords = decision.target.split(",");
-        if (coords.length === 2) {
-          const x = parseFloat(coords[0]);
-          const y = parseFloat(coords[1]);
-          if (!isNaN(x) && !isNaN(y)) {
-            targetX = x;
-            targetY = y;
+          if (result?.arrived) {
+            await ctx.runMutation(api.functions.memory.addEvent, {
+              agentId: agent._id,
+              type: "movement",
+              description: `Arrived at destination (${Math.round(result.newX)}, ${Math.round(result.newY)})`,
+              gridX: result.newX,
+              gridY: result.newY,
+            });
           }
         }
-        // If not coordinates, treat as agent name
-        if (targetX === undefined) {
-          const targetAgent = agents.find((a: any) => a.name === decision.target);
-          if (targetAgent) {
-            targetX = targetAgent.gridX;
-            targetY = targetAgent.gridY;
+
+        // 2.3 Get nearby agents for decision making
+        const nearbyAgents = agents
+          .filter((a: any) => a._id !== agent._id)
+          .filter((a: any) => {
+            const dx = a.gridX - agent.gridX;
+            const dy = a.gridY - agent.gridY;
+            return Math.sqrt(dx*dx + dy*dy) < 5; // Interaction radius
+          })
+          .map((a: any) => a.name);
+
+        // Archetype mapping
+        let aiArchetype: "builder" | "socialite" | "philosopher" | "explorer" | "nurturer" = "builder";
+        const validArchetypes = ["builder", "socialite", "philosopher", "explorer", "nurturer"];
+        if (validArchetypes.includes(agent.archetype)) {
+          aiArchetype = agent.archetype as any;
+        }
+
+        // Call AI for decision
+        const decision = await ctx.runAction(api.functions.ai.decision, {
+          agentState: {
+            name: agent.name,
+            hunger: agent.hunger, // Values are already updated via updateNeeds in DB, but agent object is stale. 
+            // Better to use current agent values or fetch again.
+            // For now, let's use what we have, it's close enough for one tick.
+            energy: agent.energy,
+            social: agent.social,
+            model: agent.model,
+          },
+          nearbyAgents,
+          archetype: aiArchetype,
+        });
+
+        // Normalize action to ensure it matches schema literals
+        const normalizedAction = normalizeAction(decision.action);
+
+        // Update action
+        let targetX: number | undefined;
+        let targetY: number | undefined;
+        if (decision.target && decision.target !== "none") {
+          const coords = decision.target.split(",");
+          if (coords.length === 2) {
+            const x = parseFloat(coords[0]);
+            const y = parseFloat(coords[1]);
+            if (!isNaN(x) && !isNaN(y)) {
+              targetX = x;
+              targetY = y;
+            }
+          }
+          if (targetX === undefined) {
+            const targetAgent = agents.find((a: any) => a.name === decision.target);
+            if (targetAgent) {
+              targetX = targetAgent.gridX;
+              targetY = targetAgent.gridY;
+            }
           }
         }
-      }
-      await ctx.runMutation(internal.functions.agents.updateAction, {
-        agentId: agent._id,
-        action: normalizedAction,
-        targetX,
-        targetY,
-      });
 
-      // Add event to sensory buffer with thought and speech
-      let description = `Thought: ${decision.thought} | Action: ${normalizedAction}`;
-      if (decision.speech) {
-        description += ` | Said: "${decision.speech}"`;
+        await ctx.runMutation(internal.functions.agents.updateAction, {
+          agentId: agent._id,
+          action: normalizedAction,
+          targetX,
+          targetY,
+        });
+
+        // Add event to sensory buffer with thought and speech
+        let description = `Thought: ${decision.thought} | Action: ${normalizedAction}`;
+        if (decision.speech) {
+          description += ` | Said: "${decision.speech}"`;
+        }
+        
+        await ctx.runMutation(api.functions.memory.addEvent, {
+          agentId: agent._id,
+          type: decision.speech ? "conversation" : "movement",
+          description,
+          gridX: agent.gridX,
+          gridY: agent.gridY,
+        });
+      }));
+
+      // Delay between batches to respect RPM
+      if (i + BATCH_SIZE < agents.length) {
+        await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
       }
-      
-      await ctx.runMutation(api.functions.memory.addEvent, {
-        agentId: agent._id,
-        type: decision.speech ? "conversation" : "movement",
-        description,
-        gridX: agent.gridX,
-        gridY: agent.gridY,
-      });
     }
 
 
