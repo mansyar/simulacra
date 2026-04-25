@@ -27,6 +27,7 @@ export class POISprite extends Actor {
       pos: new Vector(screenPos.x, screenPos.y),
       width: 32,
       height: 32,
+      z: 10,
     })
 
     const color = POI_COLORS[poi.type] || POI_COLORS.default

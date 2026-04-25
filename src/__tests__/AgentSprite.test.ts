@@ -1,15 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { Mock } from 'vitest'
-import type { Engine } from 'excalibur'
 
 // Mock Excalibur dependencies with proper class constructors
 vi.mock('excalibur', () => {
   class MockActor {
     pos: { x: number; y: number }
-    graphics: { add: Mock }
-    constructor(options?: { pos?: { x: number; y: number } }) {
+    graphics: { add: Mock; show: Mock; hide: Mock; visible: boolean }
+    z: number
+    constructor(options?: { pos?: { x: number; y: number }; z?: number }) {
       this.pos = options?.pos || { x: 0, y: 0 }
-      this.graphics = { add: vi.fn() }
+      this.z = options?.z || 0
+      this.graphics = { add: vi.fn(), show: vi.fn(), hide: vi.fn(), visible: true }
     }
     addChild() {}
   }
@@ -22,9 +23,15 @@ vi.mock('excalibur', () => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     constructor(_options?: unknown) {}
   }
+
+  class MockRectangle {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    constructor(_options?: unknown) {}
+  }
   
   class MockLabel {
-    font = { size: 0 }
+    font = { size: 0, textAlign: '' }
+    graphics = { visible: true }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     constructor(_options?: unknown) {}
   }
@@ -32,12 +39,14 @@ vi.mock('excalibur', () => {
   return {
     Actor: MockActor,
     Circle: MockCircle,
+    Rectangle: MockRectangle,
     Color: {
-      fromHex: vi.fn().mockReturnValue({}),
+      fromHex: vi.fn().mockReturnValue({ clone: () => ({}) }),
       White: {},
     },
     Vector: MockVector,
     Label: MockLabel,
+    TextAlign: { Center: 'center' },
     Engine: vi.fn(),
   }
 })
@@ -83,10 +92,8 @@ describe('AgentSprite', () => {
     const sprite = new AgentSprite(mockAgent)
     expect(typeof sprite.onPreUpdate).toBe('function')
     
-    // Mock engine parameter
-    const mockEngine = { canvas: {} }
     // Call the method (should not throw)
-    sprite.onPreUpdate(mockEngine as Engine, 16)
+    sprite.onPreUpdate()
   })
 
   it('should use agent properties in constructor', () => {

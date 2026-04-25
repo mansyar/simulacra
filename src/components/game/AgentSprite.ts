@@ -1,4 +1,4 @@
-import { Actor, Circle, Color, Vector, Label, Engine } from 'excalibur'
+import { Actor, Circle, Rectangle, Color, Vector, Label, TextAlign } from 'excalibur'
 import { gridToScreen } from '../../lib/isometric'
 
 export interface AgentData {
@@ -36,14 +36,17 @@ export class AgentSprite extends Actor {
   private circleGraphic: Circle
   private nameLabel: Label
   private speechLabel: Label
+  private speechBg: Actor
+  private bgRect: Rectangle
   private actionLabel: Label
   private targetGridX: number
   private targetGridY: number
-  private lerpSpeed: number = 0.1 // adjust as needed
+  private lerpSpeed: number = 0.1
 
   constructor(agent: AgentData) {
     super({
       pos: new Vector(0, 0),
+      z: 20,
     })
     this.agent = agent
     this.targetGridX = agent.gridX
@@ -51,41 +54,58 @@ export class AgentSprite extends Actor {
 
     const color = ARCHETYPE_COLORS[agent.archetype] || '#FFFFFF'
 
-    // Create a circle graphic (16x16 pixels)
     this.circleGraphic = new Circle({
       radius: 8,
       color: Color.fromHex(color),
     })
     this.graphics.add(this.circleGraphic)
 
-    // Create a name label floating above
     this.nameLabel = new Label({
       text: agent.name,
       pos: new Vector(0, -12), 
       color: Color.White,
     })
     this.nameLabel.font.size = 10
+    this.nameLabel.font.textAlign = TextAlign.Center
     this.addChild(this.nameLabel)
 
-    // Create an action emoji label
     this.actionLabel = new Label({
       text: ACTION_EMOJIS[agent.currentAction || 'idle'] || '❓',
       pos: new Vector(0, 8),
       color: Color.White,
     })
     this.actionLabel.font.size = 12
+    this.actionLabel.font.textAlign = TextAlign.Center
     this.addChild(this.actionLabel)
 
-    // Create a speech bubble label
+    // Speech Background
+    this.speechBg = new Actor({
+      pos: new Vector(0, -32),
+      z: 29,
+    })
+    this.bgRect = new Rectangle({
+      width: 100,
+      height: 20,
+      color: Color.fromHex('#0f172a').clone(),
+    })
+    this.bgRect.opacity = 0.9
+    this.speechBg.graphics.add(this.bgRect)
+    this.addChild(this.speechBg)
+
     this.speechLabel = new Label({
       text: '',
-      pos: new Vector(0, -30),
-      color: Color.fromHex('#f1f5f9'),
-      maxWidth: 120,
+      pos: new Vector(0, -32),
+      color: Color.fromHex('#f8fafc'),
+      maxWidth: 150,
     })
-    this.speechLabel.font.size = 11
+    this.speechLabel.font.size = 10
     this.speechLabel.font.bold = true
+    this.speechLabel.font.textAlign = TextAlign.Center
     this.addChild(this.speechLabel)
+    
+    // Initial state
+    this.speechLabel.graphics.visible = false
+    this.speechBg.graphics.visible = false
   }
 
   public updateAgentData(data: Partial<AgentData>) {
@@ -103,26 +123,28 @@ export class AgentSprite extends Actor {
     this.targetGridY = gridY
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public onPreUpdate(_engine: Engine, _elapsed: number) {
-    // Smoothly interpolate grid position towards target
+  public onPreUpdate() {
     const currentGridX = this.agent.gridX
     const currentGridY = this.agent.gridY
     const newGridX = currentGridX + (this.targetGridX - currentGridX) * this.lerpSpeed
     const newGridY = currentGridY + (this.targetGridY - currentGridY) * this.lerpSpeed
     this.agent.gridX = newGridX
     this.agent.gridY = newGridY
-    // Update screen position
+    
     const screenPos = gridToScreen(newGridX, newGridY)
     this.pos = new Vector(screenPos.x, screenPos.y)
 
-    // Update speech visibility
     const now = Date.now()
     if (this.agent.speech && this.agent.lastSpeechAt && (now - this.agent.lastSpeechAt < 8000)) {
-      this.speechLabel.text = `"${this.agent.speech}"`
+      this.speechLabel.text = this.agent.speech
       this.speechLabel.graphics.visible = true
+      this.speechBg.graphics.visible = true
+      
+      const estimatedWidth = Math.min(180, Math.max(60, this.agent.speech.length * 7))
+      this.bgRect.width = estimatedWidth
     } else {
       this.speechLabel.graphics.visible = false
+      this.speechBg.graphics.visible = false
     }
   }
 }
