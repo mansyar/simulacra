@@ -6,12 +6,7 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Environment Setup & Core Canvas' aedbb3a
 
 ## Phase 2: Isometric Grid & Viewport Culling
-- [ ] Task: Implement `IsometricGrid` Rendering
-    - [ ] Write failing tests for grid generation and coordinate conversion.
-    - [ ] Implement `IsometricGrid` using PixiJS `Graphics`.
-    - [ ] Implement Viewport Culling logic to only draw visible tiles.
-    - [ ] Implement hover highlight tile on mouse over.
-    - [ ] Verify tests pass and test coverage is >80%.
+- [x] Task: Implement `IsometricGrid` Rendering 595e7ba
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Isometric Grid & Viewport Culling' (Protocol in workflow.md)
 
 ## Phase 3: Camera System & Controls
