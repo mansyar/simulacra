@@ -45,30 +45,36 @@ export class IsometricGrid {
     const g = this.gridGraphics
     g.clear()
     // Slate-600
-    // In PixiJS v8, we use the newer graphics API
     g.setStrokeStyle({ color: 0x475569, width: 1 })
+
+    const offsetX = (this.width * this.tileWidth) / 2
+    const offsetY = 50 // Padding from top
 
     // Create vertical lines (x direction)
     for (let x = 0; x <= this.width; x++) {
       const start = gridToScreen(x, 0)
       const end = gridToScreen(x, this.height)
-      g.moveTo(start.x, start.y)
-      g.lineTo(end.x, end.y)
+      g.moveTo(start.x + offsetX, start.y + offsetY)
+      g.lineTo(end.x + offsetX, end.y + offsetY)
     }
 
     // Create horizontal lines (y direction)
     for (let y = 0; y <= this.height; y++) {
       const start = gridToScreen(0, y)
       const end = gridToScreen(this.width, y)
-      g.moveTo(start.x, start.y)
-      g.lineTo(end.x, end.y)
+      g.moveTo(start.x + offsetX, start.y + offsetY)
+      g.lineTo(end.x + offsetX, end.y + offsetY)
     }
     
     g.stroke()
   }
 
   public updateHover(screenX: number, screenY: number): void {
-    const gridPos = screenToGrid(screenX, screenY)
+    const offsetX = (this.width * this.tileWidth) / 2
+    const offsetY = 50
+
+    // Adjust screen coordinates for grid offset
+    const gridPos = screenToGrid(screenX - offsetX, screenY - offsetY)
     
     // Check bounds
     if (gridPos.x >= 0 && gridPos.x < this.width && gridPos.y >= 0 && gridPos.y < this.height) {
@@ -90,15 +96,18 @@ export class IsometricGrid {
     const g = this.highlightGraphics
     g.clear()
     
+    const offsetX = (this.width * this.tileWidth) / 2
+    const offsetY = 50
+
     const screenPos = gridToScreen(this.hoveredTile.x, this.hoveredTile.y)
     const halfWidth = this.tileWidth / 2
     const halfHeight = this.tileHeight / 2
 
     const points = [
-      screenPos.x, screenPos.y - halfHeight,
-      screenPos.x + halfWidth, screenPos.y,
-      screenPos.x, screenPos.y + halfHeight,
-      screenPos.x - halfWidth, screenPos.y,
+      screenPos.x + offsetX, screenPos.y + offsetY - halfHeight,
+      screenPos.x + offsetX + halfWidth, screenPos.y + offsetY,
+      screenPos.x + offsetX, screenPos.y + offsetY + halfHeight,
+      screenPos.x + offsetX - halfWidth, screenPos.y + offsetY,
     ]
 
     // Slate-700
@@ -126,6 +135,9 @@ export class IsometricGrid {
   }
 
   private getGridBounds(): Viewport {
+    const offsetX = (this.width * this.tileWidth) / 2
+    const offsetY = 50
+
     // The isometric grid's extreme points
     const top = gridToScreen(0, 0)
     const right = gridToScreen(this.width, 0)
@@ -133,10 +145,10 @@ export class IsometricGrid {
     const left = gridToScreen(0, this.height)
 
     return {
-      top: top.y - this.tileHeight / 2,
-      bottom: bottom.y + this.tileHeight / 2,
-      left: left.x - this.tileWidth / 2,
-      right: right.x + this.tileWidth / 2,
+      top: top.y + offsetY - this.tileHeight / 2,
+      bottom: bottom.y + offsetY + this.tileHeight / 2,
+      left: left.x + offsetX - this.tileWidth / 2,
+      right: right.x + offsetX + this.tileWidth / 2,
     }
   }
 
