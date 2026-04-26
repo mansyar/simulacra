@@ -1,9 +1,9 @@
 # Implementation Plan: Fluid Agent Movement
 
 ## Phase 1: Foundation (Noise & State)
-- [ ] Task: Integrate Simplex Noise library
-    - [ ] Add `simplex-noise` to dependencies
-    - [ ] Create `src/lib/noise.ts` utility wrapper
+- [x] Task: Integrate Simplex Noise library (175d8e3)
+    - [x] Add `simplex-noise` to dependencies
+    - [x] Create `src/lib/noise.ts` utility wrapper
 - [ ] Task: Extend `AgentSprite` state for visual offsets
     - [ ] Add `visualX/Y` offsets to `AgentSprite` class
     - [ ] Add `estimatedGridX/Y` for path prediction
