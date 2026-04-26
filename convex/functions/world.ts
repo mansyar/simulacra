@@ -252,6 +252,9 @@ export const tick = action({
     
     // 2. Process each agent
     const worldState = await ctx.runQuery(api.functions.world.getState);
+    const config = await ctx.runQuery(api.functions.config.get);
+    const interactionRadius = config?.interactionRadius ?? 5;
+
     const weather = worldState?.weather || "sunny";
     const weatherMultipliers: Record<string, number> = {
       sunny: 1.0,
@@ -350,7 +353,7 @@ export const tick = action({
           .filter((a: any) => {
             const dx = a.gridX - agent.gridX;
             const dy = a.gridY - agent.gridY;
-            return Math.sqrt(dx*dx + dy*dy) < 5; // Interaction radius
+            return Math.sqrt(dx*dx + dy*dy) < interactionRadius; // Interaction radius
           })
           .map((a: any) => a.name);
 

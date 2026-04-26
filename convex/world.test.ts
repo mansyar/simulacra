@@ -1,6 +1,6 @@
 import { test, expect } from "vitest";
 import { convexTest } from "convex-test";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import schema from "./schema";
 
 const modules = import.meta.glob("./**/*.ts");
@@ -50,4 +50,49 @@ test("world tick updates agents needs and triggers decisions", async () => {
 
   const hasDecision = events.some((e: any) => e.description.includes("Thought:") && e.description.includes("Action:"));
   expect(hasDecision).toBe(true);
+});
+
+test("interaction radius is fetched from config", async () => {
+  const t = convexTest(schema, modules);
+  
+  // 1. Setup: Create two agents at distance 3
+  const agentAId = await t.mutation(api.functions.agents.create, {
+    name: "Agent A",
+    archetype: "socialite",
+    gridX: 0,
+    gridY: 0,
   });
+  await t.mutation(api.functions.agents.create, {
+    name: "Agent B",
+    archetype: "socialite",
+    gridX: 3,
+    gridY: 0,
+  });
+
+  // 2. Set interaction radius to 2 (should NOT see each other)
+  await t.mutation(api.functions.seed.config, { clearExisting: true });
+  const cfg = await t.query(api.functions.config.get, {});
+  await t.run(async (ctx) => {
+    await ctx.db.patch(cfg!._id, { interactionRadius: 2 });
+  });
+
+  // 3. Record passive perception
+  await t.mutation(internal.functions.agents.recordPassivePerception, { agentId: agentAId });
+
+  // 4. Verify no event recorded
+  let events = await t.query(api.functions.memory.getEvents, { agentId: agentAId });
+  expect(events.length).toBe(0);
+
+  // 5. Set interaction radius to 5 (SHOULD see each other)
+  await t.run(async (ctx) => {
+    await ctx.db.patch(cfg!._id, { interactionRadius: 5 });
+  });
+
+  // 6. Record passive perception
+  await t.mutation(internal.functions.agents.recordPassivePerception, { agentId: agentAId });
+
+  // 7. Verify event recorded
+  events = await t.query(api.functions.memory.getEvents, { agentId: agentAId });
+  expect(events.length).toBe(1);
+  expect(events[0].description).toContain("I saw Agent B nearby.");
+});

@@ -271,10 +271,13 @@ export const recordPassivePerception = internalMutation({
     const agent = await ctx.db.get(args.agentId);
     if (!agent) return;
 
+    const config = await ctx.db.query("config").first();
+    const interactionRadius = config?.interactionRadius ?? 5;
+
     const allAgents = await ctx.db.query("agents").collect();
     const nearbyAgents = allAgents.filter(a => 
       a._id !== agent._id && 
-      Math.sqrt(Math.pow(a.gridX - agent.gridX, 2) + Math.pow(a.gridY - agent.gridY, 2)) < 5
+      Math.sqrt(Math.pow(a.gridX - agent.gridX, 2) + Math.pow(a.gridY - agent.gridY, 2)) < interactionRadius
     );
 
     for (const nearby of nearbyAgents) {
