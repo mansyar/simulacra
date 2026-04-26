@@ -1,8 +1,0 @@
-{
-  "track_id": "pixijs-migration_20260426",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-04-26T00:00:00Z",
-  "updated_at": "2026-04-26T00:00:00Z",
-  "description": "implement phase 4 in @docs/PHASE-PLAN.md . Read documents in @docs/ for details."
-}
