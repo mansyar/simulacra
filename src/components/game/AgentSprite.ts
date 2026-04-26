@@ -1,5 +1,6 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js'
 import { gridToScreen } from '../../lib/isometric'
+import { createNoise } from '../../lib/noise'
 import type { Id } from '../../../convex/_generated/dataModel'
 
 export interface AgentData {
@@ -47,6 +48,8 @@ export class AgentSprite extends Container {
   private visualX: number = 0
   private visualY: number = 0
   private lerpSpeed: number = 0.1
+  private noise: (x: number, y: number) => number
+  private time: number = 0
 
   constructor(agent: AgentData) {
     super()
@@ -56,6 +59,7 @@ export class AgentSprite extends Container {
     this.estimatedGridX = agent.gridX
     this.estimatedGridY = agent.gridY
     this.label = `agent-${agent.name}`
+    this.noise = createNoise(agent._id)
 
     this.circleGraphic = new Graphics()
     this.addChild(this.circleGraphic)
@@ -135,6 +139,7 @@ export class AgentSprite extends Container {
   public tick(deltaTime: number) {
     // We use deltaTime to maintain consistent speed regardless of frame rate
     const speedFactor = deltaTime
+    this.time += deltaTime * 0.05 // Noise speed
     
     const currentGridX = this.agent.gridX
     const currentGridY = this.agent.gridY
@@ -147,6 +152,18 @@ export class AgentSprite extends Container {
     
     this.estimatedGridX = newGridX
     this.estimatedGridY = newGridY
+
+    // Pacing Logic (Micro-Wandering)
+    if (this.agent.currentAction === 'idle' || this.agent.currentAction === 'working') {
+      // Small visual offsets based on noise
+      this.visualX = this.noise(this.time, 0) * 8
+      this.visualY = this.noise(0, this.time) * 4
+    } else {
+      // Reset offsets when not in wandering states
+      // Note: Phase 3 will handle interpolated movement
+      this.visualX = 0
+      this.visualY = 0
+    }
     
     this.updatePosition()
 
