@@ -1,0 +1,8 @@
+{
+  "track_id": "quick-fixes_20260427",
+  "type": "chore",
+  "status": "new",
+  "created_at": "2026-04-27T10:00:00Z",
+  "updated_at": "2026-04-27T10:00:00Z",
+  "description": "Implement Phase 5 Track A: Quick Fixes (Configurable radius, relationship valence history, and index cleanup)"
+}
