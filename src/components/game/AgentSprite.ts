@@ -53,6 +53,11 @@ export class AgentSprite extends Container {
   private lerpSpeed: number = 0.1
   private noise: (x: number, y: number) => number
   private time: number = 0
+  private blendProgress: number = 1.0
+  private blendSourceX: number = 0
+  private blendSourceY: number = 0
+  private blendTargetX: number = 0
+  private blendTargetY: number = 0
 
   constructor(agent: AgentData) {
     super()
@@ -133,9 +138,20 @@ export class AgentSprite extends Container {
     this.targetGridX = data.targetX ?? data.gridX ?? this.targetGridX
     this.targetGridY = data.targetY ?? data.gridY ?? this.targetGridY
 
-    // Reset estimated position when backend data arrives (Phase 3 Course Correction will refine this)
-    this.estimatedGridX = data.gridX ?? this.estimatedGridX
-    this.estimatedGridY = data.gridY ?? this.estimatedGridY
+    // Smooth Course Correction (Phase 3)
+    if (data.gridX !== undefined || data.gridY !== undefined) {
+      const newTruthX = data.gridX ?? this.agent.gridX
+      const newTruthY = data.gridY ?? this.agent.gridY
+      
+      // If there's a significant difference from our estimate (>0.01 tile)
+      if (Math.abs(newTruthX - this.estimatedGridX) > 0.01 || Math.abs(newTruthY - this.estimatedGridY) > 0.01) {
+        this.blendSourceX = this.estimatedGridX
+        this.blendSourceY = this.estimatedGridY
+        this.blendTargetX = newTruthX
+        this.blendTargetY = newTruthY
+        this.blendProgress = 0
+      }
+    }
 
     if (data.currentAction) {
       this.actionLabel.text = ACTION_EMOJIS[data.currentAction] || '❓'
@@ -148,8 +164,16 @@ export class AgentSprite extends Container {
     const elapsedSeconds = deltaTime / 60
     this.time += elapsedSeconds * 3 // Adjust noise speed (seconds based)
 
-    // Predicted Movement (Interpolated Goal-Seeking)
-    if (this.agent.currentAction === 'walking' || this.agent.currentAction === 'exploring') {
+    if (this.blendProgress < 1.0) {
+      // Smooth Course Correction (Phase 3)
+      this.blendProgress += deltaTime / 30 // 30 frames = 500ms at 60fps
+      if (this.blendProgress > 1.0) this.blendProgress = 1.0
+      
+      const t = this.blendProgress
+      this.estimatedGridX = this.blendSourceX + (this.blendTargetX - this.blendSourceX) * t
+      this.estimatedGridY = this.blendSourceY + (this.blendTargetY - this.blendSourceY) * t
+    } else if (this.agent.currentAction === 'walking' || this.agent.currentAction === 'exploring') {
+      // Predicted Movement (Interpolated Goal-Seeking)
       const dx = this.targetGridX - this.estimatedGridX
       const dy = this.targetGridY - this.estimatedGridY
       const distance = Math.sqrt(dx * dx + dy * dy)
