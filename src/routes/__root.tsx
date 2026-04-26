@@ -1,4 +1,4 @@
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
+import { HeadContent, Scripts, createRootRoute, Outlet } from '@tanstack/react-router'
 import { Suspense, lazy, useState, useEffect } from 'react'
 import { ConvexProvider } from "convex/react"
 import { convex } from "../lib/convex"
@@ -68,6 +68,7 @@ function RootDocument() {
                 }>
                   <GameCanvas />
                 </Suspense>
+                <Outlet />
               </ClientOnly>
             </main>
             <Footer />
