@@ -1,23 +1,22 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { Application, Container } from 'pixi.js'
-import { useQuery, useMutation } from 'convex/react'
-import { api } from '../../../convex/_generated/api'
+import { useEffect, useRef } from 'react'
+import { Application } from 'pixi.js'
+// import { useQuery, useMutation } from 'convex/react'
+// import { api } from '../../../convex/_generated/api'
 // Temporarily commenting out or stubbing components that still use Excalibur
 // import { IsometricGrid } from './IsometricGrid'
 // import { CameraController } from './Camera'
 // import { AgentSprite } from './AgentSprite'
 // import { POISprite } from './POISprite'
-import { screenToGrid } from '../../lib/isometric'
+// import { screenToGrid } from '../../lib/isometric'
 
 export default function GameCanvas() {
   const containerRef = useRef<HTMLDivElement>(null)
   const appRef = useRef<Application | null>(null)
-  const [isReady, setIsReady] = useState(false)
 
-  const agentsData = useQuery(api.functions.agents.getAll)
-  const updatePosition = useMutation(api.functions.agents.updatePosition)
+  // const agentsData = useQuery(api.functions.agents.getAll)
+  // const updatePosition = useMutation(api.functions.agents.updatePosition)
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -40,13 +39,11 @@ export default function GameCanvas() {
 
       container.appendChild(app.canvas)
       appRef.current = app
-      setIsReady(true)
     }
 
     initPixi()
 
     return () => {
-      setIsReady(false)
       if (appRef.current) {
         const currentApp = appRef.current
         if (currentApp.canvas && currentApp.canvas.parentNode) {

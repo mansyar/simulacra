@@ -18,6 +18,10 @@ This track focuses on migrating the game's rendering engine from Excalibur.js to
 4.  **Camera Controls:**
     *   Re-implement camera pan (drag) and zoom (scroll) using a main PixiJS `Container` transform (scale and position).
     *   Ensure URL synchronization (`?zoom`, `?focus`) continues to function correctly.
+    *   Preserve camera bounds clamping to restrict panning outside the grid area.
+5.  **Integration & Cleanup:**
+    *   Verify tab visibility pause/resume behaves correctly with the PixiJS application ticker.
+    *   Update relevant documentation files (ARCHITECTURE.md, ISOMETRIC.md, SPEC.md, PRD.md, PHASE-PLAN.md, README.md) to reflect the new rendering technology and APIs.
 
 ## Non-Functional Requirements
 1.  **Performance:**
@@ -34,6 +38,8 @@ This track focuses on migrating the game's rendering engine from Excalibur.js to
 *   [ ] Camera panning and zooming work smoothly and match URL parameters.
 *   [ ] Viewport culling correctly hides off-screen grid elements.
 *   [ ] Convex real-time sync accurately updates PixiJS sprite positions.
+*   [ ] Performance improvement confirmed (measure FPS before/after).
+*   [ ] Bundle size reduction confirmed (~200KB Excalibur → ~150KB PixiJS).
 *   [ ] All Excalibur references and dependencies are entirely removed from `package.json` and the codebase.
 *   [ ] New PixiJS-specific test suite passes successfully.
 

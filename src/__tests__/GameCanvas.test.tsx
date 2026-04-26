@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, unmountComponentAtNode, waitFor } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, waitFor } from '@testing-library/react'
 import GameCanvas from '../components/game/GameCanvas'
 
 // Mock PixiJS
