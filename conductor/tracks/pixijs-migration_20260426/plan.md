@@ -10,11 +10,7 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Isometric Grid & Viewport Culling' 833b2b5
 
 ## Phase 3: Camera System & Controls
-- [ ] Task: Implement `CameraController`
-    - [ ] Write failing tests for camera pan/zoom state updates based on pointer/wheel events.
-    - [ ] Implement `Camera` using a main PixiJS `Container` transform.
-    - [ ] Implement URL synchronization (`?zoom`, `?focus`).
-    - [ ] Verify tests pass and test coverage is >80%.
+- [x] Task: Implement `CameraController` 463df04
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Camera System & Controls' (Protocol in workflow.md)
 
 ## Phase 4: Sprites & Visual Improvements
