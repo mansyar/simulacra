@@ -1,0 +1,34 @@
+# Implementation Plan: Fluid Agent Movement
+
+## Phase 1: Foundation (Noise & State) [checkpoint: 719af03]
+- [x] Task: Integrate Simplex Noise library (175d8e3)
+    - [x] Add `simplex-noise` to dependencies
+    - [x] Create `src/lib/noise.ts` utility wrapper
+- [x] Task: Extend `AgentSprite` state for visual offsets (cffead8)
+    - [x] Add `visualX/Y` offsets to `AgentSprite` class
+    - [x] Add `estimatedGridX/Y` for path prediction
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Foundation' (Protocol in workflow.md) (719af03)
+
+## Phase 2: Micro-Wandering [checkpoint: bcdfae7]
+- [x] Task: Implement Pacing Logic (ca4a2e2)
+    - [x] Write Tests: Verify `AgentSprite` calculates small offsets based on noise when idle
+    - [x] Implement: Use noise to update `visualX/Y` in `AgentSprite.tick`
+- [x] Task: Implement Looking & Shifting (f67bba9)
+    - [x] Write Tests: Verify sprite flipping and vertical bounce triggers
+    - [x] Implement: Apply scaling/flipping transforms in `AgentSprite.tick`
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Micro-Wandering' (Protocol in workflow.md) (bcdfae7)
+
+## Phase 3: Interpolated Goal-Seeking [checkpoint: 2c8e4ca]
+- [x] Task: Implement Time-Synced Prediction (42329e2)
+    - [x] Write Tests: Verify `estimatedGridX/Y` moves towards target at calculated velocity
+    - [x] Implement: Logic to update `estimatedGridX/Y` based on `tickInterval`
+- [x] Task: Implement Smooth Course Correction (9407c46)
+    - [x] Write Tests: Verify position blending when backend data diverges from estimate
+    - [x] Implement: 500ms lerp/blend in `updateAgentData`
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Goal-Seeking' (Protocol in workflow.md) (2c8e4ca)
+
+## Phase 4: Integration & Optimization [checkpoint: 3934547]
+- [x] Task: Verify Multi-Agent Performance (9d4cb3c)
+    - [x] Write Tests: Stress test with 50+ moving agents for FPS drops
+    - [x] Implement: Optimize noise calls (e.g. throttle calculation frequency)
+- [x] Task: Conductor - User Manual Verification 'Phase 4: Integration' (Protocol in workflow.md) (3934547)

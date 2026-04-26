@@ -1,0 +1,8 @@
+{
+  "track_id": "fluid-movement_20260427",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-04-27T04:30:00Z",
+  "updated_at": "2026-04-27T04:30:00Z",
+  "description": "To implement Micro-Wandering (Option 1), we will modify the AgentSprite.tick method to inject a small, time-based offset (using a sine wave or Perlin noise) into the sprite’s render position, causing agents to subtly pace or shift within their current tile whenever their currentAction is \"idle\" or \"working.\" For Interpolated Goal-Seeking (Option 2), we will decouple the sprite's movement from the immediate backend gridX/Y updates by having the frontend maintain its own \"estimated\" grid position; when a targetX/Y exists, the sprite will continuously advance along the travel vector at a constant velocity, using the periodic backend updates only to \"course-correct\" any drift, thereby transforming 3-minute bursts into a single, seamless journey across the map."
+}
