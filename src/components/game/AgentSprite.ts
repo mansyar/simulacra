@@ -162,7 +162,7 @@ export class AgentSprite extends Container {
     // PIXI v8 deltaTime is usually ~1.0 for 60FPS. 
     // Convert to elapsed seconds for time-synced calculations.
     const elapsedSeconds = deltaTime / 60
-    this.time += elapsedSeconds * 3 // Adjust noise speed (seconds based)
+    this.time += elapsedSeconds * 1 // Slower noise traversal
 
     if (this.blendProgress < 1.0) {
       // Smooth Course Correction (Phase 3)
@@ -211,12 +211,12 @@ export class AgentSprite extends Container {
         this.visualY = this.noise(0, this.time) * 4
 
         // Looking (Flipping)
-        const flipNoise = this.noise(this.time * 0.1, 100)
+        const flipNoise = this.noise(this.time * 0.05, 100)
         if (flipNoise > 0.6) this.visualContainer.scale.x = 1
         else if (flipNoise < -0.6) this.visualContainer.scale.x = -1
 
         // Shifting (Vertical bounce)
-        const bounceNoise = this.noise(200, this.time * 0.5)
+        const bounceNoise = this.noise(200, this.time * 0.25)
         this.visualContainer.y = bounceNoise * 2
       } else {
         // Reset offsets when not in wandering states

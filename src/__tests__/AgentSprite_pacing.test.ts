@@ -32,6 +32,7 @@ describe('AgentSprite Pacing Logic', () => {
     
     // Simulate tick
     sprite.tick(1)
+    sprite.tick(1)
     
     // Expect visualX/Y to be non-zero
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -32,6 +32,7 @@ describe('AgentSprite Shifting Logic', () => {
     const visual = (sprite as any).visualContainer
     
     sprite.tick(1)
+    sprite.tick(1)
     
     // Expect flipped
     expect(visual.scale.x).toBe(-1)
@@ -43,6 +44,7 @@ describe('AgentSprite Shifting Logic', () => {
     const visual = (sprite as any).visualContainer
     const initialY = visual.y
     
+    sprite.tick(1)
     sprite.tick(1)
     
     const newY = visual.y
