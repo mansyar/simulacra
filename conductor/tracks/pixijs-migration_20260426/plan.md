@@ -14,11 +14,7 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Camera System & Controls' e3dad3a
 
 ## Phase 4: Sprites & Visual Improvements
-- [ ] Task: Implement `AgentSprite` and `POISprite`
-    - [ ] Write failing tests for sprite rendering, batching logic, and visual improvements (shadows, text rendering).
-    - [ ] Implement `AgentSprite` and `POISprite` using PixiJS `Container`, `Graphics`, and `Text`.
-    - [ ] Implement smooth grid-position interpolation (`lerp`) during the PixiJS ticker loop.
-    - [ ] Verify tests pass and test coverage is >80%.
+- [x] Task: Implement `AgentSprite` and `POISprite` c42378e
 - [ ] Task: Conductor - User Manual Verification 'Phase 4: Sprites & Visual Improvements' (Protocol in workflow.md)
 
 ## Phase 5: Integration & Cleanup
