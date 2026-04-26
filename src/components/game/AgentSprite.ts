@@ -10,6 +10,8 @@ export interface AgentData {
   gridY: number
   archetype: string
   currentAction?: string
+  targetX?: number
+  targetY?: number
   speech?: string
   lastSpeechAt?: number
 }
@@ -55,8 +57,8 @@ export class AgentSprite extends Container {
   constructor(agent: AgentData) {
     super()
     this.agent = { ...agent }
-    this.targetGridX = agent.gridX
-    this.targetGridY = agent.gridY
+    this.targetGridX = agent.targetX ?? agent.gridX
+    this.targetGridY = agent.targetY ?? agent.gridY
     this.estimatedGridX = agent.gridX
     this.estimatedGridY = agent.gridY
     this.label = `agent-${agent.name}`
@@ -128,9 +130,10 @@ export class AgentSprite extends Container {
 
   public updateAgentData(data: Partial<AgentData>) {
     Object.assign(this.agent, data)
-    this.targetGridX = data.gridX ?? this.targetGridX
-    this.targetGridY = data.gridY ?? this.targetGridY
-    
+    this.targetGridX = data.targetX ?? data.gridX ?? this.targetGridX
+    this.targetGridY = data.targetY ?? data.gridY ?? this.targetGridY
+
+    // Reset estimated position when backend data arrives (Phase 3 Course Correction will refine this)
     this.estimatedGridX = data.gridX ?? this.estimatedGridX
     this.estimatedGridY = data.gridY ?? this.estimatedGridY
 
@@ -140,23 +143,44 @@ export class AgentSprite extends Container {
   }
 
   public tick(deltaTime: number) {
-    // We use deltaTime to maintain consistent speed regardless of frame rate
-    const speedFactor = deltaTime
-    this.time += deltaTime * 0.05 // Noise speed
-    
-    const currentGridX = this.agent.gridX
-    const currentGridY = this.agent.gridY
-    
-    const newGridX = currentGridX + (this.targetGridX - currentGridX) * this.lerpSpeed * speedFactor
-    const newGridY = currentGridY + (this.targetGridY - currentGridY) * this.lerpSpeed * speedFactor
-    
-    this.agent.gridX = newGridX
-    this.agent.gridY = newGridY
-    
-    this.estimatedGridX = newGridX
-    this.estimatedGridY = newGridY
+    // PIXI v8 deltaTime is usually ~1.0 for 60FPS. 
+    // Convert to elapsed seconds for time-synced calculations.
+    const elapsedSeconds = deltaTime / 60
+    this.time += elapsedSeconds * 3 // Adjust noise speed (seconds based)
+
+    // Predicted Movement (Interpolated Goal-Seeking)
+    if (this.agent.currentAction === 'walking' || this.agent.currentAction === 'exploring') {
+      const dx = this.targetGridX - this.estimatedGridX
+      const dy = this.targetGridY - this.estimatedGridY
+      const distance = Math.sqrt(dx * dx + dy * dy)
+
+      if (distance > 0.01) {
+        // Time-Synced Velocity: distance / world_tick_interval
+        // Default tick interval is 180s. 
+        // Backend AGENT_SPEED is 6 units per tick.
+        // So speed is 6 / 180 = 0.0333 units/sec.
+        const speed = 6 / 180
+        const moveStep = speed * elapsedSeconds
+
+        const ratio = Math.min(1, moveStep / distance)
+        this.estimatedGridX += dx * ratio
+        this.estimatedGridY += dy * ratio
+      }
+    } else {
+      // For non-walking states, keep estimated in sync with backend position (lerped)
+      const currentGridX = this.estimatedGridX
+      const currentGridY = this.estimatedGridY
+
+      this.estimatedGridX = currentGridX + (this.agent.gridX - currentGridX) * this.lerpSpeed * deltaTime
+      this.estimatedGridY = currentGridY + (this.agent.gridY - currentGridY) * this.lerpSpeed * deltaTime
+    }
+
+    // Keep agent.gridX/Y somewhat in sync for legacy reasons or updatePosition
+    this.agent.gridX = this.estimatedGridX
+    this.agent.gridY = this.estimatedGridY
 
     // Pacing Logic (Micro-Wandering)
+
     if (this.agent.currentAction === 'idle' || this.agent.currentAction === 'working') {
       // Small visual offsets based on noise
       this.visualX = this.noise(this.time, 0) * 8
