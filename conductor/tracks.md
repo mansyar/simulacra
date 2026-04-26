@@ -4,5 +4,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [ ] **Track: Fluid Agent Movement**
+- [x] **Track: Fluid Agent Movement**
 *Link: [./tracks/fluid-movement_20260427/](./tracks/fluid-movement_20260427/)*
