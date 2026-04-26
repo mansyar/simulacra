@@ -8,11 +8,11 @@ describe('CameraController (PixiJS)', () => {
 
   beforeEach(() => {
     mockStage = {
-      position: { x: 0, y: 0, set: vi.fn().mockImplementation(function(this: any, x: number, y: number) {
+      position: { x: 0, y: 0, set: vi.fn().mockImplementation(function(this: { x: number; y: number }, x: number, y: number) {
         this.x = x;
         this.y = y !== undefined ? y : x;
       }) },
-      scale: { x: 1, y: 1, set: vi.fn().mockImplementation(function(this: any, x: number, y: number) {
+      scale: { x: 1, y: 1, set: vi.fn().mockImplementation(function(this: { x: number; y: number }, x: number, y: number) {
         this.x = x;
         this.y = y !== undefined ? y : x;
       }) },

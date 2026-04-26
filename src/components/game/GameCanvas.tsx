@@ -18,7 +18,7 @@ interface ExtendedApplication extends Application {
   _handleWheel?: (e: WheelEvent) => void
 }
 
-export default function GameCanvas() {
+export function GameCanvas() {
   const containerRef = useRef<HTMLDivElement>(null)
   const appRef = useRef<ExtendedApplication | null>(null)
   const gridRef = useRef<IsometricGrid | null>(null)

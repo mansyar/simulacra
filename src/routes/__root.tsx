@@ -9,7 +9,7 @@ import { GlobalThoughtStream, AdminPanel } from '../components'
 import appCss from '../styles.css?url'
 
 // Lazy load GameCanvas - it will only load in the browser
-const GameCanvas = lazy(() => import('../components/game/GameCanvas').then(m => ({ default: m.default })))
+const GameCanvas = lazy(() => import('../components/game/GameCanvas').then(m => ({ default: m.GameCanvas })))
 
 function ClientOnly({ children }: { children: React.ReactNode }) {
   const [isClient, setIsClient] = useState(false)
