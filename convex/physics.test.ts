@@ -71,8 +71,8 @@ test("movement resolution applies weather multipliers", async () => {
     });
   });
 
-  // Stormy weather = 0.5x multiplier. AGENT_SPEED = 2.
-  // Move distance should be 2 * 0.5 = 1.
+  // Stormy weather = 0.5x multiplier. AGENT_SPEED = 6.
+  // Move distance should be 6 * 0.5 = 3.
   await t.mutation(internal.functions.agents.resolveMovement, {
     agentId,
     speedMultiplier: 0.5,
@@ -82,11 +82,11 @@ test("movement resolution applies weather multipliers", async () => {
     return await ctx.db.get(agentId);
   });
 
-  expect(agent?.gridX).toBe(1);
+  expect(agent?.gridX).toBe(3);
   expect(agent?.gridY).toBe(0);
 
-  // Sunny weather = 1.0x multiplier. Move distance should be 2.
-  // New position should be 1 + 2 = 3.
+  // Sunny weather = 1.0x multiplier. Move distance should be 6.
+  // New position should be 3 + 6 = 9.
   await t.mutation(internal.functions.agents.resolveMovement, {
     agentId,
     speedMultiplier: 1.0,
@@ -96,5 +96,5 @@ test("movement resolution applies weather multipliers", async () => {
     return await ctx.db.get(agentId);
   });
 
-  expect(agent2?.gridX).toBe(3);
+  expect(agent2?.gridX).toBe(9);
 });

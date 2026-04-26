@@ -2,6 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import ActiveUserCount from '../components/ui/ActiveUserCount'
 import usePresenceWithSessionStorage from '../lib/usePresenceWithSessionStorage'
+import { useQuery } from 'convex/react'
+
+// Mock convex/react
+vi.mock('convex/react', () => ({
+  useQuery: vi.fn(),
+}))
 
 // Mock ../lib/usePresenceWithSessionStorage
 vi.mock('../lib/usePresenceWithSessionStorage', () => ({
@@ -24,6 +30,7 @@ describe('ActiveUserCount', () => {
     vi.clearAllMocks()
     localStorage.clear()
     sessionStorage.clear()
+    vi.mocked(useQuery).mockReturnValue({ roomId: 'main-app' })
   })
 
   it('renders with zero observers', () => {
