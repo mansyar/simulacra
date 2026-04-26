@@ -72,9 +72,14 @@ export default function GameCanvas() {
 
       const handleMouseMove = (e: MouseEvent) => {
         const rect = app.canvas.getBoundingClientRect()
-        const x = e.clientX - rect.left
-        const y = e.clientY - rect.top
-        grid.updateHover(x, y)
+        const screenX = e.clientX - rect.left
+        const screenY = e.clientY - rect.top
+        
+        // Convert screen coordinates to local stage coordinates
+        const localX = (screenX - app.stage.position.x) / app.stage.scale.x
+        const localY = (screenY - app.stage.position.y) / app.stage.scale.y
+        
+        grid.updateHover(localX, localY)
 
         if (isDragging) {
           const dx = e.clientX - lastPos.x
