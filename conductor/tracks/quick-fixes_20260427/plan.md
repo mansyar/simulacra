@@ -24,7 +24,7 @@ Focus on removing boilerplate and implementing the intro UX.
 - [x] Task: Clean up Home Route Boilerplate 63d9ebf
     - [ ] Remove TanStack Start template content from `src/routes/index.tsx`.
     - [ ] Remove duplicate `GlobalThoughtStream` from `src/routes/index.tsx`.
-- [ ] Task: Implement World Intro Overlay
+- [x] Task: Implement World Intro Overlay cfcdefd
     - [ ] **Write Tests (Red)**: Create `src/__tests__/IntroOverlay.test.tsx` to verify overlay visibility and dismissal.
     - [ ] **Implement (Green)**: Create a `IntroOverlay` component and integrate it into `src/routes/index.tsx`.
     - [ ] **Refactor**: Apply Framer Motion for a "cozy" entrance/exit animation.
