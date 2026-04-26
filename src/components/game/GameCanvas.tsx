@@ -11,9 +11,13 @@ import { IsometricGrid } from './IsometricGrid'
 // import { POISprite } from './POISprite'
 // import { screenToGrid } from '../../lib/isometric'
 
+interface ExtendedApplication extends Application {
+  _handleMouseMove?: (e: MouseEvent) => void
+}
+
 export default function GameCanvas() {
   const containerRef = useRef<HTMLDivElement>(null)
-  const appRef = useRef<Application | null>(null)
+  const appRef = useRef<ExtendedApplication | null>(null)
   const gridRef = useRef<IsometricGrid | null>(null)
 
   // const agentsData = useQuery(api.functions.agents.getAll)
@@ -23,7 +27,7 @@ export default function GameCanvas() {
     if (!containerRef.current) return
 
     const container = containerRef.current
-    const app = new Application()
+    const app = new Application() as ExtendedApplication
 
     const initPixi = async () => {
       const rect = container.getBoundingClientRect()
@@ -60,7 +64,7 @@ export default function GameCanvas() {
 
       app.canvas.addEventListener('mousemove', handleMouseMove)
       // Store for cleanup
-      ;(app as any)._handleMouseMove = handleMouseMove
+      app._handleMouseMove = handleMouseMove
     }
 
     initPixi()
@@ -68,8 +72,8 @@ export default function GameCanvas() {
     return () => {
       if (appRef.current) {
         const currentApp = appRef.current
-        if ((currentApp as any)._handleMouseMove) {
-          currentApp.canvas.removeEventListener('mousemove', (currentApp as any)._handleMouseMove)
+        if (currentApp._handleMouseMove) {
+          currentApp.canvas.removeEventListener('mousemove', currentApp._handleMouseMove)
         }
         if (currentApp.canvas && currentApp.canvas.parentNode) {
           currentApp.canvas.parentNode.removeChild(currentApp.canvas)
