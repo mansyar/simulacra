@@ -9,7 +9,7 @@ Focus on schema updates, configuration management, and core relationship logic.
     - [ ] Update `convex/schema.ts` to add `interactionRadius` to `config` table.
     - [ ] Update `convex/schema.ts` to add `valenceHistory` to `relationships` table.
     - [ ] Update `convex/functions/seed.ts` to include `interactionRadius: 5` in default config.
-- [ ] Task: Fix Relationship Valence Bug and Implement History
+- [x] Task: Fix Relationship Valence Bug and Implement History 43dc049
     - [ ] **Write Tests (Red)**: Create `convex/relationships.test.ts` to verify `lastInteractionType` updates and `valenceHistory` accumulation.
     - [ ] **Implement (Green)**: Modify `updateRelationship` in `convex/functions/agents.ts` to update valence on patch and maintain history (max 5).
     - [ ] **Refactor**: Ensure efficient array manipulation for history.
