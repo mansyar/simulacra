@@ -5,7 +5,7 @@ import { Application } from 'pixi.js'
 // import { useQuery, useMutation } from 'convex/react'
 // import { api } from '../../../convex/_generated/api'
 // Temporarily commenting out or stubbing components that still use Excalibur
-// import { IsometricGrid } from './IsometricGrid'
+import { IsometricGrid } from './IsometricGrid'
 // import { CameraController } from './Camera'
 // import { AgentSprite } from './AgentSprite'
 // import { POISprite } from './POISprite'
@@ -14,6 +14,7 @@ import { Application } from 'pixi.js'
 export default function GameCanvas() {
   const containerRef = useRef<HTMLDivElement>(null)
   const appRef = useRef<Application | null>(null)
+  const gridRef = useRef<IsometricGrid | null>(null)
 
   // const agentsData = useQuery(api.functions.agents.getAll)
   // const updatePosition = useMutation(api.functions.agents.updatePosition)
@@ -39,6 +40,15 @@ export default function GameCanvas() {
 
       container.appendChild(app.canvas)
       appRef.current = app
+
+      const grid = new IsometricGrid({
+        width: 64,
+        height: 64,
+        tileWidth: 32,
+        tileHeight: 16,
+      })
+      gridRef.current = grid
+      app.stage.addChild(grid.getContainer())
     }
 
     initPixi()
@@ -52,8 +62,34 @@ export default function GameCanvas() {
         currentApp.destroy(true, { children: true, texture: true, baseTexture: true })
         appRef.current = null
       }
+      gridRef.current = null
     }
   }, [])
+
+  // Handle mouse events
+  useEffect(() => {
+    if (!appRef.current || !gridRef.current) return
+
+    const canvas = appRef.current.canvas
+    const grid = gridRef.current
+    const app = appRef.current
+
+    const handleMouseMove = (e: MouseEvent) => {
+      // Get mouse position relative to canvas
+      const rect = canvas.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const y = e.clientY - rect.top
+      
+      // Convert to world coordinates (since we don't have a camera yet, screen = world)
+      // Future: integrate with CameraController
+      grid.updateHover(x, y)
+    }
+
+    canvas.addEventListener('mousemove', handleMouseMove)
+    return () => {
+      canvas.removeEventListener('mousemove', handleMouseMove)
+    }
+  }, [appRef.current, gridRef.current])
 
   // Handle visibility change
   useEffect(() => {

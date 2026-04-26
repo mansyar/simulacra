@@ -20,8 +20,11 @@ vi.mock('pixi.js', () => ({
     removeChild: vi.fn(),
   })),
   Graphics: vi.fn().mockImplementation(() => ({
-    rect: vi.fn().mockReturnThis(),
-    fill: vi.fn().mockReturnThis(),
+    setStrokeStyle: vi.fn().mockReturnThis(),
+    moveTo: vi.fn().mockReturnThis(),
+    lineTo: vi.fn().mockReturnThis(),
+    poly: vi.fn().mockReturnThis(),
+    stroke: vi.fn().mockReturnThis(),
     clear: vi.fn().mockReturnThis(),
   })),
   Text: vi.fn().mockImplementation(() => ({
