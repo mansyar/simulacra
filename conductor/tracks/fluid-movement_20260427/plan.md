@@ -9,14 +9,14 @@
     - [x] Add `estimatedGridX/Y` for path prediction
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Foundation' (Protocol in workflow.md) (719af03)
 
-## Phase 2: Micro-Wandering
+## Phase 2: Micro-Wandering [checkpoint: bcdfae7]
 - [x] Task: Implement Pacing Logic (ca4a2e2)
     - [x] Write Tests: Verify `AgentSprite` calculates small offsets based on noise when idle
     - [x] Implement: Use noise to update `visualX/Y` in `AgentSprite.tick`
 - [x] Task: Implement Looking & Shifting (f67bba9)
     - [x] Write Tests: Verify sprite flipping and vertical bounce triggers
     - [x] Implement: Apply scaling/flipping transforms in `AgentSprite.tick`
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Micro-Wandering' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Micro-Wandering' (Protocol in workflow.md) (bcdfae7)
 
 ## Phase 3: Interpolated Goal-Seeking
 - [ ] Task: Implement Time-Synced Prediction
