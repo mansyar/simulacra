@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulacra - Isometric Cozy Observatory</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: #FDF6E3;
+            overflow: hidden;
+        }
+        
+        /* 3D Isometric Transforms */
+        .panel-left {
+            transform: perspective(1000px) rotateY(5deg);
+            box-shadow: 6px 6px 20px rgba(139, 69, 19, 0.25), inset 0 0 30px rgba(139, 69, 19, 0.08);
+            border-left: 3px solid rgba(210, 105, 30, 0.4);
+        }
+        
+        .panel-right {
+            transform: perspective(1000px) rotateY(-5deg);
+            box-shadow: -6px 6px 20px rgba(139, 69, 19, 0.25), inset 0 0 30px rgba(139, 69, 19, 0.08);
+            border-right: 3px solid rgba(210, 105, 30, 0.4);
+        }
+        
+        .game-canvas {
+            transform: perspective(1000px) rotateX(5deg);
+            box-shadow: 0 20px 50px rgba(139, 69, 19, 0.25);
+        }
+        
+        /* Hover Effects */
+        .agent-row {
+            transition: all 0.2s ease;
+        }
+        
+        .agent-row:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateX(4px);
+            box-shadow: 0 2px 8px rgba(139, 69, 19, 0.1);
+        }
+        
+        .event-item {
+            transition: all 0.2s ease;
+        }
+        
+        .event-item:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateX(4px);
+            box-shadow: 0 2px 8px rgba(139, 69, 19, 0.1);
+        }
+        
+        .control-btn {
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(139, 69, 19, 0.2);
+        }
+        
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(139, 69, 19, 0.3);
+        }
+        
+        .control-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(139, 69, 19, 0.2);
+        }
+        
+        /* Bottom Panel Transitions */
+        .bottom-panel {
+            transition: height 0.3s ease;
+        }
+        
+        .panel-label {
+            transition: opacity 0.2s ease;
+        }
+        
+        /* Agent Details Animation */
+        .agent-details {
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .agent-details.hidden {
+            max-height: 0;
+            opacity: 0;
+        }
+        
+        .agent-details.expanded {
+            max-height: 200px;
+            opacity: 1;
+        }
+        
+        /* Needs Bar Animation */
+        .needs-bar {
+            transition: width 0.5s ease;
+        }
+        
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #F5E6D3;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #D2691E;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="h-screen">
+    <!-- Header -->
+    <header class="fixed top-0 left-0 right-0 h-14 bg-gradient-to-r from-[#E8D5B7] via-[#F5E6D3] to-[#E8D5B7] z-50 flex items-center justify-between px-6 shadow-md border-b-2 border-[#D2691E]/20">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 bg-gradient-to-br from-[#D2691E] to-[#B8860B] rounded-full flex items-center justify-center shadow-lg">
+                <i data-lucide="globe" class="w-5 h-5 text-[#FDF6E3]"></i>
+            </div>
+            <span class="text-[#5D4037] font-semibold text-xl tracking-wide">Simulacra Observatory</span>
+        </div>
+        
+        <div class="flex items-center gap-6 text-[#5D4037]">
+            <span class="flex items-center gap-2 px-3 py-1.5 bg-[#FDF6E3]/50 rounded-full">
+                <i data-lucide="sun" class="w-4 h-4 text-[#D2691E]"></i>
+                <span class="text-sm font-medium">Sunny</span>
+            </span>
+            <span class="flex items-center gap-2 px-3 py-1.5 bg-[#FDF6E3]/50 rounded-full">
+                <i data-lucide="clock" class="w-4 h-4 text-[#D2691E]"></i>
+                <span class="text-sm font-medium">14:32</span>
+            </span>
+            <span class="flex items-center gap-2 px-3 py-1.5 bg-[#FDF6E3]/50 rounded-full">
+                <i data-lucide="calendar" class="w-4 h-4 text-[#D2691E]"></i>
+                <span class="text-sm font-medium">Day 47</span>
+            </span>
+        </div>
+        
+        <div class="flex items-center gap-4">
+            <span class="text-[#5D4037] flex items-center gap-2 px-3 py-1.5 bg-[#FDF6E3]/50 rounded-full text-sm">
+                <i data-lucide="eye" class="w-4 h-4 text-[#D2691E]"></i>
+                <span class="font-medium">3 observers</span>
+            </span>
+        </div>
+    </header>
+
+    <!-- Left Panel: Agent Status -->
+    <aside class="panel-left w-56 bg-gradient-to-b from-[#E8D5B7] to-[#F5E6D3] fixed left-4 top-12 bottom-12 overflow-y-auto p-4" style="z-index: 10;">
+        <h3 class="text-[#5D4037] font-semibold mb-4 flex items-center gap-2 text-lg">
+            <i data-lucide="users" class="w-5 h-5"></i>
+            Agent Status
+        </h3>
+        
+        <!-- Agent 1: Bob -->
+        <div class="agent-card mb-3">
+            <div class="agent-row flex items-center justify-between p-3 bg-white/80 rounded-lg cursor-pointer transition-all border-2 border-transparent hover:border-[#D2691E]/40" onclick="toggleAgent(this)">
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                    <div class="w-5 h-5 bg-[#8B4513] rounded-full shadow-md flex-shrink-0"></div>
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="text-[#5D4037] font-semibold text-sm flex-shrink-0">Bob</span>
+                        <span class="text-xs text-[#8B7355] bg-[#E8D5B7]/70 px-2.5 py-1 rounded-full font-medium whitespace-nowrap">(Builder)</span>
+                    </div>
+                </div>
+                <i data-lucide="chevron-down" class="w-5 h-5 text-[#8B7355] agent-chevron flex-shrink-0"></i>
+            </div>
+            <div class="agent-details hidden pl-4 mt-2">
+                <div class="space-y-3">
+                    <div>
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span class="text-[#8B7355] font-medium">Hunger</span>
+                            <span class="text-[#8B4513] font-bold">80%</span>
+                        </div>
+                        <div class="h-3 bg-[#F5E6D3] rounded-full overflow-hidden shadow-inner">
+                            <div class="needs-bar h-full bg-gradient-to-r from-[#FFA500] to-[#FFB347] rounded-full shadow-sm" style="width: 80%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span class="text-[#8B7355] font-medium">Energy</span>
+                            <span class="text-[#87CEEB] font-bold">50%</span>
+                        </div>
+                        <div class="h-3 bg-[#F5E6D3] rounded-full overflow-hidden shadow-inner">
+                            <div class="needs-bar h-full bg-gradient-to-r from-[#87CEEB] to-[#B0E0E6] rounded-full shadow-sm" style="width: 50%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span class="text-[#8B7355] font-medium">Social</span>
+                            <span class="text-[#90EE90] font-bold">70%</span>
+                        </div>
+                        <div class="h-3 bg-[#F5E6D3] rounded-full overflow-hidden shadow-inner">
+                            <div class="needs-bar h-full bg-gradient-to-r from-[#90EE90] to-[#98FB98] rounded-full shadow-sm" style="width: 70%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Agent 2: Paris -->
+        <div class="agent-card mb-3">
+            <div class="agent-row flex items-center justify-between p-3 bg-white/80 rounded-lg cursor-pointer transition-all border-2 border-transparent hover:border-[#D2691E]/40" onclick="toggleAgent(this)">
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                    <div class="w-5 h-5 bg-[#FF69B4] rounded-full shadow-md flex-shrink-0"></div>
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="text-[#5D4037] font-semibold text-sm flex-shrink-0">Paris</span>
+                        <span class="text-xs text-[#8B7355] bg-[#E8D5B7]/70 px-2.5 py-1 rounded-full font-medium whitespace-nowrap">(Socialite)</span>
+                    </div>
+                </div>
+                <i data-lucide="chevron-down" class="w-5 h-5 text-[#8B7355] agent-chevron flex-shrink-0"></i>
+            </div>
+            <div class="agent-details hidden pl-4 mt-2">
+                <div class="space-y-3">
+                    <div>
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span class="text-[#8B7355] font-medium">Hunger</span>
+                            <span class="text-[#8B4513] font-bold">60%</span>
+                        </div>
+                        <div class="h-3 bg-[#F5E6D3] rounded-full overflow-hidden shadow-inner">
+                            <div class="needs-bar h-full bg-gradient-to-r from-[#FFA500] to-[#FFB347] rounded-full shadow-sm" style="width: 60%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span class="text-[#8B7355] font-medium">Energy</span>
+                            <span class="text-[#87CEEB] font-bold">80%</span>
+                        </div>
+                        <div class="h-3 bg-[#F5E6D3] rounded-full overflow-hidden shadow-inner">
+                            <div class="needs-bar h-full bg-gradient-to-r from-[#87CEEB] to-[#B0E0E6] rounded-full shadow-sm" style="width: 80%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span class="text-[#8B7355] font-medium">Social</span>
+                            <span class="text-[#90EE90] font-bold">90%</span>
+                        </div>
+                        <div class="h-3 bg-[#F5E6D3] rounded-full overflow-hidden shadow-inner">
+                            <div class="needs-bar h-full bg-gradient-to-r from-[#90EE90] to-[#98FB98] rounded-full shadow-sm" style="width: 90%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Agent 3: Socrates -->
+        <div class="agent-card mb-3">
+            <div class="agent-row flex items-center justify-between p-3 bg-white/80 rounded-lg cursor-pointer transition-all border-2 border-transparent hover:border-[#D2691E]/40" onclick="toggleAgent(this)">
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                    <div class="w-5 h-5 bg-[#9370DB] rounded-full shadow-md flex-shrink-0"></div>
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="text-[#5D4037] font-semibold text-sm flex-shrink-0">Socrates</span>
+                        <span class="text-xs text-[#8B7355] bg-[#E8D5B7]/70 px-2.5 py-1 rounded-full font-medium whitespace-nowrap">(Philosopher)</span>
+                    </div>
+                </div>
+                <i data-lucide="chevron-down" class="w-5 h-5 text-[#8B7355] agent-chevron flex-shrink-0"></i>
+            </div>
+            <div class="agent-details hidden pl-4 mt-2">
+                <div class="space-y-3">
+                    <div>
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span class="text-[#8B7355] font-medium">Hunger</span>
+                            <span class="text-[#8B4513] font-bold">50%</span>
+                        </div>
+                        <div class="h-3 bg-[#F5E6D3] rounded-full overflow-hidden shadow-inner">
+                            <div class="needs-bar h-full bg-gradient-to-r from-[#FFA500] to-[#FFB347] rounded-full shadow-sm" style="width: 50%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span class="text-[#8B7355] font-medium">Energy</span>
+                            <span class="text-[#87CEEB] font-bold">60%</span>
+                        </div>
+                        <div class="h-3 bg-[#F5E6D3] rounded-full overflow-hidden shadow-inner">
+                            <div class="needs-bar h-full bg-gradient-to-r from-[#87CEEB] to-[#B0E0E6] rounded-full shadow-sm" style="width: 60%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span class="text-[#8B7355] font-medium">Social</span>
+                            <span class="text-[#90EE90] font-bold">40%</span>
+                        </div>
+                        <div class="h-3 bg-[#F5E6D3] rounded-full overflow-hidden shadow-inner">
+                            <div class="needs-bar h-full bg-gradient-to-r from-[#90EE90] to-[#98FB98] rounded-full shadow-sm" style="width: 40%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Agent 4: Indiana -->
+        <div class="agent-card mb-3">
+            <div class="agent-row flex items-center justify-between p-3 bg-white/80 rounded-lg cursor-pointer transition-all border-2 border-transparent hover:border-[#D2691E]/40" onclick="toggleAgent(this)">
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                    <div class="w-5 h-5 bg-[#228B22] rounded-full shadow-md flex-shrink-0"></div>
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="text-[#5D4037] font-semibold text-sm flex-shrink-0">Indiana</span>
+                        <span class="text-xs text-[#8B7355] bg-[#E8D5B7]/70 px-2.5 py-1 rounded-full font-medium whitespace-nowrap">(Explorer)</span>
+                    </div>
+                </div>
+                <i data-lucide="chevron-down" class="w-5 h-5 text-[#8B7355] agent-chevron flex-shrink-0"></i>
+            </div>
+            <div class="agent-details hidden pl-4 mt-2">
+                <div class="space-y-3">
+                    <div>
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span class="text-[#8B7355] font-medium">Hunger</span>
+                            <span class="text-[#8B4513] font-bold">70%</span>
+                        </div>
+                        <div class="h-3 bg-[#F5E6D3] rounded-full overflow-hidden shadow-inner">
+                            <div class="needs-bar h-full bg-gradient-to-r from-[#FFA500] to-[#FFB347] rounded-full shadow-sm" style="width: 70%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span class="text-[#8B7355] font-medium">Energy</span>
+                            <span class="text-[#87CEEB] font-bold">50%</span>
+                        </div>
+                        <div class="h-3 bg-[#F5E6D3] rounded-full overflow-hidden shadow-inner">
+                            <div class="needs-bar h-full bg-gradient-to-r from-[#87CEEB] to-[#B0E0E6] rounded-full shadow-sm" style="width: 50%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span class="text-[#8B7355] font-medium">Social</span>
+                            <span class="text-[#90EE90] font-bold">60%</span>
+                        </div>
+                        <div class="h-3 bg-[#F5E6D3] rounded-full overflow-hidden shadow-inner">
+                            <div class="needs-bar h-full bg-gradient-to-r from-[#90EE90] to-[#98FB98] rounded-full shadow-sm" style="width: 60%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Agent 5: Florence -->
+        <div class="agent-card mb-3">
+            <div class="agent-row flex items-center justify-between p-3 bg-white/80 rounded-lg cursor-pointer transition-all border-2 border-transparent hover:border-[#D2691E]/40" onclick="toggleAgent(this)">
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                    <div class="w-5 h-5 bg-[#FFA07A] rounded-full shadow-md flex-shrink-0"></div>
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="text-[#5D4037] font-semibold text-sm flex-shrink-0">Florence</span>
+                        <span class="text-xs text-[#8B7355] bg-[#E8D5B7]/70 px-2.5 py-1 rounded-full font-medium whitespace-nowrap">(Nurturer)</span>
+                    </div>
+                </div>
+                <i data-lucide="chevron-down" class="w-5 h-5 text-[#8B7355] agent-chevron flex-shrink-0"></i>
+            </div>
+            <div class="agent-details hidden pl-4 mt-2">
+                <div class="space-y-3">
+                    <div>
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span class="text-[#8B7355] font-medium">Hunger</span>
+                            <span class="text-[#8B4513] font-bold">80%</span>
+                        </div>
+                        <div class="h-3 bg-[#F5E6D3] rounded-full overflow-hidden shadow-inner">
+                            <div class="needs-bar h-full bg-gradient-to-r from-[#FFA500] to-[#FFB347] rounded-full shadow-sm" style="width: 80%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span class="text-[#8B7355] font-medium">Energy</span>
+                            <span class="text-[#87CEEB] font-bold">70%</span>
+                        </div>
+                        <div class="h-3 bg-[#F5E6D3] rounded-full overflow-hidden shadow-inner">
+                            <div class="needs-bar h-full bg-gradient-to-r from-[#87CEEB] to-[#B0E0E6] rounded-full shadow-sm" style="width: 70%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span class="text-[#8B7355] font-medium">Social</span>
+                            <span class="text-[#90EE90] font-bold">90%</span>
+                        </div>
+                        <div class="h-3 bg-[#F5E6D3] rounded-full overflow-hidden shadow-inner">
+                            <div class="needs-bar h-full bg-gradient-to-r from-[#90EE90] to-[#98FB98] rounded-full shadow-sm" style="width: 90%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- System Status -->
+        <div class="mt-6 pt-4 border-t border-[#D2691E]">
+            <div class="text-xs text-[#8B7355] space-y-1">
+                <div class="flex justify-between">
+                    <span>Status:</span>
+                    <span class="text-[#5D4037]">Online</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Tick:</span>
+                    <span class="text-[#5D4037]">142</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Agents:</span>
+                    <span class="text-[#5D4037]">5</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Center Game Canvas -->
+    <main class="game-canvas ml-52 mr-52 mb-12 bg-gradient-to-br from-[#FDF6E3] to-[#F5E6D3] fixed top-12 bottom-12 flex items-center justify-center" id="gameCanvas">
+        <div class="relative">
+            <svg class="w-[500px] h-[400px]" viewBox="0 0 400 300" id="gridSvg">
+                <!-- Isometric Grid - Enhanced Visibility -->
+                <defs>
+                    <linearGradient id="gridGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#D2691E;stop-opacity:0.6" />
+                        <stop offset="100%" style="stop-color:#B8860B;stop-opacity:0.4" />
+                    </linearGradient>
+                </defs>
+                
+                <!-- Main grid lines -->
+                <line x1="200" y1="0" x2="0" y2="150" stroke="url(#gridGradient)" stroke-width="2.5" opacity="0.8"/>
+                <line x1="200" y1="0" x2="400" y2="150" stroke="url(#gridGradient)" stroke-width="2.5" opacity="0.8"/>
+                <line x1="0" y1="150" x2="200" y2="300" stroke="url(#gridGradient)" stroke-width="2.5" opacity="0.8"/>
+                <line x1="400" y1="150" x2="200" y2="300" stroke="url(#gridGradient)" stroke-width="2.5" opacity="0.8"/>
+                
+                <!-- Secondary grid lines -->
+                <line x1="100" y1="0" x2="0" y2="75" stroke="#D2691E" stroke-width="1" opacity="0.4"/>
+                <line x1="300" y1="0" x2="400" y2="75" stroke="#D2691E" stroke-width="1" opacity="0.4"/>
+                <line x1="0" y1="75" x2="100" y2="150" stroke="#D2691E" stroke-width="1" opacity="0.4"/>
+                <line x1="400" y1="75" x2="300" y2="150" stroke="#D2691E" stroke-width="1" opacity="0.4"/>
+                <line x1="100" y1="150" x2="0" y2="225" stroke="#D2691E" stroke-width="1" opacity="0.4"/>
+                <line x1="400" y1="150" x2="300" y2="225" stroke="#D2691E" stroke-width="1" opacity="0.4"/>
+                <line x1="100" y1="225" x2="200" y2="300" stroke="#D2691E" stroke-width="1" opacity="0.4"/>
+                <line x1="300" y1="225" x2="400" y2="300" stroke="#D2691E" stroke-width="1" opacity="0.4"/>
+                
+                <!-- Center highlight -->
+                <ellipse cx="200" cy="150" rx="150" ry="100" fill="none" stroke="#D2691E" stroke-width="1" opacity="0.2"/>
+                
+                <!-- Agent Markers - Larger and More Visible -->
+                <g class="agents-group">
+                    <!-- Bob (Builder) - Brown -->
+                    <circle cx="200" cy="140" r="14" fill="#8B4513" class="agent-marker" data-agent="bob"
+                        style="filter: drop-shadow(0 3px 5px rgba(139, 69, 19, 0.5)); transition: all 0.3s ease;"
+                        onmouseenter="highlightAgent(this)" onmouseleave="unhighlightAgent(this)"/>
+                    <circle cx="200" cy="140" r="14" fill="none" stroke="#D2691E" stroke-width="2" opacity="0" class="agent-marker-ring" data-agent="bob"
+                        style="transition: opacity 0.3s ease;"/>
+                    
+                    <!-- Paris (Socialite) - Pink -->
+                    <circle cx="230" cy="125" r="14" fill="#FF69B4" class="agent-marker" data-agent="paris"
+                        style="filter: drop-shadow(0 3px 5px rgba(255, 105, 180, 0.5)); transition: all 0.3s ease;"
+                        onmouseenter="highlightAgent(this)" onmouseleave="unhighlightAgent(this)"/>
+                    <circle cx="230" cy="125" r="14" fill="none" stroke="#FF1493" stroke-width="2" opacity="0" class="agent-marker-ring" data-agent="paris"
+                        style="transition: opacity 0.3s ease;"/>
+                    
+                    <!-- Socrates (Philosopher) - Purple -->
+                    <circle cx="170" cy="150" r="14" fill="#9370DB" class="agent-marker" data-agent="socrates"
+                        style="filter: drop-shadow(0 3px 5px rgba(147, 112, 219, 0.5)); transition: all 0.3s ease;"
+                        onmouseenter="highlightAgent(this)" onmouseleave="unhighlightAgent(this)"/>
+                    <circle cx="170" cy="150" r="14" fill="none" stroke="#8B008B" stroke-width="2" opacity="0" class="agent-marker-ring" data-agent="socrates"
+                        style="transition: opacity 0.3s ease;"/>
+                    
+                    <!-- Indiana (Explorer) - Green -->
+                    <circle cx="240" cy="160" r="14" fill="#228B22" class="agent-marker" data-agent="indiana"
+                        style="filter: drop-shadow(0 3px 5px rgba(34, 139, 34, 0.5)); transition: all 0.3s ease;"
+                        onmouseenter="highlightAgent(this)" onmouseleave="unhighlightAgent(this)"/>
+                    <circle cx="240" cy="160" r="14" fill="none" stroke="#006400" stroke-width="2" opacity="0" class="agent-marker-ring" data-agent="indiana"
+                        style="transition: opacity 0.3s ease;"/>
+                    
+                    <!-- Florence (Nurturer) - Orange -->
+                    <circle cx="210" cy="170" r="14" fill="#FFA07A" class="agent-marker" data-agent="florence"
+                        style="filter: drop-shadow(0 3px 5px rgba(255, 160, 122, 0.5)); transition: all 0.3s ease;"
+                        onmouseenter="highlightAgent(this)" onmouseleave="unhighlightAgent(this)"/>
+                    <circle cx="210" cy="170" r="14" fill="none" stroke="#FF8C00" stroke-width="2" opacity="0" class="agent-marker-ring" data-agent="florence"
+                        style="transition: opacity 0.3s ease;"/>
+                </g>
+            </svg>
+        </div>
+        
+        <!-- Camera Controls Hint -->
+        <div class="absolute bottom-6 left-6 text-sm text-[#8B7355] bg-[#E8D5B7]/80 px-3 py-1.5 rounded-full shadow">
+            <span class="text-[#D2691E] font-medium">Drag</span> to pan • <span class="text-[#D2691E] font-medium">Scroll</span> to zoom
+        </div>
+        
+        <!-- Zoom Level -->
+        <div class="absolute bottom-6 left-1/2 -translate-x-1/2 text-sm text-[#5D4037] bg-[#E8D5B7] px-4 py-1.5 rounded-full shadow font-medium">
+            Zoom: <span id="zoomLevel" class="text-[#D2691E]">1.0</span>x
+        </div>
+    </main>
+
+    <!-- Right Panel: Thought Stream -->
+    <aside class="panel-right w-72 bg-gradient-to-b from-[#E8D5B7] to-[#F5E6D3] fixed right-4 top-12 bottom-12 overflow-y-auto p-4" style="z-index: 10;">
+        <h3 class="text-[#5D4037] font-semibold mb-4 flex items-center gap-2 text-lg">
+            <i data-lucide="message-circle" class="w-5 h-5"></i>
+            Thought Stream
+        </h3>
+        
+        <div class="space-y-3">
+            <!-- Event 1 -->
+            <div class="event-item p-3.5 bg-white/80 rounded-lg cursor-pointer transition-all border-2 border-transparent hover:border-[#D2691E]/40">
+                <div class="flex items-center gap-2 mb-1.5">
+                    <span class="text-xl">🌾</span>
+                    <span class="text-sm text-[#5D4037] font-semibold">Bob</span>
+                    <span class="text-xs text-[#8B7355] ml-auto font-medium">14:30</span>
+                </div>
+                <p class="text-sm text-[#8B7355]">Moving to workshop...</p>
+            </div>
+            
+            <!-- Event 2 -->
+            <div class="event-item p-3.5 bg-white/80 rounded-lg cursor-pointer transition-all border-2 border-transparent hover:border-[#D2691E]/40">
+                <div class="flex items-center gap-2 mb-1.5">
+                    <span class="text-xl">🌻</span>
+                    <span class="text-sm text-[#5D4037] font-semibold">Paris</span>
+                    <span class="text-xs text-[#8B7355] ml-auto font-medium">14:30</span>
+                </div>
+                <p class="text-sm text-[#8B7355]">"Hello there!"</p>
+            </div>
+            
+            <!-- Event 3 -->
+            <div class="event-item p-3.5 bg-white/80 rounded-lg cursor-pointer transition-all border-2 border-transparent hover:border-[#D2691E]/40">
+                <div class="flex items-center gap-2 mb-1.5">
+                    <span class="text-xl">📚</span>
+                    <span class="text-sm text-[#5D4037] font-semibold">Socrates</span>
+                    <span class="text-xs text-[#8B7355] ml-auto font-medium">14:31</span>
+                </div>
+                <p class="text-sm text-[#8B7355]">Pondering existence...</p>
+            </div>
+            
+            <!-- Event 4 -->
+            <div class="event-item p-3.5 bg-white/80 rounded-lg cursor-pointer transition-all border-2 border-transparent hover:border-[#D2691E]/40">
+                <div class="flex items-center gap-2 mb-1.5">
+                    <span class="text-xl">🧭</span>
+                    <span class="text-sm text-[#5D4037] font-semibold">Indiana</span>
+                    <span class="text-xs text-[#8B7355] ml-auto font-medium">14:31</span>
+                </div>
+                <p class="text-sm text-[#8B7355]">Exploring hills...</p>
+            </div>
+            
+            <!-- Event 5 -->
+            <div class="event-item p-3.5 bg-white/80 rounded-lg cursor-pointer transition-all border-2 border-transparent hover:border-[#D2691E]/40">
+                <div class="flex items-center gap-2 mb-1.5">
+                    <span class="text-xl">🌷</span>
+                    <span class="text-sm text-[#5D4037] font-semibold">Florence</span>
+                    <span class="text-xs text-[#8B7355] ml-auto font-medium">14:32</span>
+                </div>
+                <p class="text-sm text-[#8B7355]">Checking garden...</p>
+            </div>
+            
+            <!-- Event 6 -->
+            <div class="event-item p-3.5 bg-white/80 rounded-lg cursor-pointer transition-all border-2 border-transparent hover:border-[#D2691E]/40">
+                <div class="flex items-center gap-2 mb-1.5">
+                    <span class="text-xl">☀️</span>
+                    <span class="text-sm text-[#5D4037] font-semibold">World</span>
+                    <span class="text-xs text-[#8B7355] ml-auto font-medium">14:32</span>
+                </div>
+                <p class="text-sm text-[#8B7355]">Weather: Sunny</p>
+            </div>
+        </div>
+        
+        <!-- Event Count -->
+        <div class="mt-4 pt-4 border-t-2 border-[#D2691E]/30">
+            <div class="flex justify-between text-sm text-[#8B7355]">
+                <span class="font-medium">Events today:</span>
+                <span class="text-[#5D4037] font-bold">6</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Bottom Control Panel (Collapsible) -->
+    <footer class="bottom-panel fixed bottom-0 left-0 right-0 h-14 bg-gradient-to-r from-[#E8D5B7] to-[#F5E6D3] z-50 flex items-center justify-center gap-4 px-4 border-t-2 border-[#D2691E]/30" id="bottomPanel">
+        <button class="control-btn px-5 py-2.5 bg-gradient-to-br from-[#D2691E] to-[#B8860B] text-[#FDF6E3] rounded-lg text-sm hover:from-[#B8860B] hover:to-[#8B4513] transition-all flex items-center gap-2 shadow-lg" onclick="manualTick()">
+            <i data-lucide="play" class="w-4 h-4"></i>
+            <span class="panel-label font-medium">Manual Tick</span>
+        </button>
+        
+        <button class="control-btn px-5 py-2.5 bg-gradient-to-br from-[#D2691E] to-[#B8860B] text-[#FDF6E3] rounded-lg text-sm hover:from-[#B8860B] hover:to-[#8B4513] transition-all flex items-center gap-2 shadow-lg" onclick="resetWorld()">
+            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+            <span class="panel-label font-medium">Reset World</span>
+        </button>
+        
+        <button class="control-btn px-5 py-2.5 bg-gradient-to-br from-[#D2691E] to-[#B8860B] text-[#FDF6E3] rounded-lg text-sm hover:from-[#B8860B] hover:to-[#8B4513] transition-all flex items-center gap-2 shadow-lg" onclick="openConfig()">
+            <i data-lucide="settings" class="w-4 h-4"></i>
+            <span class="panel-label font-medium">Config</span>
+        </button>
+        
+        <button onclick="toggleBottomPanel()" class="control-btn px-4 py-2.5 bg-gradient-to-br from-[#8B7355] to-[#6B5344] text-[#FDF6E3] rounded-lg hover:from-[#6B5344] hover:to-[#5D4037] transition-all ml-4 shadow-lg">
+            <i data-lucide="chevron-down" class="w-4 h-4" id="toggleIcon"></i>
+        </button>
+    </footer>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+        
+        // Agent expansion functionality (multiple agents can be expanded)
+        function toggleAgent(element) {
+            const details = element.nextElementSibling;
+            const chevron = element.querySelector('.agent-chevron');
+            
+            if (details.classList.contains('hidden')) {
+                details.classList.remove('hidden');
+                details.classList.add('expanded');
+                chevron.setAttribute('data-lucide', 'chevron-up');
+            } else {
+                details.classList.add('hidden');
+                details.classList.remove('expanded');
+                chevron.setAttribute('data-lucide', 'chevron-down');
+            }
+            
+            lucide.createIcons();
+        }
+        
+        // Bottom panel collapse/expand
+        let isCollapsed = false;
+        
+        function toggleBottomPanel() {
+            const panel = document.getElementById('bottomPanel');
+            const icon = document.getElementById('toggleIcon');
+            const labels = document.querySelectorAll('.panel-label');
+            
+            isCollapsed = !isCollapsed;
+            
+            if (isCollapsed) {
+                panel.style.height = '44px';
+                icon.setAttribute('data-lucide', 'chevron-up');
+                labels.forEach(label => label.style.display = 'none');
+            } else {
+                panel.style.height = '56px';
+                icon.setAttribute('data-lucide', 'chevron-down');
+                labels.forEach(label => label.style.display = 'inline');
+            }
+            
+            lucide.createIcons();
+        }
+        
+        // Show labels on hover when collapsed
+        document.getElementById('bottomPanel').addEventListener('mouseenter', function() {
+            if (isCollapsed) {
+                const labels = this.querySelectorAll('.panel-label');
+                labels.forEach(label => label.style.display = 'inline');
+            }
+        });
+        
+        document.getElementById('bottomPanel').addEventListener('mouseleave', function() {
+            if (isCollapsed) {
+                const labels = this.querySelectorAll('.panel-label');
+                labels.forEach(label => label.style.display = 'none');
+            }
+        });
+        
+        // Control button functions
+        function manualTick() {
+            console.log('Manual tick triggered');
+            const btn = event.target.closest('button');
+            btn.classList.add('from-[#8B4513]', 'to-[#6B5344]');
+            setTimeout(() => btn.classList.remove('from-[#8B4513]', 'to-[#6B5344]'), 200);
+        }
+        
+        function resetWorld() {
+            console.log('Reset world triggered');
+            if (confirm('Are you sure you want to reset the world?')) {
+                console.log('World reset confirmed');
+            }
+        }
+        
+        function openConfig() {
+            console.log('Open config triggered');
+            alert('Configuration panel would open here');
+        }
+        
+        // Agent marker highlighting
+        function highlightAgent(marker) {
+            const agentId = marker.dataset.agent;
+            const ring = document.querySelector(`.agent-marker-ring[data-agent="${agentId}"]`);
+            if (ring) {
+                ring.style.opacity = '1';
+            }
+            marker.style.transform = 'scale(1.15)';
+            marker.style.filter = 'drop-shadow(0 5px 10px rgba(0,0,0,0.3))';
+        }
+        
+        function unhighlightAgent(marker) {
+            const agentId = marker.dataset.agent;
+            const ring = document.querySelector(`.agent-marker-ring[data-agent="${agentId}"]`);
+            if (ring) {
+                ring.style.opacity = '0';
+            }
+            marker.style.transform = 'scale(1)';
+            marker.style.filter = '';
+        }
+        
+        // Pan and Zoom functionality
+        let scale = 1;
+        let panX = 0;
+        let panY = 0;
+        let isDragging = false;
+        let startX, startY;
+        
+        const gameCanvas = document.getElementById('gameCanvas');
+        const gridSvg = document.getElementById('gridSvg');
+        
+        // Mouse wheel zoom
+        gameCanvas.addEventListener('wheel', function(e) {
+            e.preventDefault();
+            
+            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            scale *= delta;
+            scale = Math.max(0.5, Math.min(3, scale));
+            
+            updateTransform();
+            document.getElementById('zoomLevel').textContent = scale.toFixed(1);
+        });
+        
+        // Mouse drag pan
+        gameCanvas.addEventListener('mousedown', function(e) {
+            if (e.target.closest('.agent-marker')) return;
+            
+            isDragging = true;
+            startX = e.clientX - panX;
+            startY = e.clientY - panY;
+            gameCanvas.style.cursor = 'grabbing';
+        });
+        
+        document.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
+            
+            panX = e.clientX - startX;
+            panY = e.clientY - startY;
+            
+            updateTransform();
+        });
+        
+        document.addEventListener('mouseup', function() {
+            isDragging = false;
+            gameCanvas.style.cursor = 'grab';
+        });
+        
+        function updateTransform() {
+            gridSvg.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+        }
+        
+        // Agent marker click
+        document.querySelectorAll('.agent-marker').forEach(marker => {
+            marker.addEventListener('click', function() {
+                const agent = this.dataset.agent;
+                console.log('Clicked agent:', agent);
+                // Could highlight agent in left panel
+            });
+        });
+        
+        // Set initial cursor
+        gameCanvas.style.cursor = 'grab';
+    </script>
+</body>
+</html>

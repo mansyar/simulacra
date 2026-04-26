@@ -212,40 +212,105 @@
 
 ## Phase 5: The Social
 
-**Goal:** Proximity interactions and chat
+**Goal:** Multi-turn conversations, agent detail panel, and relationship-aware AI
 
-**Status:** ⏳ NOT STARTED (Depends on Phase 4)
+**Status:** ⏳ IN PROGRESS
 
-### Week 8: Proximity System
+> **Note:** Many Phase 5 items from the original plan were already built during
+> Phases 2–4 (distance calculation, speech bubbles, relationships table, affinity
+> tracking, thought stream). This revised plan focuses on remaining gaps only.
 
-#### Day 1-2: Distance Calculation
-- [ ] Implement Euclidean distance function
-- [ ] Add interaction radius to agent config
-- [ ] Detect nearby agents during tick
+### Already Complete (from earlier phases)
 
-#### Day 3-4: Chat System
-- [ ] Implement conversation logic
-- [ ] Add speech bubble rendering
-- [ ] Store conversation in memories
+- [x] Euclidean distance function (`world.ts:333`)
+- [x] Nearby agent detection during tick (`world.ts:328-335`, `agents.ts:recordPassivePerception`)
+- [x] Speech bubble rendering (`AgentSprite.ts:103-122`)
+- [x] Store conversations in memories (`world.ts:445-451`, event type `"conversation"`)
+- [x] `relationships` table with indexes (`schema.ts:96-105`)
+- [x] Affinity score tracking ±100 range (`agents.ts:updateRelationship`)
+- [x] Relationship updates after interactions (`world.ts:384-388`)
+- [x] Thought Stream sidebar (`GlobalThoughtStream.tsx`)
+- [x] Real-time agent thoughts via events (`memory.addEvent`)
 
-#### Day 5-7: Relationships
-- [ ] Create `relationships` table
-- [ ] Track affinity scores
-- [ ] Update relationships after interactions
+---
 
-### Week 9: UI Updates
+### Track A: Quick Fixes (Day 1, ~1 hour)
 
-- [ ] Create Thought Stream sidebar
-- [ ] Display agent thoughts in real-time
-- [ ] Add agent detail panel
-- [ ] Connect `/agent/:id` route
+- [ ] **A1. Configurable interaction radius** — Move hardcoded `5` from `world.ts:333` and `agents.ts:277` to the `config` table
+- [ ] **A2. Fix relationship valence bug** — `updateRelationship` never updates `lastInteractionType` on subsequent interactions (only on insert)
+- [ ] **A3. Remove TanStack starter content** — Clean up `index.tsx` route; `/` should show only the game canvas (already rendered by `__root.tsx`)
+
+### Track B: Frontend Interaction (Days 1–3)
+
+#### B1. Click-to-Select Agent (~0.5 day)
+- [ ] Set `eventMode: 'static'` on `AgentSprite` to make sprites interactive
+- [ ] Emit click events from `AgentSprite` → `GameCanvas`
+- [ ] Add selected-agent state (visual highlight ring, camera focus)
+- [ ] Wire click to navigate to `/agent/$id`
+
+#### B2. Agent Detail Panel — `/agent/$id` (~1.5 days)
+- [ ] Create TanStack route `/agent/$id` as a left-side slide-in panel
+- [ ] Display agent identity: name, archetype, bio, core traits
+- [ ] Display needs bars: hunger, energy, social (live-updating)
+- [ ] Display current goal and action
+- [ ] Display inventory
+- [ ] Display relationships list with affinity scores
+- [ ] Display recent events/memories for this agent
+- [ ] Close panel returns to `/`
+
+#### B3. Thought Stream Improvements (~0.5 day)
+- [ ] Add filter by agent name and event type
+- [ ] Auto-scroll to latest event
+- [ ] Highlight events from selected agent
+
+### Track C: Social Depth (Days 3–5)
+
+#### C1. Relationship Context in AI Prompts (~0.5 day)
+- [ ] Query `relationships` table for the deciding agent
+- [ ] Include relationship data in `buildFullContext` (e.g. "You like Alice (affinity: +14), you distrust Bob (affinity: -8)")
+- [ ] Verify AI decisions reference relationship context
+
+#### C2. Multi-Turn Conversations (~1.5 days)
+
+> **Design:** Open-ended, one exchange per tick. Agent A initiates on tick N,
+> Agent B responds on tick N+1, and so on until one agent decides to end the
+> conversation or walks away.
+
+- [ ] Add `conversationState` to agent schema: `{ partnerId, role: "initiator" | "responder", turnCount }`
+- [ ] On tick: if agent has an active conversation, generate a response instead of a fresh decision
+- [ ] Conversation ends when: agent decides to stop, partner walks away, or `turnCount` exceeds a cap (e.g. 5)
+- [ ] Store each exchange as a `"conversation"` event with partner reference
+- [ ] Both agents show speech bubbles during active conversations
+
+#### C3. Conversation Visual Indicators (~0.5 day)
+- [ ] Draw a subtle dotted line or glow arc between two agents in active conversation
+- [ ] Show a chat icon above conversing agent pairs
+
+---
+
+### Implementation Order
+
+```
+A1 + A2 + A3 (quick fixes, ~1 hour)
+  → B1 (click-to-select, foundation for B2)
+  → B2 (agent detail panel — main frontend task)
+  → C1 (relationship context in AI prompts)
+  → C2 (multi-turn conversations — main backend task)
+  → B3 (thought stream improvements)
+  → C3 (conversation visuals — polish)
+```
+
+**Estimated total: 4–6 days**
 
 ### Phase 5 Checkpoints
 
-- [ ] Agents chat when near each other
-- [ ] Relationship scores update correctly
-- [ ] Thought Stream shows agent activity
-- [ ] Click agent opens detail panel
+- [ ] Clicking an agent in the canvas opens a detail side panel on the left
+- [ ] Agent detail panel shows live needs, traits, relationships, and events
+- [ ] Agents hold multi-turn conversations across ticks (open-ended, 1 exchange/tick)
+- [ ] AI decisions reference relationship context ("I like Alice, I'll go talk to her")
+- [ ] Conversation pairs are visually linked on the canvas
+- [ ] Thought Stream supports filtering by agent and event type
+- [ ] No TanStack starter template content remains on the index route
 
 ---
 
@@ -367,7 +432,7 @@ Phase 6 (Polish)
 3. ✅ **Done:** Install and configure Convex (Phase 2)
 4. ✅ **Done:** Implement LLM integration (Phase 3)
 5. ✅ **Done:** Migrate Excalibur → PixiJS (Phase 4)
-6. ⚙️ **Current:** Add proximity and chat (Phase 5)
+6. ⚙️ **Current:** Social depth, agent detail panel, multi-turn conversations (Phase 5 — Tracks A/B/C)
 7. ⏳ **Finally:** Master panel and deployment (Phase 6)
 
 ---
