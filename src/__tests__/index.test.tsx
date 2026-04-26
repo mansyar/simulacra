@@ -1,63 +1,32 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
-import type { ComponentType } from 'react'
-
-// Mock TanStack Router
-vi.mock('@tanstack/react-router', () => ({
-  createFileRoute: vi.fn().mockImplementation(() => (config: unknown) => config),
-}))
-
-// Mock components
-vi.mock('../components', () => ({
-  GlobalThoughtStream: () => <div data-testid="thought-stream" />,
-}))
-
-// Import after mocking
+import { render, screen, fireEvent, act } from '@testing-library/react'
 import { Route } from '../routes/index'
 
+// Mock IntroOverlay
+vi.mock('../components/ui/IntroOverlay', () => ({
+  IntroOverlay: ({ onDismiss }: { onDismiss: () => void }) => (
+    <div data-testid="intro-overlay">
+      <button onClick={onDismiss}>Enter World</button>
+    </div>
+  ),
+}))
+
 describe('Index Route', () => {
-  it('should export Route configuration', () => {
-    expect(Route).toBeTruthy()
+  const AppComponent = Route.options.component!
+
+  it('should render App component with IntroOverlay', () => {
+    render(<AppComponent />)
+    expect(screen.getByTestId('intro-overlay')).toBeTruthy()
   })
 
-  it('should render App component', () => {
-    const routeAny = Route as unknown as { component: ComponentType }
-    const AppComponent = routeAny.component
-    expect(AppComponent).toBeTruthy()
-    
+  it('should dismiss IntroOverlay when onDismiss is called', async () => {
     render(<AppComponent />)
+    const button = screen.getByText(/Enter World/i)
     
-    expect(screen.getByText(/TanStack Start Base Template/i)).toBeTruthy()
-    expect(screen.getByText(/Start simple, ship quickly/i)).toBeTruthy()
-  })
-
-  it('should have correct page structure', () => {
-    const routeAny = Route as unknown as { component: ComponentType }
-    const AppComponent = routeAny.component
-    render(<AppComponent />)
+    await act(async () => {
+      fireEvent.click(button)
+    })
     
-    const main = screen.getByRole('main')
-    expect(main).toBeTruthy()
-    expect(main.className).toContain('page-wrap')
-  })
-
-  it('should render feature cards', () => {
-    const routeAny = Route as unknown as { component: ComponentType }
-    const AppComponent = routeAny.component
-    render(<AppComponent />)
-    
-    expect(screen.getByText(/Type-Safe Routing/i)).toBeTruthy()
-    expect(screen.getByText(/Server Functions/i)).toBeTruthy()
-    expect(screen.getByText(/Streaming by Default/i)).toBeTruthy()
-    expect(screen.getByText(/Tailwind Native/i)).toBeTruthy()
-  })
-
-  it('should render links', () => {
-    const routeAny = Route as unknown as { component: ComponentType }
-    const AppComponent = routeAny.component
-    render(<AppComponent />)
-    
-    const links = screen.getAllByRole('link')
-    expect(links.length).toBeGreaterThan(0)
+    expect(screen.queryByTestId('intro-overlay')).toBeNull()
   })
 })
