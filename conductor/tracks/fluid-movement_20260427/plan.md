@@ -4,9 +4,9 @@
 - [x] Task: Integrate Simplex Noise library (175d8e3)
     - [x] Add `simplex-noise` to dependencies
     - [x] Create `src/lib/noise.ts` utility wrapper
-- [ ] Task: Extend `AgentSprite` state for visual offsets
-    - [ ] Add `visualX/Y` offsets to `AgentSprite` class
-    - [ ] Add `estimatedGridX/Y` for path prediction
+- [x] Task: Extend `AgentSprite` state for visual offsets (cffead8)
+    - [x] Add `visualX/Y` offsets to `AgentSprite` class
+    - [x] Add `estimatedGridX/Y` for path prediction
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Foundation' (Protocol in workflow.md)
 
 ## Phase 2: Micro-Wandering
