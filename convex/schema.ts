@@ -100,6 +100,7 @@ export default defineSchema({
     interactionsCount: v.number(),
     lastInteractionAt: v.number(),
     lastInteractionType: v.union(v.literal("positive"), v.literal("negative"), v.literal("neutral")),
+    valenceHistory: v.array(v.union(v.literal("positive"), v.literal("negative"), v.literal("neutral"))),
   })
     .index("by_agents", ["agentAId", "agentBId"])
     .index("by_affinity", ["affinity"]),

@@ -39,6 +39,26 @@ export const getPois = query({
 });
 
 /**
+ * Query: Get relationship between two agents
+ */
+export const getRelationship = query({
+  args: {
+    agentAId: v.id("agents"),
+    agentBId: v.id("agents"),
+  },
+  handler: async (ctx, args) => {
+    const [id1, id2] = args.agentAId < args.agentBId 
+      ? [args.agentAId, args.agentBId] 
+      : [args.agentBId, args.agentAId];
+
+    return await ctx.db
+      .query("relationships")
+      .withIndex("by_agents", (q) => q.eq("agentAId", id1).eq("agentBId", id2))
+      .first();
+  },
+});
+
+/**
  * Mutation: Update the world state
  */
 export const updateState = mutation({

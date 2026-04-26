@@ -329,11 +329,16 @@ export const updateRelationship = internalMutation({
       .withIndex("by_agents", (q) => q.eq("agentAId", id1).eq("agentBId", id2))
       .first();
 
+    const type = (args.delta > 0 ? "positive" : (args.delta < 0 ? "negative" : "neutral")) as "positive" | "negative" | "neutral";
+
     if (relationship) {
+      const history = [type, ...(relationship.valenceHistory || [])].slice(0, 5) as ("positive" | "negative" | "neutral")[];
       await ctx.db.patch(relationship._id, {
         affinity: Math.max(-100, Math.min(100, relationship.affinity + args.delta)),
         interactionsCount: relationship.interactionsCount + 1,
         lastInteractionAt: Date.now(),
+        lastInteractionType: type,
+        valenceHistory: history,
       });
     } else {
       await ctx.db.insert("relationships", {
@@ -342,7 +347,8 @@ export const updateRelationship = internalMutation({
         affinity: args.delta,
         interactionsCount: 1,
         lastInteractionAt: Date.now(),
-        lastInteractionType: args.delta > 0 ? "positive" : (args.delta < 0 ? "negative" : "neutral"),
+        lastInteractionType: type,
+        valenceHistory: [type],
       });
     }
   },
