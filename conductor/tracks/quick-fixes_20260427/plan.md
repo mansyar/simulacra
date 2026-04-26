@@ -5,7 +5,7 @@ This plan outlines the steps to implement configurable interaction radius, fix r
 ## Phase 1: Backend Infrastructure & Logic (TDD)
 Focus on schema updates, configuration management, and core relationship logic.
 
-- [ ] Task: Update Convex Schema and Seed Data
+- [x] Task: Update Convex Schema and Seed Data 99a2447
     - [ ] Update `convex/schema.ts` to add `interactionRadius` to `config` table.
     - [ ] Update `convex/schema.ts` to add `valenceHistory` to `relationships` table.
     - [ ] Update `convex/functions/seed.ts` to include `interactionRadius: 5` in default config.
