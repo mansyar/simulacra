@@ -10,9 +10,9 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Foundation' (Protocol in workflow.md) (719af03)
 
 ## Phase 2: Micro-Wandering
-- [ ] Task: Implement Pacing Logic
-    - [ ] Write Tests: Verify `AgentSprite` calculates small offsets based on noise when idle
-    - [ ] Implement: Use noise to update `visualX/Y` in `AgentSprite.tick`
+- [x] Task: Implement Pacing Logic (ca4a2e2)
+    - [x] Write Tests: Verify `AgentSprite` calculates small offsets based on noise when idle
+    - [x] Implement: Use noise to update `visualX/Y` in `AgentSprite.tick`
 - [ ] Task: Implement Looking & Shifting
     - [ ] Write Tests: Verify sprite flipping and vertical bounce triggers
     - [ ] Implement: Apply scaling/flipping transforms in `AgentSprite.tick`
