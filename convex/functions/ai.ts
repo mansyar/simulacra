@@ -305,16 +305,15 @@ export const reflect = action({
         });
       }
 
-      // 2. Save high-importance memories
+      // 2. Save high-importance memories in parallel
       if (reflection.memories) {
-        for (const memory of reflection.memories) {
-          if (memory.importance >= 5) {
-            await ctx.runAction(api.functions.memory.addSemanticMemory, {
-              agentId: args.agentId,
-              content: memory.content,
-            });
-          }
-        }
+        const importantMemories = reflection.memories.filter((m: any) => m.importance >= 5);
+        await Promise.all(importantMemories.map(async (memory: any) => {
+          await ctx.runAction(api.functions.memory.addSemanticMemory, {
+            agentId: args.agentId,
+            content: memory.content,
+          });
+        }));
       }
 
       return { success: true };

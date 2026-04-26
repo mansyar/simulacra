@@ -110,7 +110,7 @@ export const resolveMovement = internalMutation({
 
     if (agent.targetX === undefined || agent.targetY === undefined) return;
 
-    const AGENT_SPEED = 2; // grid units per tick
+    const AGENT_SPEED = 6; // grid units per tick
     const dx = agent.targetX - agent.gridX;
     const dy = agent.targetY - agent.gridY;
     const distance = Math.sqrt(dx * dx + dy * dy);

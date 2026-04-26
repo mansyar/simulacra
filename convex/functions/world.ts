@@ -15,6 +15,20 @@ export const getState = query({
 });
 
 /**
+ * Query: Get sleep mode configuration
+ */
+export const getSleepConfig = query({
+  args: {},
+  handler: async () => {
+    return {
+      roomId: process.env.PRESENCE_ROOM_ID || "main-app",
+      enableSleepMode: process.env.ENABLE_SLEEP_MODE === "true",
+      gracePeriod: parseInt(process.env.SLEEP_MODE_GRACE_PERIOD || "30000"),
+    };
+  },
+});
+
+/**
  * Query: Get all points of interest
  */
 export const getPois = query({
@@ -86,6 +100,8 @@ export const checkSleepMode = action({
     const activeUsers = await ctx.runQuery(api.presence.list, { roomToken: roomId });
     const userCount = activeUsers.length;
 
+    console.log(`[SLEEP] Checking presence in room "${roomId}". Found ${userCount} users.`);
+
     if (userCount > 0) {
       // Users are present, update activity timestamp
       await ctx.runMutation(api.functions.world.updateState, {
@@ -109,15 +125,11 @@ export const checkSleepMode = action({
       };
     }
 
-    // Beyond grace period, check legacy inactivity timeout as well
-    const lastTick = state.lastTickAt || now;
-    const timeSinceLastTick = now - lastTick;
-    const sleepTimeout = 30 * 60 * 1000; // 30 minutes
-
+    // Beyond grace period, stop immediately
     return { 
-      sleeping: timeSinceLastTick > sleepTimeout, 
+      sleeping: true, 
       reason: `Inactive for ${Math.round(timeSinceLastActivity / 1000)}s (grace period: ${gracePeriod/1000}s)`,
-      timeSinceLastTick 
+      timeSinceLastTick: now - (state.lastTickAt || now)
     };
   },
 });
@@ -192,13 +204,16 @@ export const advanceWorldState = internalMutation({
  * Action: Process a world tick
  */
 export const tick = action({
-  args: {},
-  handler: async (ctx): Promise<{ success: boolean; skipped?: boolean; reason?: string; agentCount?: number }> => {
+  args: {
+    skipSleep: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args): Promise<{ success: boolean; skipped?: boolean; reason?: string; agentCount?: number }> => {
     console.log("[WORLD] Starting tick processing...");
     // Check sleep mode
     const enableSleepMode = process.env.ENABLE_SLEEP_MODE === "true";
+    const skipSleep = args.skipSleep ?? false;
     
-    if (enableSleepMode) {
+    if (enableSleepMode && !skipSleep) {
       const sleepStatus = await ctx.runAction(api.functions.world.checkSleepMode);
       
       if (sleepStatus.sleeping) {
@@ -273,7 +288,7 @@ export const tick = action({
         if (currentTicks - lastReflected > (480 + jitter)) {
           console.log(`[WORLD] Triggering reflection for agent ${agent.name}`);
           // Trigger async reflection (non-blocking)
-          await ctx.runAction(api.functions.ai.reflect, {
+          void ctx.runAction(api.functions.ai.reflect, {
             agentId: agent._id,
           });
           
@@ -406,6 +421,19 @@ export const tick = action({
           speech: decision.speech,
           lastSpeechAt: decision.speech ? Date.now() : undefined,
         });
+
+        // 2.8 Autonomous Exploration: If exploring but no target, pick a random spot
+        if (normalizedAction === "exploring" && targetX === undefined) {
+          const randomX = Math.floor(Math.random() * 64);
+          const randomY = Math.floor(Math.random() * 64);
+          console.log(`[WORLD] Agent ${agent.name} is wandering to (${randomX}, ${randomY})`);
+          await ctx.runMutation(internal.functions.agents.updateAction, {
+            agentId: agent._id,
+            action: "exploring",
+            targetX: randomX,
+            targetY: randomY,
+          });
+        }
 
         // Add event to sensory buffer with thought and speech
         let description = `Thought: ${decision.thought} | Action: ${normalizedAction}`;

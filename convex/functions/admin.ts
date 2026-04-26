@@ -8,7 +8,7 @@ import { api } from "../_generated/api";
 export const manualTick = action({
   args: {},
   handler: async (ctx): Promise<any> => {
-    return await ctx.runAction(api.functions.world.tick, {});
+    return await ctx.runAction(api.functions.world.tick, { skipSleep: true });
   },
 });
 

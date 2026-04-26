@@ -73,7 +73,7 @@
 ## 6. COST OPTIMIZATION (TOKEN MANAGEMENT)
 - **Lazy Interaction:** Only call the LLM when agents are within the "Interaction Radius" or when a Hunger/Sleep threshold is met.
 - **Context Pruning:** Use Convex Vector Search to only send the *relevant* memories to the LLM, rather than the entire history.
-- **Sleep Mode:** Pause Crons if no user has accessed the app in over 30 minutes.
+- **Sleep Mode:** Pause Crons immediately after the 30-second grace period with no active users.
 
 ---
 

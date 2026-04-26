@@ -3,8 +3,10 @@
 import { api } from "../../../convex/_generated/api";
 import usePresenceWithSessionStorage from "../../lib/usePresenceWithSessionStorage";
 import { useState } from "react";
+import { useQuery } from "convex/react";
 
 export default function ActiveUserCount() {
+  const sleepConfig = useQuery(api.functions.world.getSleepConfig);
   const [userId] = useState(() => {
     // Try to get existing user ID from localStorage
     if (typeof window !== 'undefined') {
@@ -20,7 +22,8 @@ export default function ActiveUserCount() {
     }
     return newId;
   });
-  const roomId = "main-app";
+  
+  const roomId = sleepConfig?.roomId || "main-app";
   const presenceState = usePresenceWithSessionStorage(api.presence, roomId, userId, 10000);
 
   const onlineUsers = presenceState?.filter((p) => p.online) ?? [];

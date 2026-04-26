@@ -94,7 +94,7 @@ All LLM responses must follow this JSON structure:
 ### 4.3 Cost Optimization
 - **Lazy LLM**: Only call when agents within interaction radius
 - **Context pruning**: Vector search retrieves only relevant memories
-- **Sleep mode**: Pause crons after 30 minutes of inactivity (30-second grace period for real-time presence)
+- **Sleep mode**: Pause crons immediately after the 30-second grace period with no active users.
 
 ---
 

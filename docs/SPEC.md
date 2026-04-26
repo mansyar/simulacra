@@ -150,7 +150,7 @@
 ### 5.3 Cost Optimization
 - Lazy LLM: Only call when agents are within interaction radius
 - Context pruning: Vector search retrieves only relevant memories
-- Sleep mode: Pause crons after 30 min of no active users
+- Sleep mode: Pause crons immediately after the 30s grace period with no active users
 
 ---
 

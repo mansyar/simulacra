@@ -10,6 +10,7 @@ crons.interval(
   "world tick",
   { minutes: tickIntervalMinutes },
   api.functions.world.tick,
+  { skipSleep: false }
 );
 
 export default crons;
