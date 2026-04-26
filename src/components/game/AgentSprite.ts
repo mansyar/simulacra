@@ -35,6 +35,7 @@ const ARCHETYPE_COLORS: Record<string, number> = {
 
 export class AgentSprite extends Container {
   private agent: AgentData
+  private visualContainer: Container
   private circleGraphic: Graphics
   private nameLabel: Text
   private actionLabel: Text
@@ -61,8 +62,11 @@ export class AgentSprite extends Container {
     this.label = `agent-${agent.name}`
     this.noise = createNoise(agent._id)
 
+    this.visualContainer = new Container()
+    this.addChild(this.visualContainer)
+
     this.circleGraphic = new Graphics()
-    this.addChild(this.circleGraphic)
+    this.visualContainer.addChild(this.circleGraphic)
 
     const labelStyle = new TextStyle({
       fontSize: 10,
@@ -81,14 +85,13 @@ export class AgentSprite extends Container {
       fontSize: 12,
     })
 
-    this.actionLabel = new Text({ 
-      text: ACTION_EMOJIS[agent.currentAction || 'idle'] || '❓', 
-      style: emojiStyle 
+    this.actionLabel = new Text({
+      text: ACTION_EMOJIS[agent.currentAction || 'idle'] || '❓',
+      style: emojiStyle
     })
     this.actionLabel.anchor.set(0.5, 0)
     this.actionLabel.position.set(0, 8)
-    this.addChild(this.actionLabel)
-
+    this.visualContainer.addChild(this.actionLabel)
     // Speech
     this.speechContainer = new Container()
     this.speechContainer.position.set(0, -32)
@@ -158,11 +161,22 @@ export class AgentSprite extends Container {
       // Small visual offsets based on noise
       this.visualX = this.noise(this.time, 0) * 8
       this.visualY = this.noise(0, this.time) * 4
+
+      // Looking (Flipping)
+      const flipNoise = this.noise(this.time * 0.1, 100)
+      if (flipNoise > 0.6) this.visualContainer.scale.x = 1
+      else if (flipNoise < -0.6) this.visualContainer.scale.x = -1
+
+      // Shifting (Vertical bounce)
+      const bounceNoise = this.noise(200, this.time * 0.5)
+      this.visualContainer.y = bounceNoise * 2
     } else {
       // Reset offsets when not in wandering states
       // Note: Phase 3 will handle interpolated movement
       this.visualX = 0
       this.visualY = 0
+      this.visualContainer.scale.x = 1
+      this.visualContainer.y = 0
     }
     
     this.updatePosition()
