@@ -9,9 +9,9 @@
 - [x] Task: Implement `IsometricGrid` Rendering 595e7ba
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Isometric Grid & Viewport Culling' 833b2b5
 
-## Phase 3: Camera System & Controls
+## Phase 3: Camera System & Controls [checkpoint: e3dad3a]
 - [x] Task: Implement `CameraController` 463df04
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Camera System & Controls' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Camera System & Controls' e3dad3a
 
 ## Phase 4: Sprites & Visual Improvements
 - [ ] Task: Implement `AgentSprite` and `POISprite`
