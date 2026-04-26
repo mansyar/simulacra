@@ -18,14 +18,14 @@
     - [x] Implement: Apply scaling/flipping transforms in `AgentSprite.tick`
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Micro-Wandering' (Protocol in workflow.md) (bcdfae7)
 
-## Phase 3: Interpolated Goal-Seeking
+## Phase 3: Interpolated Goal-Seeking [checkpoint: 2c8e4ca]
 - [x] Task: Implement Time-Synced Prediction (42329e2)
     - [x] Write Tests: Verify `estimatedGridX/Y` moves towards target at calculated velocity
     - [x] Implement: Logic to update `estimatedGridX/Y` based on `tickInterval`
 - [x] Task: Implement Smooth Course Correction (9407c46)
     - [x] Write Tests: Verify position blending when backend data diverges from estimate
     - [x] Implement: 500ms lerp/blend in `updateAgentData`
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Goal-Seeking' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Goal-Seeking' (Protocol in workflow.md) (2c8e4ca)
 
 ## Phase 4: Integration & Optimization
 - [ ] Task: Verify Multi-Agent Performance
