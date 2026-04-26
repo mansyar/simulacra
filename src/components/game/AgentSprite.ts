@@ -203,28 +203,28 @@ export class AgentSprite extends Container {
     this.agent.gridX = this.estimatedGridX
     this.agent.gridY = this.estimatedGridY
 
-    // Pacing Logic (Micro-Wandering)
+    // Pacing Logic (Micro-Wandering) - Optimization: Only update noise every 2 frames
+    if (Math.floor(this.time * 60) % 2 === 0) {
+      if (this.agent.currentAction === 'idle' || this.agent.currentAction === 'working') {
+        // Small visual offsets based on noise
+        this.visualX = this.noise(this.time, 0) * 8
+        this.visualY = this.noise(0, this.time) * 4
 
-    if (this.agent.currentAction === 'idle' || this.agent.currentAction === 'working') {
-      // Small visual offsets based on noise
-      this.visualX = this.noise(this.time, 0) * 8
-      this.visualY = this.noise(0, this.time) * 4
+        // Looking (Flipping)
+        const flipNoise = this.noise(this.time * 0.1, 100)
+        if (flipNoise > 0.6) this.visualContainer.scale.x = 1
+        else if (flipNoise < -0.6) this.visualContainer.scale.x = -1
 
-      // Looking (Flipping)
-      const flipNoise = this.noise(this.time * 0.1, 100)
-      if (flipNoise > 0.6) this.visualContainer.scale.x = 1
-      else if (flipNoise < -0.6) this.visualContainer.scale.x = -1
-
-      // Shifting (Vertical bounce)
-      const bounceNoise = this.noise(200, this.time * 0.5)
-      this.visualContainer.y = bounceNoise * 2
-    } else {
-      // Reset offsets when not in wandering states
-      // Note: Phase 3 will handle interpolated movement
-      this.visualX = 0
-      this.visualY = 0
-      this.visualContainer.scale.x = 1
-      this.visualContainer.y = 0
+        // Shifting (Vertical bounce)
+        const bounceNoise = this.noise(200, this.time * 0.5)
+        this.visualContainer.y = bounceNoise * 2
+      } else {
+        // Reset offsets when not in wandering states
+        this.visualX = 0
+        this.visualY = 0
+        this.visualContainer.scale.x = 1
+        this.visualContainer.y = 0
+      }
     }
     
     this.updatePosition()
