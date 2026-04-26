@@ -13,9 +13,9 @@
 - [x] Task: Implement Pacing Logic (ca4a2e2)
     - [x] Write Tests: Verify `AgentSprite` calculates small offsets based on noise when idle
     - [x] Implement: Use noise to update `visualX/Y` in `AgentSprite.tick`
-- [ ] Task: Implement Looking & Shifting
-    - [ ] Write Tests: Verify sprite flipping and vertical bounce triggers
-    - [ ] Implement: Apply scaling/flipping transforms in `AgentSprite.tick`
+- [x] Task: Implement Looking & Shifting (f67bba9)
+    - [x] Write Tests: Verify sprite flipping and vertical bounce triggers
+    - [x] Implement: Apply scaling/flipping transforms in `AgentSprite.tick`
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Micro-Wandering' (Protocol in workflow.md)
 
 ## Phase 3: Interpolated Goal-Seeking
