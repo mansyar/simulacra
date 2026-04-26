@@ -5,9 +5,9 @@
 - [x] Task: Create `GameCanvas` PixiJS Component 445636e
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Environment Setup & Core Canvas' aedbb3a
 
-## Phase 2: Isometric Grid & Viewport Culling
+## Phase 2: Isometric Grid & Viewport Culling [checkpoint: 833b2b5]
 - [x] Task: Implement `IsometricGrid` Rendering 595e7ba
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Isometric Grid & Viewport Culling' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Isometric Grid & Viewport Culling' 833b2b5
 
 ## Phase 3: Camera System & Controls
 - [ ] Task: Implement `CameraController`
