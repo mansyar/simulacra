@@ -9,7 +9,11 @@ const mockApp = {
   init: mockInit,
   destroy: mockDestroy,
   canvas: document.createElement('canvas'),
-  stage: { addChild: vi.fn() },
+  stage: { 
+    addChild: vi.fn(),
+    position: { x: 0, y: 0, set: vi.fn() },
+    scale: { x: 1, y: 1, set: vi.fn() },
+  },
   ticker: { add: vi.fn(), remove: vi.fn(), stop: vi.fn(), start: vi.fn() },
 }
 

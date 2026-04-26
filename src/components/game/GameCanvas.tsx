@@ -6,19 +6,23 @@ import { Application } from 'pixi.js'
 // import { api } from '../../../convex/_generated/api'
 // Temporarily commenting out or stubbing components that still use Excalibur
 import { IsometricGrid } from './IsometricGrid'
-// import { CameraController } from './Camera'
+import { CameraController } from './Camera'
 // import { AgentSprite } from './AgentSprite'
 // import { POISprite } from './POISprite'
 // import { screenToGrid } from '../../lib/isometric'
 
 interface ExtendedApplication extends Application {
   _handleMouseMove?: (e: MouseEvent) => void
+  _handleMouseDown?: (e: MouseEvent) => void
+  _handleMouseUp?: (e: MouseEvent) => void
+  _handleWheel?: (e: WheelEvent) => void
 }
 
 export default function GameCanvas() {
   const containerRef = useRef<HTMLDivElement>(null)
   const appRef = useRef<ExtendedApplication | null>(null)
   const gridRef = useRef<IsometricGrid | null>(null)
+  const cameraRef = useRef<CameraController | null>(null)
 
   // const agentsData = useQuery(api.functions.agents.getAll)
   // const updatePosition = useMutation(api.functions.agents.updatePosition)
@@ -54,17 +58,55 @@ export default function GameCanvas() {
       gridRef.current = grid
       app.stage.addChild(grid.getContainer())
 
+      const camera = new CameraController(app.stage)
+      cameraRef.current = camera
+
       // Add event listeners here after init
+      let isDragging = false
+      let lastPos = { x: 0, y: 0 }
+
+      const handleMouseDown = (e: MouseEvent) => {
+        isDragging = true
+        lastPos = { x: e.clientX, y: e.clientY }
+      }
+
       const handleMouseMove = (e: MouseEvent) => {
         const rect = app.canvas.getBoundingClientRect()
         const x = e.clientX - rect.left
         const y = e.clientY - rect.top
         grid.updateHover(x, y)
+
+        if (isDragging) {
+          const dx = e.clientX - lastPos.x
+          const dy = e.clientY - lastPos.y
+          const pos = camera.getPosition()
+          camera.handlePan(pos.x + dx, pos.y + dy)
+          lastPos = { x: e.clientX, y: e.clientY }
+        }
       }
 
+      const handleMouseUp = () => {
+        isDragging = false
+      }
+
+      const handleWheel = (e: WheelEvent) => {
+        e.preventDefault()
+        const rect = app.canvas.getBoundingClientRect()
+        const x = e.clientX - rect.left
+        const y = e.clientY - rect.top
+        camera.handleZoom(e.deltaY, x, y)
+      }
+
+      app.canvas.addEventListener('mousedown', handleMouseDown)
       app.canvas.addEventListener('mousemove', handleMouseMove)
+      window.addEventListener('mouseup', handleMouseUp)
+      app.canvas.addEventListener('wheel', handleWheel, { passive: false })
+
       // Store for cleanup
+      app._handleMouseDown = handleMouseDown
       app._handleMouseMove = handleMouseMove
+      app._handleMouseUp = handleMouseUp
+      app._handleWheel = handleWheel
     }
 
     initPixi()
@@ -72,9 +114,11 @@ export default function GameCanvas() {
     return () => {
       if (appRef.current) {
         const currentApp = appRef.current
-        if (currentApp._handleMouseMove) {
-          currentApp.canvas.removeEventListener('mousemove', currentApp._handleMouseMove)
-        }
+        if (currentApp._handleMouseDown) currentApp.canvas.removeEventListener('mousedown', currentApp._handleMouseDown)
+        if (currentApp._handleMouseMove) currentApp.canvas.removeEventListener('mousemove', currentApp._handleMouseMove)
+        if (currentApp._handleMouseUp) window.removeEventListener('mouseup', currentApp._handleMouseUp)
+        if (currentApp._handleWheel) currentApp.canvas.removeEventListener('wheel', currentApp._handleWheel)
+
         if (currentApp.canvas && currentApp.canvas.parentNode) {
           currentApp.canvas.parentNode.removeChild(currentApp.canvas)
         }
@@ -82,6 +126,7 @@ export default function GameCanvas() {
         appRef.current = null
       }
       gridRef.current = null
+      cameraRef.current = null
     }
   }, [])
 
