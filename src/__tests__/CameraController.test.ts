@@ -1,98 +1,63 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { CameraController } from '../components/game/Camera'
-import { Camera, InputHost, PointerEventReceiver, Vector, BoundingBox, Engine, Screen, WheelEvent } from 'excalibur'
+import { Container } from 'pixi.js'
 
-describe('CameraController', () => {
-  let mockCamera: Camera
-  let mockInput: InputHost
-  let mockPointers: PointerEventReceiver
-  let mockEngine: Engine
+describe('CameraController (PixiJS)', () => {
+  let mockStage: Container
   let controller: CameraController
 
   beforeEach(() => {
-    // Mock Camera
-    mockCamera = {
-      pos: Vector.Zero,
-      zoom: 1,
-      strategy: {
-        limitCameraBounds: vi.fn(),
-      },
-    } as unknown as Camera
+    mockStage = {
+      position: { x: 0, y: 0, set: vi.fn().mockImplementation(function(this: any, x: number, y: number) {
+        this.x = x;
+        this.y = y !== undefined ? y : x;
+      }) },
+      scale: { x: 1, y: 1, set: vi.fn().mockImplementation(function(this: any, x: number, y: number) {
+        this.x = x;
+        this.y = y !== undefined ? y : x;
+      }) },
+    } as unknown as Container
 
-    // Mock InputHost
-    const isDraggingMock = vi.fn()
-    mockPointers = {
-      isDragging: isDraggingMock,
-      primary: {
-        lastWorldPos: Vector.Zero,
-        lastScreenPos: Vector.Zero,
-      },
-      currentFrameWheel: [],
-    } as unknown as PointerEventReceiver
-    mockInput = {
-      pointers: mockPointers,
-    } as unknown as InputHost
-
-    // Mock Engine with screen and screenToWorldCoordinates
-    mockEngine = {
-      screen: {
-        viewport: { width: 800, height: 600 },
-      } as unknown as Screen,
-      screenToWorldCoordinates: vi.fn((point) => point),
-    } as unknown as Engine
-
-    controller = new CameraController(mockCamera, mockInput, mockEngine)
+    controller = new CameraController(mockStage)
   })
 
-  it('should limit camera bounds when bounds provided', () => {
-    const bounds = new BoundingBox({ left: 0, right: 100, top: 0, bottom: 100 })
-    const controller = new CameraController(mockCamera, mockInput, mockEngine, bounds)
+  it('should initialize with correct container', () => {
     expect(controller).toBeDefined()
   })
 
-  it('should pan camera when dragging', () => {
-    // Simulate drag start
-    mockPointers.isDragging = vi.fn().mockReturnValue(true)
-    mockPointers.primary.lastWorldPos = new Vector(10, 20)
-    // First update: drag start
-    controller.update(16)
-    // Second update: dragging
-    controller.update(16)
-    // Ensure no error thrown
-    expect(() => controller.update(16)).not.toThrow()
+  it('should update stage position when panning', () => {
+    // Simulate pan by calling the handler directly (since event listeners are on the canvas)
+    controller.handlePan(10, 20)
+    expect(mockStage.position.x).toBe(10)
+    expect(mockStage.position.y).toBe(20)
   })
 
-  it('should zoom camera when mouse wheel event', () => {
-    // Simulate wheel event
-    mockPointers.currentFrameWheel = [{ deltaY: -100 }] as WheelEvent[]
-    const initialZoom = mockCamera.zoom
-    controller.update(16)
-    // Zoom should increase (deltaY negative => zoom in)
-    expect(mockCamera.zoom).toBeGreaterThan(initialZoom)
+  it('should update stage scale when zooming', () => {
+    const initialScale = mockStage.scale.x
+    controller.handleZoom(-100, 400, 300) // Zoom in at mouse (400, 300)
+    expect(mockStage.scale.x).toBeGreaterThan(initialScale)
   })
 
-  it('should handle null primary pointer during drag', () => {
-    mockPointers.isDragging = vi.fn().mockReturnValue(true)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mockPointers.primary = null as any
-    controller.update(16)
-    expect(controller).toBeDefined()
+  it('should clamp zoom within min/max bounds', () => {
+    // Zoom out many times
+    for(let i=0; i<20; i++) {
+      controller.handleZoom(100, 0, 0)
+    }
+    expect(mockStage.scale.x).toBe(0.5) // minZoom
+
+    // Zoom in many times
+    for(let i=0; i<20; i++) {
+      controller.handleZoom(-100, 0, 0)
+    }
+    expect(mockStage.scale.x).toBe(2) // maxZoom
   })
 
   it('should clamp position to specified bounds', () => {
-    const bounds = new BoundingBox({ left: 0, right: 100, top: 0, bottom: 100 })
-    const limitedController = new CameraController(mockCamera, mockInput, mockEngine, bounds)
+    const bounds = { left: -100, right: 100, top: -100, bottom: 100 }
+    const limitedController = new CameraController(mockStage, bounds)
     
-    // Simulate position outside bounds
-    mockPointers.isDragging = vi.fn().mockReturnValue(true)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mockPointers.primary = { lastWorldPos: new Vector(500, 500) } as any
-    
-    limitedController.update(16)
-    limitedController.update(16)
-    
-    // Position should be clamped
-    expect(mockCamera.pos.x).toBeLessThanOrEqual(100)
-    expect(mockCamera.pos.y).toBeLessThanOrEqual(100)
+    limitedController.handlePan(500, 500)
+    expect(mockStage.position.x).toBeLessThanOrEqual(100)
+    expect(mockStage.position.y).toBeLessThanOrEqual(100)
   })
 })
