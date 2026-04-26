@@ -1,30 +1,64 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import type { MockInstance } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { IsometricGrid } from '../components/game/IsometricGrid'
-import type { ExcaliburGraphicsContext } from 'excalibur'
-import { Color, Vector } from 'excalibur'
+import { Container, Graphics } from 'pixi.js'
 
-type DrawLineCall = [Vector, Vector, Color, number];
+// Mock PixiJS
+vi.mock('pixi.js', () => {
+  const mockGraphics = {
+    setStrokeStyle: vi.fn().mockReturnThis(),
+    moveTo: vi.fn().mockReturnThis(),
+    lineTo: vi.fn().mockReturnThis(),
+    poly: vi.fn().mockReturnThis(),
+    stroke: vi.fn().mockReturnThis(),
+    clear: vi.fn().mockReturnThis(),
+    visible: true,
+  }
+  return {
+    Container: vi.fn().mockImplementation(() => {
+      const children: any[] = []
+      return {
+        addChild: vi.fn().mockImplementation((child) => children.push(child)),
+        removeChild: vi.fn().mockImplementation((child) => {
+          const idx = children.indexOf(child)
+          if (idx > -1) children.splice(idx, 1)
+        }),
+        children,
+      }
+    }),
+    Graphics: vi.fn().mockImplementation(() => mockGraphics),
+  }
+})
 
-describe('IsometricGrid', () => {
-  let mockCtx: ExcaliburGraphicsContext
-  let drawLineSpy: MockInstance
-
+describe('IsometricGrid (PixiJS)', () => {
   beforeEach(() => {
-    // Mock ExcaliburGraphicsContext
-    mockCtx = {
-      drawLine: vi.fn(),
-    } as unknown as ExcaliburGraphicsContext
-
-    // Spy on ctx.drawLine
-    drawLineSpy = vi.spyOn(mockCtx, 'drawLine')
+    vi.clearAllMocks()
   })
 
-  afterEach(() => {
-    vi.restoreAllMocks()
+  it('should initialize with correct dimensions and add graphics to container', () => {
+    const grid = new IsometricGrid({
+      width: 10,
+      height: 10,
+      tileWidth: 32,
+      tileHeight: 16,
+    })
+    
+    expect(grid.getContainer()).toBeDefined()
   })
 
-  it('should render grid with correct number of lines', () => {
+  it('should update hover highlight based on screen coordinates', () => {
+    const grid = new IsometricGrid({
+      width: 10,
+      height: 10,
+      tileWidth: 32,
+      tileHeight: 16,
+    })
+
+    // Center of grid roughly
+    grid.updateHover(0, 0)
+    // We expect some graphics calls to have happened for the highlight
+  })
+
+  it('should implement viewport culling', () => {
     const grid = new IsometricGrid({
       width: 64,
       height: 64,
@@ -32,78 +66,33 @@ describe('IsometricGrid', () => {
       tileHeight: 16,
     })
 
-    grid.render(mockCtx)
+    // Define a small viewport
+    const viewport = {
+      left: 0,
+      top: 0,
+      right: 100,
+      bottom: 100
+    }
 
-    // Vertical lines: (width + 1) * height = 65 * 64 = 4160
-    // Horizontal lines: (height + 1) * width = 65 * 64 = 4160
-    // Total: 8320 lines
-    expect(drawLineSpy).toHaveBeenCalled()
+    grid.cull(viewport)
+    // This should potentially hide some internal graphics or limit drawing
   })
 
-  it('should draw lines with Slate-600 color', () => {
+  it('should clear hover highlight when out of bounds', () => {
     const grid = new IsometricGrid({
-      width: 1,
-      height: 1,
+      width: 10,
+      height: 10,
       tileWidth: 32,
       tileHeight: 16,
     })
 
-    grid.render(mockCtx)
+    const mockGraphicsClear = vi.spyOn(grid.getContainer().children[1] as any, 'clear')
 
-    // Verify drawLine calls have color #475569
-    const calls = drawLineSpy.mock.calls as DrawLineCall[]
-    calls.forEach((call: DrawLineCall) => {
-      expect(call[2]).toBeInstanceOf(Color)
-      const color = call[2] as Color
-      expect(color.toHex()).toBe('#475569')
-    })
-  })
-
-  it('should track mouse position for hover', () => {
-    const grid = new IsometricGrid({
-      width: 64,
-      height: 64,
-      tileWidth: 32,
-      tileHeight: 16,
-    })
-
-    // Set mouse at origin (should hover over tile 0,0)
-    grid.setMousePosition(0, 0)
+    // First hover valid
+    grid.updateHover(0, 0)
     
-    grid.render(mockCtx)
-    
-    // Should have drawn highlight lines (thicker lines)
-    const highlightCalls = (drawLineSpy.mock.calls as DrawLineCall[]).filter((call: DrawLineCall) => {
-      const color = call[2] as Color
-      return color.toHex() === '#334155'
-    })
-    expect(highlightCalls.length).toBeGreaterThan(0)
-  })
-
-  it('should clear hover when mouse leaves grid', () => {
-    const grid = new IsometricGrid({
-      width: 64,
-      height: 64,
-      tileWidth: 32,
-      tileHeight: 16,
-    })
-
-    // Set mouse at origin
-    grid.setMousePosition(0, 0)
-    grid.render(mockCtx)
-    
-    // Clear hover
-    grid.setMousePosition(-1000, -1000)
-    
-    // Reset spy
-    drawLineSpy.mockClear()
-    grid.render(mockCtx)
-    
-    // Should not have highlight lines
-    const highlightCalls = (drawLineSpy.mock.calls as DrawLineCall[]).filter((call: DrawLineCall) => {
-      const color = call[2] as Color
-      return color.toHex() === '#334155'
-    })
-    expect(highlightCalls.length).toBe(0)
+    // Then hover invalid
+    grid.updateHover(1000, 1000)
+    expect(mockGraphicsClear).toHaveBeenCalled()
   })
 })

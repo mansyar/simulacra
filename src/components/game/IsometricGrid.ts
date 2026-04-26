@@ -1,5 +1,4 @@
-import { Vector, Color } from 'excalibur'
-import type { ExcaliburGraphicsContext } from 'excalibur'
+import { Container, Graphics } from 'pixi.js'
 import { gridToScreen, screenToGrid } from '../../lib/isometric'
 
 export interface IsometricGridOptions {
@@ -9,110 +8,139 @@ export interface IsometricGridOptions {
   tileHeight: number
 }
 
+export interface Viewport {
+  left: number
+  top: number
+  right: number
+  bottom: number
+}
+
 export class IsometricGrid {
   private width: number
   private height: number
   private tileWidth: number
   private tileHeight: number
+  private container: Container
+  private gridGraphics: Graphics
+  private highlightGraphics: Graphics
   private hoveredTile: { x: number; y: number } | null = null
-  private gridLines: Array<{ start: Vector; end: Vector; color: Color; thickness: number }> = []
 
   constructor(options: IsometricGridOptions) {
     this.width = options.width
     this.height = options.height
     this.tileWidth = options.tileWidth
     this.tileHeight = options.tileHeight
-    this.createGridLines()
+
+    this.container = new Container()
+    this.gridGraphics = new Graphics()
+    this.highlightGraphics = new Graphics()
+
+    this.container.addChild(this.gridGraphics)
+    this.container.addChild(this.highlightGraphics)
+
+    this.drawGrid()
   }
 
-  private createGridLines(): void {
-    const lineColor = Color.fromHex('#475569')
+  private drawGrid(): void {
+    const g = this.gridGraphics
+    g.clear()
+    // Slate-600
+    // In PixiJS v8, we use the newer graphics API
+    g.setStrokeStyle({ color: 0x475569, width: 1 })
 
     // Create vertical lines (x direction)
     for (let x = 0; x <= this.width; x++) {
-      for (let y = 0; y < this.height; y++) {
-        const start = gridToScreen(x, y)
-        const end = gridToScreen(x, y + 1)
-        this.gridLines.push({
-          start: new Vector(Math.round(start.x), Math.round(start.y)),
-          end: new Vector(Math.round(end.x), Math.round(end.y)),
-          color: lineColor,
-          thickness: 1,
-        })
-      }
+      const start = gridToScreen(x, 0)
+      const end = gridToScreen(x, this.height)
+      g.moveTo(start.x, start.y)
+      g.lineTo(end.x, end.y)
     }
 
     // Create horizontal lines (y direction)
     for (let y = 0; y <= this.height; y++) {
-      for (let x = 0; x < this.width; x++) {
-        const start = gridToScreen(x, y)
-        const end = gridToScreen(x + 1, y)
-        this.gridLines.push({
-          start: new Vector(Math.round(start.x), Math.round(start.y)),
-          end: new Vector(Math.round(end.x), Math.round(end.y)),
-          color: lineColor,
-          thickness: 1,
-        })
-      }
+      const start = gridToScreen(0, y)
+      const end = gridToScreen(this.width, y)
+      g.moveTo(start.x, start.y)
+      g.lineTo(end.x, end.y)
     }
+    
+    g.stroke()
   }
 
-  public setMousePosition(screenX: number, screenY: number): void {
+  public updateHover(screenX: number, screenY: number): void {
     const gridPos = screenToGrid(screenX, screenY)
+    
+    // Check bounds
     if (gridPos.x >= 0 && gridPos.x < this.width && gridPos.y >= 0 && gridPos.y < this.height) {
-      this.hoveredTile = { x: gridPos.x, y: gridPos.y }
+      if (!this.hoveredTile || this.hoveredTile.x !== gridPos.x || this.hoveredTile.y !== gridPos.y) {
+        this.hoveredTile = { x: gridPos.x, y: gridPos.y }
+        this.drawHighlight()
+      }
     } else {
-      this.hoveredTile = null
-    }
-  }
-
-  public getBoundingBox(): { left: number; right: number; top: number; bottom: number } {
-    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity
-    for (let x = 0; x < this.width; x++) {
-      for (let y = 0; y < this.height; y++) {
-        const screenPos = gridToScreen(x, y)
-        const halfWidth = this.tileWidth / 2
-        const halfHeight = this.tileHeight / 2
-        const vertices = [
-          { x: screenPos.x, y: screenPos.y - halfHeight },
-          { x: screenPos.x + halfWidth, y: screenPos.y },
-          { x: screenPos.x, y: screenPos.y + halfHeight },
-          { x: screenPos.x - halfWidth, y: screenPos.y },
-        ]
-        vertices.forEach(v => {
-          if (v.x < minX) minX = v.x
-          if (v.x > maxX) maxX = v.x
-          if (v.y < minY) minY = v.y
-          if (v.y > maxY) maxY = v.y
-        })
+      if (this.hoveredTile !== null) {
+        this.hoveredTile = null
+        this.highlightGraphics.clear()
       }
     }
-    return { left: minX, right: maxX, top: minY, bottom: maxY }
   }
 
-  public render(ctx: ExcaliburGraphicsContext): void {
-    // Draw static grid lines (pre-calculated)
-    for (const line of this.gridLines) {
-      ctx.drawLine(line.start, line.end, line.color, line.thickness)
+  private drawHighlight(): void {
+    if (!this.hoveredTile) return
+
+    const g = this.highlightGraphics
+    g.clear()
+    
+    const screenPos = gridToScreen(this.hoveredTile.x, this.hoveredTile.y)
+    const halfWidth = this.tileWidth / 2
+    const halfHeight = this.tileHeight / 2
+
+    const points = [
+      screenPos.x, screenPos.y - halfHeight,
+      screenPos.x + halfWidth, screenPos.y,
+      screenPos.x, screenPos.y + halfHeight,
+      screenPos.x - halfWidth, screenPos.y,
+    ]
+
+    // Slate-700
+    g.setStrokeStyle({ color: 0x334155, width: 2 })
+    g.poly(points, true)
+    g.stroke()
+  }
+
+  /**
+   * Culls the grid graphics based on the current viewport.
+   * For simplicity in this initial migration, we cull the entire grid graphics object.
+   * Future optimization: Split grid into chunks and cull chunks.
+   */
+  public cull(viewport: Viewport): void {
+    const bounds = this.getGridBounds()
+    
+    const isVisible = !(
+      bounds.right < viewport.left ||
+      bounds.left > viewport.right ||
+      bounds.bottom < viewport.top ||
+      bounds.top > viewport.bottom
+    )
+
+    this.gridGraphics.visible = isVisible
+  }
+
+  private getGridBounds(): Viewport {
+    // The isometric grid's extreme points
+    const top = gridToScreen(0, 0)
+    const right = gridToScreen(this.width, 0)
+    const bottom = gridToScreen(this.width, this.height)
+    const left = gridToScreen(0, this.height)
+
+    return {
+      top: top.y - this.tileHeight / 2,
+      bottom: bottom.y + this.tileHeight / 2,
+      left: left.x - this.tileWidth / 2,
+      right: right.x + this.tileWidth / 2,
     }
+  }
 
-    // Draw hover highlight (only this changes)
-    if (this.hoveredTile) {
-      const screenPos = gridToScreen(this.hoveredTile.x, this.hoveredTile.y)
-      const halfWidth = this.tileWidth / 2
-      const halfHeight = this.tileHeight / 2
-
-      const top = new Vector(Math.round(screenPos.x), Math.round(screenPos.y - halfHeight))
-      const right = new Vector(Math.round(screenPos.x + halfWidth), Math.round(screenPos.y))
-      const bottom = new Vector(Math.round(screenPos.x), Math.round(screenPos.y + halfHeight))
-      const left = new Vector(Math.round(screenPos.x - halfWidth), Math.round(screenPos.y))
-
-      const highlightColor = Color.fromHex('#334155')
-      const thickness = 2
-      ctx.drawLine(top, right, highlightColor, thickness)
-      ctx.drawLine(right, bottom, highlightColor, thickness)
-      ctx.drawLine(bottom, left, highlightColor, thickness)
-      ctx.drawLine(left, top, highlightColor, thickness)
-    }
+  public getContainer(): Container {
+    return this.container
   }
 }
