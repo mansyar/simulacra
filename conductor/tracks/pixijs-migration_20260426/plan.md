@@ -1,9 +1,9 @@
 # Implementation Plan: Excalibur to PixiJS Migration
 
-## Phase 1: Environment Setup & Core Canvas
+## Phase 1: Environment Setup & Core Canvas [checkpoint: aedbb3a]
 - [x] Task: Remove Excalibur and Install PixiJS 694a297
 - [x] Task: Create `GameCanvas` PixiJS Component 445636e
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Environment Setup & Core Canvas' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Environment Setup & Core Canvas' aedbb3a
 
 ## Phase 2: Isometric Grid & Viewport Culling
 - [ ] Task: Implement `IsometricGrid` Rendering
