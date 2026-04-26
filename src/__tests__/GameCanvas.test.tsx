@@ -83,7 +83,7 @@ describe('GameCanvas (PixiJS)', () => {
     
     // Unmount and check destroy
     unmount()
-    expect(mockDestroy).toHaveBeenCalledWith(true, { children: true, texture: true, baseTexture: true })
+    expect(mockDestroy).toHaveBeenCalledWith(true, { children: true, texture: true })
   })
 
   it('should handle visibility change', async () => {
