@@ -21,7 +21,7 @@ Focus on schema updates, configuration management, and core relationship logic.
 ## Phase 2: Frontend Cleanup & Welcome Overlay
 Focus on removing boilerplate and implementing the intro UX.
 
-- [ ] Task: Clean up Home Route Boilerplate
+- [x] Task: Clean up Home Route Boilerplate 63d9ebf
     - [ ] Remove TanStack Start template content from `src/routes/index.tsx`.
     - [ ] Remove duplicate `GlobalThoughtStream` from `src/routes/index.tsx`.
 - [ ] Task: Implement World Intro Overlay
