@@ -13,7 +13,7 @@ Focus on schema updates, configuration management, and core relationship logic.
     - [ ] **Write Tests (Red)**: Create `convex/relationships.test.ts` to verify `lastInteractionType` updates and `valenceHistory` accumulation.
     - [ ] **Implement (Green)**: Modify `updateRelationship` in `convex/functions/agents.ts` to update valence on patch and maintain history (max 5).
     - [ ] **Refactor**: Ensure efficient array manipulation for history.
-- [ ] Task: Decouple Interaction Radius from Code
+- [x] Task: Decouple Interaction Radius from Code bc95135
     - [ ] **Write Tests (Red)**: Update `convex/world.test.ts` to verify interaction radius is fetched from config.
     - [ ] **Implement (Green)**: Update `convex/functions/world.ts` and `convex/functions/agents.ts` to fetch `interactionRadius` from the `config` table.
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Backend' (Protocol in workflow.md)
