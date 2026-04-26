@@ -144,7 +144,9 @@ simulacra/
   "framer-motion": "^11.0.0",
   "react": "^18.2.0",
   "react-dom": "^18.2.0",
-  "tailwindcss": "^3.4.0"
+  "tailwindcss": "^3.4.0",
+  "simplex-noise": "^4.0.0",
+  "alea": "^1.0.0"
 }
 ```
 
