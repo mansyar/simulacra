@@ -95,6 +95,34 @@ export const agents = mutation({
   },
 });
 
+export const config = mutation({
+  args: {
+    clearExisting: v.optional(v.boolean()),
+  },
+  handler: async (ctx, { clearExisting }) => {
+    if (clearExisting) {
+      const existingConfig = await ctx.db.query("config").collect();
+      for (const cfg of existingConfig) await ctx.db.delete(cfg._id);
+    }
+
+    const existing = await ctx.db.query("config").first();
+    if (!existing) {
+      await ctx.db.insert("config", {
+        masterPasswordHash: "pbkdf2_sha256$260000$hashedpassword", // Placeholder
+        defaultTickInterval: 180,
+        enableSleepMode: true,
+        llmProvider: "openai",
+        llmModel: "gpt-3.5-turbo",
+        interactionRadius: 5,
+      });
+    } else if (existing.interactionRadius === undefined) {
+      await ctx.db.patch(existing._id, { interactionRadius: 5 });
+    }
+
+    return { message: "Config seeded successfully" };
+  },
+});
+
 export const world = mutation({
   args: {
     clearExisting: v.optional(v.boolean()),

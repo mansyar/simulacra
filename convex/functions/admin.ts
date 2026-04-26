@@ -109,6 +109,7 @@ export const resetWorld = mutation({
 
     // 5. Re-seed the world using the seed function
     await ctx.runMutation(api.functions.seed.agents, { clearExisting: false });
+    await ctx.runMutation(api.functions.seed.config, { clearExisting: false });
 
     return { success: true, message: "World reset and re-seeded successfully." };
   },

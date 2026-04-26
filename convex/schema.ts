@@ -142,6 +142,7 @@ export default defineSchema({
     llmProvider: v.string(), // e.g. "openai", "siliconflow", "deepseek"
     llmBaseUrl: v.optional(v.string()),
     llmModel: v.string(),
+    interactionRadius: v.number(),
   }),
 
   archetypes: defineTable({
