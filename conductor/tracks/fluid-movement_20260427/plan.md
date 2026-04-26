@@ -22,9 +22,9 @@
 - [x] Task: Implement Time-Synced Prediction (42329e2)
     - [x] Write Tests: Verify `estimatedGridX/Y` moves towards target at calculated velocity
     - [x] Implement: Logic to update `estimatedGridX/Y` based on `tickInterval`
-- [ ] Task: Implement Smooth Course Correction
-    - [ ] Write Tests: Verify position blending when backend data diverges from estimate
-    - [ ] Implement: 500ms lerp/blend in `updateAgentData`
+- [x] Task: Implement Smooth Course Correction (9407c46)
+    - [x] Write Tests: Verify position blending when backend data diverges from estimate
+    - [x] Implement: 500ms lerp/blend in `updateAgentData`
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Goal-Seeking' (Protocol in workflow.md)
 
 ## Phase 4: Integration & Optimization
