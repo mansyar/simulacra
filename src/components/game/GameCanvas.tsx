@@ -49,6 +49,18 @@ export default function GameCanvas() {
       })
       gridRef.current = grid
       app.stage.addChild(grid.getContainer())
+
+      // Add event listeners here after init
+      const handleMouseMove = (e: MouseEvent) => {
+        const rect = app.canvas.getBoundingClientRect()
+        const x = e.clientX - rect.left
+        const y = e.clientY - rect.top
+        grid.updateHover(x, y)
+      }
+
+      app.canvas.addEventListener('mousemove', handleMouseMove)
+      // Store for cleanup
+      ;(app as any)._handleMouseMove = handleMouseMove
     }
 
     initPixi()
@@ -56,6 +68,9 @@ export default function GameCanvas() {
     return () => {
       if (appRef.current) {
         const currentApp = appRef.current
+        if ((currentApp as any)._handleMouseMove) {
+          currentApp.canvas.removeEventListener('mousemove', (currentApp as any)._handleMouseMove)
+        }
         if (currentApp.canvas && currentApp.canvas.parentNode) {
           currentApp.canvas.parentNode.removeChild(currentApp.canvas)
         }
@@ -65,31 +80,6 @@ export default function GameCanvas() {
       gridRef.current = null
     }
   }, [])
-
-  // Handle mouse events
-  useEffect(() => {
-    if (!appRef.current || !gridRef.current) return
-
-    const canvas = appRef.current.canvas
-    const grid = gridRef.current
-    const app = appRef.current
-
-    const handleMouseMove = (e: MouseEvent) => {
-      // Get mouse position relative to canvas
-      const rect = canvas.getBoundingClientRect()
-      const x = e.clientX - rect.left
-      const y = e.clientY - rect.top
-      
-      // Convert to world coordinates (since we don't have a camera yet, screen = world)
-      // Future: integrate with CameraController
-      grid.updateHover(x, y)
-    }
-
-    canvas.addEventListener('mousemove', handleMouseMove)
-    return () => {
-      canvas.removeEventListener('mousemove', handleMouseMove)
-    }
-  }, [appRef.current, gridRef.current])
 
   // Handle visibility change
   useEffect(() => {
