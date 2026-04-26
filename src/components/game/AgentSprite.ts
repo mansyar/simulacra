@@ -42,6 +42,10 @@ export class AgentSprite extends Container {
   private speechLabel: Text
   private targetGridX: number
   private targetGridY: number
+  private estimatedGridX: number
+  private estimatedGridY: number
+  private visualX: number = 0
+  private visualY: number = 0
   private lerpSpeed: number = 0.1
 
   constructor(agent: AgentData) {
@@ -49,6 +53,8 @@ export class AgentSprite extends Container {
     this.agent = { ...agent }
     this.targetGridX = agent.gridX
     this.targetGridY = agent.gridY
+    this.estimatedGridX = agent.gridX
+    this.estimatedGridY = agent.gridY
     this.label = `agent-${agent.name}`
 
     this.circleGraphic = new Graphics()
@@ -118,6 +124,9 @@ export class AgentSprite extends Container {
     this.targetGridX = data.gridX ?? this.targetGridX
     this.targetGridY = data.gridY ?? this.targetGridY
     
+    this.estimatedGridX = data.gridX ?? this.estimatedGridX
+    this.estimatedGridY = data.gridY ?? this.estimatedGridY
+
     if (data.currentAction) {
       this.actionLabel.text = ACTION_EMOJIS[data.currentAction] || '❓'
     }
@@ -135,6 +144,9 @@ export class AgentSprite extends Container {
     
     this.agent.gridX = newGridX
     this.agent.gridY = newGridY
+    
+    this.estimatedGridX = newGridX
+    this.estimatedGridY = newGridY
     
     this.updatePosition()
 
@@ -163,7 +175,10 @@ export class AgentSprite extends Container {
   private updatePosition() {
     const offsetX = (64 * 32) / 2
     const offsetY = 50
-    const screenPos = gridToScreen(this.agent.gridX, this.agent.gridY)
-    this.position.set(screenPos.x + offsetX, screenPos.y + offsetY)
+    const screenPos = gridToScreen(this.estimatedGridX, this.estimatedGridY)
+    this.position.set(
+      screenPos.x + offsetX + this.visualX, 
+      screenPos.y + offsetY + this.visualY
+    )
   }
 }
