@@ -26,13 +26,13 @@ This document defines the technology stack for the Simulacra project - an autono
 ### Game Engine
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| Excalibur.js | Latest | TypeScript-first 2D game engine |
+| PixiJS | 8.x | GPU-accelerated 2D rendering engine |
 
 ### AI Integration
 | Technology | Version | Purpose |
 |------------|---------|---------|
 | OpenAI-compatible API | - | LLM for agent decision-making |
-| Available Models | - | Kimi K2.6, qwen-9b, GPT-4o-mini, etc. |
+| Default Provider | Groq | llama-3.1-8b-instant (Free tier optimized) |
 
 ### Styling
 | Technology | Version | Purpose |
@@ -64,8 +64,8 @@ This document defines the technology stack for the Simulacra project - an autono
 │                        CLIENT (TanStack Start)                  │
 ├─────────────────────────────────────────────────────────────────┤
 │  ┌──────────────┐  ┌──────────────┐  ┌───────────────────────┐  │
-│  │  GameCanvas  │  │ ThoughtStream│  │    Master Panel       │  │
-│  │ (Excalibur)  │  │   (Sidebar)  │  │  (Weather/Spawn)     │  │
+│  │  GameCanvas  │  │ ThoughtStream│  │    God Mode Panel     │  │
+│  │   (PixiJS)   │  │   (Sidebar)  │  │  (Weather/Ticks)      │  │
 │  └──────────────┘  └──────────────┘  └───────────────────────┘  │
 └────────────────────────────┬────────────────────────────────────┘
                              │ useQuery/useMutation
@@ -97,16 +97,16 @@ simulacra/
 ├── src/
 │   ├── components/
 │   │   ├── game/
-│   │   │   ├── GameCanvas.tsx      # Excalibur game canvas
-│   │   │   ├── IsometricGrid.ts   # 64x64 grid renderer
+│   │   │   ├── GameCanvas.tsx      # PixiJS game canvas
+│   │   │   ├── IsometricGrid.ts   # PixiJS Graphics grid
 │   │   │   ├── AgentSprite.ts     # Agent visual component
 │   │   │   ├── POISprite.ts       # Fixed location component
 │   │   │   └── Camera.ts          # Pan/zoom controller
 │   │   ├── ui/
 │   │   │   ├── Header.tsx          # Weather + Master toggle
-│   │   │   ├── ThoughtStream.tsx  # AI thought sidebar
+│   │   │   ├── GlobalThoughtStream.tsx # AI thought sidebar
 │   │   │   ├── AdminPanel.tsx     # God-mode controls
-│   │   │   └── AgentDetail.tsx    # Agent overlay
+│   │   │   └── WorldHUD.tsx       # Top-left status
 │   │   └── index.ts
 │   ├── convex/
 │   │   ├── admin.ts               # God-mode triggers
@@ -115,22 +115,19 @@ simulacra/
 │   │   ├── agents.ts              # Agent CRUD operations
 │   │   ├── world.ts               # World tick logic
 │   │   ├── ai.ts                  # High-level agent brain logic
-│   │   └── memories.ts            # Memory system
+│   │   └── memory.ts              # Memory system
 │   ├── lib/
 │   │   ├── isometric.ts           # Iso coords conversion
-│   │   └── constants.ts           # Grid, tile, camera constants
+│   │   └── server-functions.ts    # TanStack Start server fns
 │   ├── routes/
 │   │   ├── index.tsx              # Main world view (/)
-│   │   └── agent.$id.tsx          # Agent detail (/agent/:id)
-│   ├── app.tsx                    # Root app component
-│   └── entry-client.tsx           # Client entry point
+│   │   ├── about.tsx              # Project info
+│   │   └── __root.tsx             # Root layout
 ├── convex/
 │   └── convex.json                 # Convex configuration
-├── public/
-│   └── sprites/                    # Agent sprite assets
 ├── package.json
 ├── tsconfig.json
-├── tailwind.config.ts
+├── tailwind.config.js
 └── vite.config.ts
 ```
 
@@ -142,9 +139,8 @@ simulacra/
 ```json
 {
   "@tanstack/start": "^1.0.0",
-  "@convex-dev/presence": "^0.1.0",
   "convex": "^1.0.0",
-  "excalibur": "^0.30.0",
+  "pixi.js": "^8.0.0",
   "framer-motion": "^11.0.0",
   "react": "^18.2.0",
   "react-dom": "^18.2.0",
@@ -207,8 +203,8 @@ The implementation supports any OpenAI-compatible API endpoint. Models used incl
 
 ### Rendering
 - 60 FPS target for game canvas
-- Use Excalibur's built-in sprite batching
-- Implement viewport culling for off-screen tiles
+- Use PixiJS GPU-accelerated rendering
+- Implement viewport culling for grid lines
 
 ### Database
 - Convex handles real-time sync automatically

@@ -7,7 +7,7 @@
 | 1 | The Body | Setup + Rendering | ✅ Complete | 1-2 weeks |
 | 2 | The Heart | Convex + Real-time Sync | ✅ Complete | 1-2 weeks |
 | 3 | The Brain | LLM Integration + Memory | ✅ Complete | 2-3 weeks |
-| 4 | The Eyes | Excalibur → PixiJS Migration | ⏳ Not Started | 3-4 days |
+| 4 | The Eyes | Excalibur → PixiJS Migration | ✅ Complete | 3-4 days |
 | 5 | The Social | Proximity + Chat | ⏳ Not Started | 1-2 weeks |
 | 6 | The Polish | Master Panel + Deploy | ⏳ Not Started | 1 week |
 
@@ -147,57 +147,56 @@
 
 **Goal:** Migrate rendering layer from Excalibur.js to PixiJS for GPU-accelerated 2D rendering, viewport culling, and future visual effects support
 
-**Status:** ⏳ NOT STARTED (Depends on Phase 3)
-
-**Why:** Excalibur's full game-engine overhead (scene graph, ECS, physics pipeline) runs every frame despite only using ~5% of its features. The 64×64 grid generates 8,320 line segments per frame with no viewport culling. PixiJS provides WebGL/WebGPU batch rendering, native sprite sheet support, and GPU-powered visual effects (tinting, filters, particles) needed for later phases.
+**Status:** ✅ COMPLETE
 
 ### Days 1-2: Core Migration
 
 #### PixiJS Setup
-- [ ] Install PixiJS v8: `pnpm add pixi.js`
-- [ ] Remove Excalibur: `pnpm remove excalibur`
-- [ ] Create new `GameCanvas.tsx` with PixiJS `Application`
-- [ ] Wire up React lifecycle (init/destroy) with `useEffect`
+- [x] Install PixiJS v8: `pnpm add pixi.js`
+- [x] Remove Excalibur: `pnpm remove excalibur`
+- [x] Create new `GameCanvas.tsx` with PixiJS `Application`
+- [x] Wire up React lifecycle (init/destroy) with `useEffect`
 
 #### Isometric Grid
-- [ ] Rewrite `IsometricGrid.ts` using PixiJS `Graphics`
-- [ ] Implement viewport culling (only draw visible grid lines)
-- [ ] Preserve existing `gridToScreen` / `screenToGrid` math (no changes needed)
-- [ ] Render hover highlight tile
+- [x] Rewrite `IsometricGrid.ts` using PixiJS `Graphics`
+- [x] Implement viewport culling (only draw visible grid lines)
+- [x] Preserve existing `gridToScreen` / `screenToGrid` math (no changes needed)
+- [x] Render hover highlight tile
 
 #### Camera Controller
-- [ ] Rewrite `Camera.ts` using PixiJS `Container` transform (translate + scale)
-- [ ] Implement drag-to-pan with pointer events
-- [ ] Implement scroll-to-zoom with wheel events
-- [ ] Preserve camera bounds clamping
+- [x] Rewrite `Camera.ts` using PixiJS `Container` transform (translate + scale)
+- [x] Implement drag-to-pan with pointer events
+- [x] Implement scroll-to-zoom with wheel events
+- [x] Preserve camera bounds clamping
 
 ### Days 3-4: Sprites & Polish
 
 #### Agent Sprites
-- [ ] Rewrite `AgentSprite.ts` using PixiJS `Container` + `Graphics` + `Text`
-- [ ] Implement archetype-colored circles (same visual as current)
-- [ ] Add name labels and action emoji rendering
-- [ ] Implement speech bubble with background
-- [ ] Preserve smooth grid-position lerping (`onPreUpdate` → ticker callback)
+- [x] Rewrite `AgentSprite.ts` using PixiJS `Container` + `Graphics` + `Text`
+- [x] Implement archetype-colored circles (same visual as current)
+- [x] Add name labels and action emoji rendering
+- [x] Implement speech bubble with background
+- [x] Preserve smooth grid-position lerping (`onPreUpdate` → ticker callback)
 
 #### POI Sprites
-- [ ] Rewrite `POISprite.ts` using PixiJS `Container` + `Graphics` + `Text`
-- [ ] Match existing visual style
+- [x] Rewrite `POISprite.ts` using PixiJS `Container` + `Graphics` + `Text`
+- [x] Match existing visual style
 
 #### Integration & Cleanup
-- [ ] Verify Convex real-time sync still works (agents appear/update/remove)
-- [ ] Verify click-to-move interaction
-- [ ] Verify tab visibility pause/resume
-- [ ] Update/add Vitest tests for new rendering layer
-- [ ] Remove all Excalibur imports and types from codebase
+- [x] Verify Convex real-time sync still works (agents appear/update/remove)
+- [x] Verify click-to-move interaction
+- [x] Verify tab visibility pause/resume
+- [x] Update/add Vitest tests for new rendering layer
+- [x] Remove all Excalibur imports and types from codebase
+- [x] Fix Thought Stream blankness by logging survival mode states
 
 #### Documentation Updates
-- [ ] Update `docs/ARCHITECTURE.md` — Replace Excalibur references with PixiJS (rendering layer, component descriptions)
-- [ ] Update `docs/ISOMETRIC.md` — Update rendering implementation details to reflect PixiJS APIs
-- [ ] Update `docs/SPEC.md` — Update tech stack and rendering references
-- [ ] Update `docs/PRD.md` — Update technology stack section
-- [ ] Update `docs/PHASE-PLAN.md` — Mark Phase 4 complete, update Phase 1 description to note historical Excalibur usage
-- [ ] Update `README.md` — Update tech stack, setup instructions, and any Excalibur mentions
+- [x] Update `docs/ARCHITECTURE.md`
+- [x] Update `docs/ISOMETRIC.md`
+- [x] Update `docs/SPEC.md`
+- [x] Update `docs/PRD.md`
+- [x] Update `docs/PHASE-PLAN.md`
+- [x] Update `README.md`
 
 ### Phase 4 Checkpoints
 
@@ -361,14 +360,14 @@ Phase 6 (Polish)
 
 ## Recommended Development Order
 
-### Current Status: Phase 4 In Progress ⚙️
+### Current Status: Phase 5 In Progress ⚙️
 
-1. ✅ **Start simple:** Grid rendering complete with Excalibur.js
+1. ✅ **Start simple:** Grid rendering complete with PixiJS v8
 2. ✅ **Add one thing at a time:** Agent sprites, camera controls, tests
 3. ✅ **Done:** Install and configure Convex (Phase 2)
 4. ✅ **Done:** Implement LLM integration (Phase 3)
-5. ⚙️ **Current:** Migrate Excalibur → PixiJS (Phase 4)
-6. ⏳ **Then:** Add proximity and chat (Phase 5)
+5. ✅ **Done:** Migrate Excalibur → PixiJS (Phase 4)
+6. ⚙️ **Current:** Add proximity and chat (Phase 5)
 7. ⏳ **Finally:** Master panel and deployment (Phase 6)
 
 ---

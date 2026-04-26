@@ -8,27 +8,28 @@
 ## 2. CORE TECH STACK
 - **Frontend Framework:** TanStack Start (Beta/RC)
 - **Backend/Database:** Convex (Real-time, Vector-enabled)
-- **Game Engine:** Excalibur.js (TypeScript-first 2D Engine)
-- **AI Integration:** OpenAI GPT-4o-mini / Claude 3.5 Haiku (via Convex Actions)
+- **Game Engine:** PixiJS v8 (GPU-accelerated 2D)
+- **AI Integration:** Groq API (`llama-3.1-8b-instant`) via OpenAI-compatible endpoint
 - **Styling:** Tailwind CSS + Framer Motion (for UI overlays)
 
 ---
 
 ## 3. FUNCTIONAL REQUIREMENTS
 
-### 3.1 The World Engine (Excalibur.js)
-- **Isometric Projection:** Render a $64 \times 64$ tilemap using isometric coordinates.
-- **Entity-Component System (ECS):** - `AgentActor`: Handles movement, idle animations, and name-tags.
-    - `ActionComponent`: Manages current intent (walking, interacting, idling).
-- **Interpolation Logic:** The engine must smoothly interpolate agent positions between Convex database updates to prevent "teleporting."
+### 3.1 The World Engine (PixiJS v8)
+- **Isometric Projection:** Render a 64x64 tilemap using isometric coordinates.
+- **Rendering Layers:** 
+    - `IsometricGrid`: Viewport-culled grid lines drawn with Graphics.
+    - `AgentSprite`: PixiJS Container managing body, shadow, labels, and speech bubbles.
+- **Interpolation Logic:** The engine smoothly interpolates sprite positions between Convex database updates using the PixiJS ticker delta.
 
 ### 3.2 The AI Architecture (Convex Brain)
-- **The Heartbeat (Cron):** A Convex Cron job triggers every 60–120 seconds to process a global world "tick."
+- **The Heartbeat (Cron):** A Convex Cron job triggers every 180 seconds to process a global world "tick."
 - **Tiered Memory System:**
     1. **Sensory Buffer:** Recent logs (last 10 events) stored in a standard Convex table.
     2. **Semantic Memory:** Long-term facts stored in a Convex Vector Index.
-    3. **Reflection Layer:** Every 24 hours (simulated), agents summarize their day into "Core Traits."
-- **Deterministic vs. Generative:** Routine movement (hunger → walk to fridge) is handled by deterministic code; social interactions are handled by LLM generation.
+    3. **Reflection Layer:** Simulated reflection updates agent core traits based on recent history.
+- **Deterministic vs. Generative:** Survival needs (hunger, sleep) are prioritized via deterministic logic; social interactions are handled by LLM generation.
 
 ### 3.3 The User Interface (TanStack Start)
 - **Nested Routing:** - `/` : Global world view.
@@ -43,7 +44,7 @@
 ### 4.1 Data Flow Model
 1. **Mutation:** A Cron or User Action updates the `agents` table in Convex.
 2. **Reactivity:** TanStack Start's `useQuery` hook receives the updated agent array instantly.
-3. **Synchronization:** The `GameWorld` component detects the data change and updates the corresponding Excalibur `Actor` target coordinates.
+3. **Synchronization:** The `GameCanvas` component detects the data change and updates the corresponding PixiJS `Sprite` target coordinates.
 4. **Distance Logic:** The system uses the Euclidean distance formula to trigger social proximity events:
    $$d = \sqrt{(x_B - x_A)^2 + (y_B - y_A)^2}$$
 
@@ -77,8 +78,9 @@
 ---
 
 ## 7. MILESTONES
-1. **Phase 1 (The Body):** Setup TanStack Start project with a canvas-based Excalibur isometric grid.
+1. **Phase 1 (The Body):** Setup TanStack Start project with a canvas-based isometric grid.
 2. **Phase 2 (The Heart):** Implement Convex schema and basic real-time movement syncing.
 3. **Phase 3 (The Brain):** Integrate Convex Actions for LLM decision-making and Vector Search memory.
-4. **Phase 4 (The Social):** Implement proximity-based chatting and persistent relationship tracking.
-5. **Phase 5 (The Polish):** Add "God-Mode" UI and deploy via Vercel/Netlify.
+4. **Phase 4 (The Eyes):** Migrate rendering from Excalibur.js to PixiJS v8 for performance.
+5. **Phase 5 (The Social):** Implement proximity-based chatting and persistent relationship tracking.
+6. **Phase 6 (The Polish):** Add "God-Mode" UI and deploy via Vercel/Netlify.

@@ -15,8 +15,8 @@
 |-------|------------|
 | Frontend | TanStack Start (Beta/RC) |
 | Backend/Database | Convex (Real-time + Vector Search) |
-| Game Engine | Excalibur.js (Custom isometric renderer) |
-| AI Integration | OpenAI GPT-4o-mini or Claude 3.5 Haiku |
+| Game Engine | PixiJS v8 (GPU-accelerated 2D) |
+| AI Integration | Groq API (`llama-3.1-8b-instant`) |
 | Styling | Tailwind CSS + Framer Motion |
 | Vector Search | Convex Vector Index (768 dimensions) |
 
@@ -29,6 +29,7 @@
 - **Tile Size:** 32×16 pixels (isometric diamond)
 - **Coordinate System:** Iso coordinates (x, y) ↔ Screen coordinates conversion
 - **Camera:** Centered on world, zoomable (0.5x - 3x), pan via drag
+- **Viewport Culling:** Only render visible grid lines for performance
 - **Background:** Procedural sky gradient (day/night cycle optional)
 
 ### 2.2 Agent System
@@ -117,11 +118,13 @@
 - [ ] Agents make decisions based on memory
 - [ ] Sensory buffer stores recent events
 
-### 4.4 Phase 4 - The Social
-- [ ] Proximity detection (Euclidean distance)
-- [ ] Chat interactions trigger when agents are near
-- [ ] Relationship tracking (likes/dislikes)
-- [ ] Thought stream displays agent thoughts
+### 4.4 Phase 4 - The Eyes (Rendering Migration)
+- [x] Remove Excalibur.js dependency
+- [x] Implement PixiJS v8 Application
+- [x] Rewrite IsometricGrid with viewport culling
+- [x] Migrate Agent and POI sprites to PixiJS Containers
+- [x] Implement smooth interpolation in PixiJS ticker
+- [x] Fix Thought Stream logging for survival states
 
 ### 4.5 Phase 5 - The Polish
 - [ ] Master panel with password protection

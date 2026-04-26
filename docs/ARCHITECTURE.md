@@ -12,15 +12,15 @@
 │   │   CLIENT     │◄───────►│           CONVEX                │    │
 │   │  (TanStack   │  Real-  │    ┌─────────┐  ┌───────────┐   │    │
 │   │   Start +    │  time   │    │ Database │  │  Vector   │   │    │
-│   │  Excalibur) │  sync   │    │ (Tables) │  │   Index   │   │    │
+│   │   PixiJS)    │  sync   │    │ (Tables) │  │   Index   │   │    │
 │   │              │         │    └─────────┘  └───────────┘   │    │
 │   └──────────────┘         └─────────────────────────────────┘    │
 │          │                          │                               │
 │          │                          │ Actions                       │
 │          ▼                          ▼                               │
 │   ┌──────────────┐         ┌─────────────────────────────────┐    │
-│   │  Excalibur   │         │        LLM PROVIDER             │    │
-│   │    Canvas    │         │  (OpenAI / Anthropic Claude)    │    │
+│   │    PixiJS    │         │        LLM PROVIDER             │    │
+│   │    Canvas    │         │  (OpenAI / Groq / Llama 3)      │    │
 │   └──────────────┘         └─────────────────────────────────┘    │
 │                                                                      │
 └─────────────────────────────────────────────────────────────────────┘
@@ -35,11 +35,11 @@
 ```
 Step 1: MUTATION          Step 2: REACTIVITY          Step 3: SYNCHRONIZATION      Step 4: INTERPOLATION
 ┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
-│  Cron Job or    │       │  TanStack       │       │  GameWorld      │       │  Excalibur      │
-│  User Action    │──────►│  useQuery       │──────►│  detects       │──────►│  Actor          │
+│  Cron Job or    │       │  TanStack       │       │  GameWorld      │       │  PixiJS         │
+│  User Action    │──────►│  useQuery       │──────►│  detects       │──────►│  Container      │
 │  updates agents │       │  receives       │       │  data change   │       │  lerps to       │
 │  table in       │       │  updated agent  │       │  and updates   │       │  target coords  │
-│  Convex         │       │  array          │       │  Actor target  │       │  smoothly       │
+│  Convex         │       │  array          │       │  Sprite target │       │  smoothly       │
 └─────────────────┘       └─────────────────┘       └─────────────────┘       └─────────────────┘
 ```
 
@@ -103,27 +103,28 @@ Step 1: MUTATION          Step 2: REACTIVITY          Step 3: SYNCHRONIZATION   
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
 │  routes/                                                         │
-│  ├── _index.tsx          ← Global world view (main canvas)      │
-│  ├── agent.$id.tsx      ← Agent detail overlay                  │
-│  └── layout.tsx         ← Root layout with header/footer        │
+│  ├── index.tsx          ← Global world view (main canvas)       │
+│  ├── about.tsx          ← Project information                   │
+│  └── __root.tsx         ← Root layout with header/footer        │
 │                                                                  │
 │  components/                                                     │
-│  ├── GameWorld/                                                 │
-│  │   ├── GameCanvas.tsx       ← Excalibur integration          │
-│  │   ├── IsometricRenderer.ts ← Custom iso grid                 │
-│  │   ├── AgentSprite.tsx      ← Individual agent rendering     │
-│  │   └── CameraController.ts  ← Pan/zoom management            │
+│  ├── game/                                                      │
+│  │   ├── GameCanvas.tsx       ← PixiJS integration             │
+│  │   ├── IsometricGrid.ts     ← PixiJS Graphics grid           │
+│  │   ├── AgentSprite.ts       ← Individual agent rendering     │
+│  │   ├── POISprite.ts         ← Point of Interest rendering    │
+│  │   └── Camera.ts            ← Pan/zoom management            │
 │  │                                                              │
 │  ├── UI/                                                        │
 │  │   ├── Header.tsx            ← Weather, Master toggle         │
-│  │   ├── MasterPanel.tsx      ← Password-protected controls    │
-│  │   ├── ThoughtStream.tsx    ← Real-time AI log sidebar       │
-│  │   └── AgentDetail.tsx       ← Side panel for /agent/:id      │
+│  │   ├── AdminPanel.tsx       ← God Mode controls              │
+│  │   ├── GlobalThoughtStream.tsx ← Real-time AI log sidebar      │
+│  │   └── WorldHUD.tsx         ← Top-left status display        │
 │  │                                                              │
-│  └── hooks/                                                     │
-│      ├── useGameState.ts        ← Convex query hooks            │
-│      ├── useAgentInterpolation.ts ← Smooth movement             │
-│      └── useCamera.ts           ← Zoom/pan state                │
+│  └── lib/                                                       │
+│      ├── convex.ts            ← Convex client setup            │
+│      ├── server-functions.ts  ← TanStack Start server fns      │
+│      └── isometric.ts         ← Coordinate math                │
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -300,18 +301,18 @@ const masterActions = {
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
 │  1. CANVAS LAYER                                                │
-│     - Single Excalibur canvas (not DOM elements for tiles)     │
-│     - Only re-render changed tiles                             │
-│     - Use sprite batching for agents                           │
+│     - Single PixiJS canvas (GPU accelerated WebGL/WebGPU)      │
+│     - Viewport Culling: Only render visible grid lines          │
+│     - Automatic Sprite Batching by PixiJS                       │
 │                                                                  │
 │  2. INTERPOLATION                                               │
-│     - Store: lastKnownPosition, targetPosition                 │
-│     - Lerp factor: (now - lastUpdate) / (targetUpdate - now)   │
-│     - Smooth 60fps even with 1s server update interval          │
+│     - Store: currentPosition, targetPosition                    │
+│     - Lerp factor based on ticker deltaTime                     │
+│     - Smooth 60fps rendering independent of server tick rate    │
 │                                                                  │
-│  3. SPATIAL PARTITIONING (future)                               │
-│     - Quadtree for agent lookup                                 │
-│     - Only process nearby agents for proximity                 │
+│  3. ASSET MANAGEMENT                                            │
+│     - Minimal geometric primitives for agents (high perf)       │
+│     - Shared Graphics contexts where applicable                 │
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
