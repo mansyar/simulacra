@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>THE HIVE // Simulacra</title>
+  <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="scanlines"></div>
+  <div class="grain-overlay"></div>
+
+  <div class="grid-container">
+    <header class="header">
+      <div class="header-left">
+        <div class="logo">
+          <span class="logo-icon">◇</span>
+          <span class="logo-text">SIMULACRA</span>
+          <span class="logo-badge">HIVE</span>
+        </div>
+        <div class="header-stats">
+          <div class="stat-chip">
+            <span class="chip-dot pulse"></span>
+            <span class="chip-label">TICK</span>
+            <span class="chip-value" id="tick-count">1,247</span>
+          </div>
+          <div class="stat-chip">
+            <span class="chip-label">AGENTS</span>
+            <span class="chip-value" id="agent-count">32</span>
+          </div>
+          <div class="stat-chip">
+            <span class="chip-label">DAY</span>
+            <span class="chip-value" id="day-count">14</span>
+          </div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="weather-display" id="weather-display">
+          <span class="weather-icon">☀</span>
+          <span class="weather-text">Sunny</span>
+        </div>
+        <div class="time-display">
+          <span class="time-icon">◷</span>
+          <span class="time-text" id="time-display">14:32</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-grid">
+      <section class="panel panel-agents">
+        <div class="panel-header">
+          <h2 class="panel-title">Agent Roster</h2>
+          <div class="panel-controls">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="builder">Builders</button>
+            <button class="filter-btn" data-filter="explorer">Explorers</button>
+            <button class="filter-btn" data-filter="socialite">Socialites</button>
+          </div>
+        </div>
+        <div class="agent-grid" id="agent-grid"></div>
+      </section>
+
+      <section class="panel panel-thoughts">
+        <div class="panel-header">
+          <h2 class="panel-title">Thought Stream</h2>
+          <span class="panel-badge" id="stream-count">LIVE</span>
+        </div>
+        <div class="thought-stream" id="thought-stream">
+          <div class="thought-entry">
+            <span class="thought-time">[14:32:07]</span>
+            <span class="thought-agent" style="color:#60d7cf">Lyra</span>
+            <span class="thought-text">found a nice spot near the pond to rest</span>
+          </div>
+          <div class="thought-entry">
+            <span class="thought-time">[14:31:55]</span>
+            <span class="thought-agent" style="color:#6ec89a">Orion</span>
+            <span class="thought-text">is heading toward the garden to gather herbs</span>
+          </div>
+          <div class="thought-entry">
+            <span class="thought-time">[14:31:42]</span>
+            <span class="thought-agent" style="color:#e8a87c">Faye</span>
+            <span class="thought-text">greeted Nova with a warm smile near the fountain</span>
+          </div>
+          <div class="thought-entry">
+            <span class="thought-time">[14:31:30]</span>
+            <span class="thought-agent" style="color:#60d7cf">Lyra</span>
+            <span class="thought-text">feels hungry (hunger: 72) — searching for food</span>
+          </div>
+          <div class="thought-entry">
+            <span class="thought-time">[14:31:18]</span>
+            <span class="thought-agent" style="color:#c9a0dc">Nova</span>
+            <span class="thought-text">woke up feeling refreshed after a good rest</span>
+          </div>
+          <div class="thought-entry">
+            <span class="thought-time">[14:31:05]</span>
+            <span class="thought-agent" style="color:#6ec89a">Orion</span>
+            <span class="thought-text">is exploring the eastern forest edge</span>
+          </div>
+          <div class="thought-entry">
+            <span class="thought-time">[14:30:52]</span>
+            <span class="thought-agent" style="color:#f4d03f">Sol</span>
+            <span class="thought-text">started building a small shelter near the oak tree</span>
+          </div>
+          <div class="thought-entry">
+            <span class="thought-time">[14:30:40]</span>
+            <span class="thought-agent" style="color:#e8a87c">Faye</span>
+            <span class="thought-text">is feeling social — looking for someone to talk to</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel panel-world">
+        <div class="panel-header">
+          <h2 class="panel-title">World State</h2>
+        </div>
+        <div class="world-content">
+          <div class="world-visual" id="world-visual">
+            <canvas id="mini-map" width="200" height="200"></canvas>
+          </div>
+          <div class="world-metrics">
+            <div class="metric">
+              <span class="metric-label">Weather</span>
+              <span class="metric-value sunny" id="metric-weather">☀ Sunny</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Time</span>
+              <span class="metric-value" id="metric-time">14:32</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Day</span>
+              <span class="metric-value" id="metric-day">14</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Active Agents</span>
+              <span class="metric-value" id="metric-active">28 / 32</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Total Ticks</span>
+              <span class="metric-value" id="metric-ticks">1,247</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel panel-archetypes">
+        <div class="panel-header">
+          <h2 class="panel-title">Archetype Distribution</h2>
+        </div>
+        <div class="archetype-bars" id="archetype-bars">
+          <div class="arch-bar" data-type="builder">
+            <span class="arch-label">Builders</span>
+            <div class="arch-track">
+              <div class="arch-fill" style="width:31%"></div>
+            </div>
+            <span class="arch-count">10</span>
+          </div>
+          <div class="arch-bar" data-type="explorer">
+            <span class="arch-label">Explorers</span>
+            <div class="arch-track">
+              <div class="arch-fill" style="width:25%"></div>
+            </div>
+            <span class="arch-count">8</span>
+          </div>
+          <div class="arch-bar" data-type="socialite">
+            <span class="arch-label">Socialites</span>
+            <div class="arch-track">
+              <div class="arch-fill" style="width:22%"></div>
+            </div>
+            <span class="arch-count">7</span>
+          </div>
+          <div class="arch-bar" data-type="philosopher">
+            <span class="arch-label">Philosophers</span>
+            <div class="arch-track">
+              <div class="arch-fill" style="width:16%"></div>
+            </div>
+            <span class="arch-count">5</span>
+          </div>
+          <div class="arch-bar" data-type="nurturer">
+            <span class="arch-label">Nurturers</span>
+            <div class="arch-track">
+              <div class="arch-fill" style="width:6%"></div>
+            </div>
+            <span class="arch-count">2</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel panel-needs">
+        <div class="panel-header">
+          <h2 class="panel-title">Population Needs</h2>
+        </div>
+        <div class="needs-content">
+          <div class="need-item">
+            <span class="need-label">Hunger</span>
+            <div class="need-track">
+              <div class="need-fill hunger" style="width:45%"></div>
+            </div>
+            <span class="need-value">45%</span>
+          </div>
+          <div class="need-item">
+            <span class="need-label">Energy</span>
+            <div class="need-track">
+              <div class="need-fill energy" style="width:62%"></div>
+            </div>
+            <span class="need-value">62%</span>
+          </div>
+          <div class="need-item">
+            <span class="need-label">Social</span>
+            <div class="need-track">
+              <div class="need-fill social" style="width:38%"></div>
+            </div>
+            <span class="need-value">38%</span>
+          </div>
+          <div class="need-item">
+            <span class="need-label">Interactions</span>
+            <div class="need-track">
+              <div class="need-fill interaction" style="width:73%"></div>
+            </div>
+            <span class="need-value">73</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel panel-activity">
+        <div class="panel-header">
+          <h2 class="panel-title">Recent Activity</h2>
+        </div>
+        <div class="activity-list" id="activity-list">
+          <div class="activity-item">
+            <span class="activity-type move">↗</span>
+            <span class="activity-desc">Lyra moved to (23, 41)</span>
+          </div>
+          <div class="activity-item">
+            <span class="activity-type talk">◈</span>
+            <span class="activity-desc">Faye & Nova chatted near fountain</span>
+          </div>
+          <div class="activity-item">
+            <span class="activity-type build">◆</span>
+            <span class="activity-desc">Sol built a shelter at (12, 34)</span>
+          </div>
+          <div class="activity-item">
+            <span class="activity-type eat">●</span>
+            <span class="activity-desc">Orion ate berries at the garden</span>
+          </div>
+          <div class="activity-item">
+            <span class="activity-type sleep">◷</span>
+            <span class="activity-desc">Nova went to sleep (energy: 8)</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-left">
+        <span class="status-dot online"></span>
+        <span class="status-text">Simulation Active</span>
+      </div>
+      <div class="footer-right">
+        <span class="footer-meta">Last Tick: <span id="last-tick">14:32:07</span></span>
+        <span class="footer-meta">Uptime: <span id="uptime">2h 14m</span></span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

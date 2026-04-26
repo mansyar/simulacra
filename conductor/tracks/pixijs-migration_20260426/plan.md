@@ -13,9 +13,10 @@
 - [x] Task: Implement `CameraController` 463df04
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Camera System & Controls' e3dad3a
 
-## Phase 4: Sprites & Visual Improvements
+## Phase 4: Sprites & Visual Improvements - [checkpoint: 597a7a5]
 - [x] Task: Implement `AgentSprite` and `POISprite` c42378e
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Sprites & Visual Improvements' (Protocol in workflow.md)
+- [x] Task: Fix Thought Stream Blankness (Survival Mode Logging) 597a7a5
+- [x] Task: Conductor - User Manual Verification 'Phase 4: Sprites & Visual Improvements' 597a7a5
 
 ## Phase 5: Integration & Cleanup
 - [ ] Task: Final System Integration

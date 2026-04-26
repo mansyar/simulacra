@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEON NOIR // TERMINAL</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="crt-overlay"></div>
+    <div class="scanlines"></div>
+    <div class="noise-overlay"></div>
+    
+    <div class="grid-container">
+        <header class="header-glitch" data-text="SYSTEM ONLINE">
+            <h1>NEON NOIR</h1>
+            <p class="subtitle">// TERMINAL INTERFACE</p>
+        </header>
+
+        <aside class="sidebar">
+            <div class="terminal-window">
+                <div class="terminal-header">
+                    <span class="dot red"></span>
+                    <span class="dot yellow"></span>
+                    <span class="dot green"></span>
+                    <span class="terminal-title">root@neon:~#</span>
+                </div>
+                <div class="terminal-body">
+                    <div class="terminal-output" id="terminal-output">
+                        <span class="prompt">➜</span> <span class="command">init_system</span><br>
+                        <span class="output-line">[SYSTEM] Boot sequence initiated...</span><br>
+                        <span class="output-line">[SYSTEM] Loading neural interfaces...</span><br>
+                        <span class="output-line">[SYSTEM] Establishing secure connection...</span><br>
+                        <span class="output-line success">[SUCCESS] All systems operational</span><br>
+                    </div>
+                    <div class="cursor-blink">_</div>
+                </div>
+            </div>
+
+            <div class="data-panel">
+                <h3>SYSTEM STATUS</h3>
+                <div class="stat-item">
+                    <span class="stat-label">CPU</span>
+                    <div class="stat-bar">
+                        <div class="stat-fill cpu" id="cpu-bar"></div>
+                    </div>
+                    <span class="stat-value" id="cpu-value">0%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">MEMORY</span>
+                    <div class="stat-bar">
+                        <div class="stat-fill memory" id="memory-bar"></div>
+                    </div>
+                    <span class="stat-value" id="memory-value">0%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">NETWORK</span>
+                    <div class="stat-bar">
+                        <div class="stat-fill network" id="network-bar"></div>
+                    </div>
+                    <span class="stat-value" id="network-value">0%</span>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="card glitch-card" data-text="DASHBOARD">
+                <h2><span class="glitch" data-text="DASHBOARD">DASHBOARD</span></h2>
+                <div class="card-content">
+                    <div class="visualizer" id="visualizer"></div>
+                    <p class="card-text">// REAL-TIME DATA STREAM</p>
+                </div>
+            </div>
+
+            <div class="card asymmetric-card">
+                <h3>ACTIVE MODULES</h3>
+                <ul class="module-list">
+                    <li class="module-item" data-module="neural">
+                        <span class="module-icon">◈</span>
+                        <span class="module-name">Neural Interface</span>
+                        <span class="module-status online">ONLINE</span>
+                    </li>
+                    <li class="module-item" data-module="security">
+                        <span class="module-icon">◆</span>
+                        <span class="module-name">Security Protocol</span>
+                        <span class="module-status online">ONLINE</span>
+                    </li>
+                    <li class="module-item" data-module="encryption">
+                        <span class="module-icon">◉</span>
+                        <span class="module-name">Data Encryption</span>
+                        <span class="module-status online">ONLINE</span>
+                    </li>
+                    <li class="module-item" data-module="analytics">
+                        <span class="module-icon">◫</span>
+                        <span class="module-name">Analytics Engine</span>
+                        <span class="module-status offline">STANDBY</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card command-card">
+                <h3>COMMAND INPUT</h3>
+                <div class="command-input-wrapper">
+                    <span class="prompt-symbol">➜</span>
+                    <input type="text" class="command-input" placeholder="Enter command..." id="command-input">
+                </div>
+                <div class="command-history" id="command-history"></div>
+            </div>
+
+            <div class="card hex-card">
+                <h3>ENCRYPTION KEY</h3>
+                <div class="hex-grid" id="hex-grid"></div>
+                <div class="key-display" id="key-display">
+                    <span class="key-char" data-char="A">A</span>
+                    <span class="key-char" data-char="B">B</span>
+                    <span class="key-char" data-char="C">C</span>
+                    <span class="key-char" data-char="D">D</span>
+                    <span class="key-char" data-char="E">E</span>
+                    <span class="key-char" data-char="F">F</span>
+                    <span class="key-char" data-char="0">0</span>
+                    <span class="key-char" data-char="1">1</span>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="footer-left">
+                <span class="connection-status">●</span>
+                <span class="connection-text">ENCRYPTED CONNECTION</span>
+            </div>
+            <div class="footer-right">
+                <span class="timestamp" id="timestamp"></span>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

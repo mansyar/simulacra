@@ -19,6 +19,7 @@ export const addEvent = mutation({
     targetId: v.optional(v.id("agents")),
   },
   handler: async (ctx, args) => {
+    console.log(`[MEMORY] Adding event for agent ${args.agentId}: ${args.type} - ${args.description}`);
     // Add the new event
     await ctx.db.insert("events", {
       agentId: args.agentId,

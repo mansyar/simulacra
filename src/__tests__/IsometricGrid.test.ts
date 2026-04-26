@@ -85,7 +85,7 @@ describe('IsometricGrid (PixiJS)', () => {
       tileHeight: 16,
     })
 
-    const mockGraphicsClear = vi.spyOn(grid.getContainer().children[1] as { clear: () => void }, 'clear')
+    const mockGraphicsClear = vi.spyOn(grid.getContainer().children[1] as unknown as { clear: () => void }, 'clear')
 
     // 0,0 grid is at 160, 50
     grid.updateHover(160, 50)

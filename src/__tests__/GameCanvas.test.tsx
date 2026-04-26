@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, waitFor } from '@testing-library/react'
-import GameCanvas from '../components/game/GameCanvas'
+import { GameCanvas } from '../components/game/GameCanvas'
 
 // Mock PixiJS
 const mockDestroy = vi.fn()
@@ -17,24 +17,34 @@ const mockApp = {
   ticker: { add: vi.fn(), remove: vi.fn(), stop: vi.fn(), start: vi.fn() },
 }
 
-vi.mock('pixi.js', () => ({
-  Application: vi.fn().mockImplementation(() => mockApp),
-  Container: vi.fn().mockImplementation(() => ({
-    addChild: vi.fn(),
-    removeChild: vi.fn(),
-  })),
-  Graphics: vi.fn().mockImplementation(() => ({
-    setStrokeStyle: vi.fn().mockReturnThis(),
-    moveTo: vi.fn().mockReturnThis(),
-    lineTo: vi.fn().mockReturnThis(),
-    poly: vi.fn().mockReturnThis(),
-    stroke: vi.fn().mockReturnThis(),
-    clear: vi.fn().mockReturnThis(),
-  })),
-  Text: vi.fn().mockImplementation(() => ({
-    style: {},
-  })),
-}))
+vi.mock('pixi.js', () => {
+  class MockContainer {
+    children = []
+    position = { x: 0, y: 0, set: vi.fn() }
+    visible = true
+    addChild = vi.fn()
+    removeChild = vi.fn()
+  }
+
+  return {
+    Application: vi.fn().mockImplementation(() => mockApp),
+    Container: MockContainer,
+    Graphics: vi.fn().mockImplementation(() => ({
+      setStrokeStyle: vi.fn().mockReturnThis(),
+      moveTo: vi.fn().mockReturnThis(),
+      lineTo: vi.fn().mockReturnThis(),
+      poly: vi.fn().mockReturnThis(),
+      stroke: vi.fn().mockReturnThis(),
+      clear: vi.fn().mockReturnThis(),
+      circle: vi.fn().mockReturnThis(),
+      fill: vi.fn().mockReturnThis(),
+      rect: vi.fn().mockReturnThis(),
+    })),
+    Text: vi.fn().mockImplementation(() => ({
+      style: {},
+    })),
+  }
+})
 
 // Mock Convex
 vi.mock('convex/react', () => ({

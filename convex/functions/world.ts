@@ -194,6 +194,7 @@ export const advanceWorldState = internalMutation({
 export const tick = action({
   args: {},
   handler: async (ctx): Promise<{ success: boolean; skipped?: boolean; reason?: string; agentCount?: number }> => {
+    console.log("[WORLD] Starting tick processing...");
     // Check sleep mode
     const enableSleepMode = process.env.ENABLE_SLEEP_MODE === "true";
     
@@ -212,6 +213,7 @@ export const tick = action({
 
     // 1. Get all active agents
     const agents = await ctx.runQuery(api.functions.agents.getAll);
+    console.log(`[WORLD] Processing ${agents.length} active agents`);
     
     // 2. Process each agent
     const worldState = await ctx.runQuery(api.functions.world.getState);
@@ -229,14 +231,25 @@ export const tick = action({
 
     for (let i = 0; i < agents.length; i += BATCH_SIZE) {
       const batch = agents.slice(i, i + BATCH_SIZE);
+      console.log(`[WORLD] Processing batch ${i / BATCH_SIZE + 1} of ${Math.ceil(agents.length / BATCH_SIZE)}`);
       
       await Promise.all(batch.map(async (agent: any) => {
         // 2.1 Safety Layer: Check for critical needs (Survival overrides)
         if (agent.hunger > 90 || agent.energy < 10) {
           const survivalAction = agent.hunger > 90 ? "eating" : "sleeping";
+          console.log(`[WORLD] Agent ${agent.name} in survival mode: ${survivalAction}`);
           await ctx.runMutation(internal.functions.agents.updateAction, {
             agentId: agent._id,
             action: survivalAction,
+          });
+
+          // Log survival event to the thought stream
+          await ctx.runMutation(api.functions.memory.addEvent, {
+            agentId: agent._id,
+            type: survivalAction === "eating" ? "interaction" : "movement",
+            description: `My ${survivalAction === "eating" ? "hunger" : "exhaustion"} is critical. I must stop to ${survivalAction}.`,
+            gridX: agent.gridX,
+            gridY: agent.gridY,
           });
           return;
         }
@@ -258,6 +271,7 @@ export const tick = action({
         const jitter = Math.floor(Math.random() * 40) - 20;
         
         if (currentTicks - lastReflected > (480 + jitter)) {
+          console.log(`[WORLD] Triggering reflection for agent ${agent.name}`);
           // Trigger async reflection (non-blocking)
           await ctx.runAction(api.functions.ai.reflect, {
             agentId: agent._id,
@@ -279,6 +293,7 @@ export const tick = action({
           });
 
           if (result?.arrived) {
+            console.log(`[WORLD] Agent ${agent.name} arrived at target`);
             await ctx.runMutation(api.functions.memory.addEvent, {
               agentId: agent._id,
               type: "movement",
@@ -312,6 +327,7 @@ export const tick = action({
         }
 
         // Call AI for decision
+        console.log(`[WORLD] Requesting decision for agent ${agent.name}...`);
         // FETCH FULL CONTEXT (Identity + RAG Memories)
         const fullContext = await ctx.runAction(api.functions.ai.buildFullContext, {
           agentId: agent._id,
@@ -331,6 +347,7 @@ export const tick = action({
           contextOverride: fullContext, // New field to support RAG
         });
 
+        console.log(`[WORLD] Agent ${agent.name} decided: ${decision.action}`);
         // Normalize action to ensure it matches schema literals
         const normalizedAction = normalizeAction(decision.action);
 
@@ -396,6 +413,7 @@ export const tick = action({
           description += ` | Said: "${decision.speech}"`;
         }
         
+        console.log(`[WORLD] Logging event for agent ${agent.name}`);
         await ctx.runMutation(api.functions.memory.addEvent, {
           agentId: agent._id,
           type: decision.speech ? "conversation" : "movement",
@@ -412,8 +430,10 @@ export const tick = action({
     }
 
     // 3. Advance world state (time, weather, etc.)
+    console.log("[WORLD] Advancing world state...");
     await ctx.runMutation(internal.functions.world.advanceWorldState);
 
+    console.log("[WORLD] Tick processing complete.");
     return { success: true, skipped: false, agentCount: agents.length };
   },
 });

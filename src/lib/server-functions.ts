@@ -44,6 +44,14 @@ export const resetAgentBrain = createServerFn({ method: "POST" })
     });
   });
 
+/**
+ * Server Function: Reset the entire world state
+ */
+export const resetWorldState = createServerFn({ method: "POST" })
+  .handler(async () => {
+    return await httpClient.mutation(api.functions.admin.resetWorld, {});
+  });
+
 
 
 

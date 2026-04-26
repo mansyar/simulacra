@@ -1,8 +1,9 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js'
 import { gridToScreen } from '../../lib/isometric'
+import type { Id } from '../../../convex/_generated/dataModel'
 
 export interface POIData {
-  id: string
+  _id: Id<'pois'>
   name: string
   gridX: number
   gridY: number
@@ -17,38 +18,40 @@ const POI_COLORS: Record<string, number> = {
   default: 0x64748b  // Slate
 }
 
-export class POISprite {
-  private container: Container
+export class POISprite extends Container {
   private rectGraphic: Graphics
   private nameLabel: Text
 
   constructor(poi: POIData) {
-    this.container = new Container()
+    super()
+    this.label = `poi-${poi.name}`
+    
+    const offsetX = (64 * 32) / 2
+    const offsetY = 50
     const screenPos = gridToScreen(poi.gridX, poi.gridY)
-    this.container.position.set(screenPos.x, screenPos.y)
+    this.position.set(screenPos.x + offsetX, screenPos.y + offsetY)
+
+    this.rectGraphic = new Graphics()
+    this.addChild(this.rectGraphic)
 
     const color = POI_COLORS[poi.type] || POI_COLORS.default
 
-    this.rectGraphic = new Graphics()
     this.rectGraphic.rect(-12, -12, 24, 24)
-    this.rectGraphic.fill(color)
+      .fill(color)
+      .stroke({ width: 2, color: 0xffffff, alpha: 0.3 })
     this.rectGraphic.rotation = Math.PI / 4
-    this.container.addChild(this.rectGraphic)
 
     const labelStyle = new TextStyle({
       fontSize: 12,
       fill: 0xe2e8f0,
       fontWeight: 'bold',
       align: 'center',
+      stroke: { color: 0x000000, width: 2 }
     })
 
     this.nameLabel = new Text({ text: poi.name, style: labelStyle })
     this.nameLabel.anchor.set(0.5, 1)
     this.nameLabel.position.set(0, -20)
-    this.container.addChild(this.nameLabel)
-  }
-
-  public getContainer(): Container {
-    return this.container
+    this.addChild(this.nameLabel)
   }
 }

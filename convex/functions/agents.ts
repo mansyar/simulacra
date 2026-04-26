@@ -278,7 +278,12 @@ export const recordPassivePerception = internalMutation({
     );
 
     for (const nearby of nearbyAgents) {
-      // Add a sensory event to the buffer
+      // Use the proper addEvent logic via a internal call if possible, 
+      // but since addEvent is a public mutation, we'll replicate the logic here 
+      // or just call it if we were in an action. 
+      // Since we are in a mutation, we'll just insert and then we should 
+      // ideally have a shared internal helper for the cleanup logic.
+      
       await ctx.db.insert("events", {
         agentId: agent._id,
         type: "movement",
@@ -286,6 +291,20 @@ export const recordPassivePerception = internalMutation({
         gridX: agent.gridX,
         gridY: agent.gridY,
       });
+
+      // Cleanup oldest events for this agent to maintain sensory buffer
+      const events = await ctx.db
+        .query("events")
+        .withIndex("by_agent", (q) => q.eq("agentId", agent._id))
+        .collect();
+
+      if (events.length > 10) {
+        const sortedEvents = events.sort((a, b) => a._creationTime - b._creationTime);
+        const toDelete = sortedEvents.slice(0, sortedEvents.length - 10);
+        for (const event of toDelete) {
+          await ctx.db.delete(event._id);
+        }
+      }
     }
   },
 });

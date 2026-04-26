@@ -1,8 +1,9 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js'
 import { gridToScreen } from '../../lib/isometric'
+import type { Id } from '../../../convex/_generated/dataModel'
 
 export interface AgentData {
-  id: string
+  _id: Id<'agents'>
   name: string
   gridX: number
   gridY: number
@@ -31,8 +32,7 @@ const ARCHETYPE_COLORS: Record<string, number> = {
   nurturer: 0x10b981,
 }
 
-export class AgentSprite {
-  private container: Container
+export class AgentSprite extends Container {
   private agent: AgentData
   private circleGraphic: Graphics
   private nameLabel: Text
@@ -45,29 +45,27 @@ export class AgentSprite {
   private lerpSpeed: number = 0.1
 
   constructor(agent: AgentData) {
+    super()
     this.agent = { ...agent }
     this.targetGridX = agent.gridX
     this.targetGridY = agent.gridY
-
-    this.container = new Container()
-    
-    const color = ARCHETYPE_COLORS[agent.archetype] || 0xFFFFFF
+    this.label = `agent-${agent.name}`
 
     this.circleGraphic = new Graphics()
-    this.circleGraphic.circle(0, 0, 8)
-    this.circleGraphic.fill(color)
-    this.container.addChild(this.circleGraphic)
+    this.addChild(this.circleGraphic)
 
     const labelStyle = new TextStyle({
       fontSize: 10,
       fill: 0xffffff,
       align: 'center',
+      fontWeight: 'bold',
+      stroke: { color: 0x000000, width: 2 }
     })
 
     this.nameLabel = new Text({ text: agent.name, style: labelStyle })
     this.nameLabel.anchor.set(0.5, 1)
     this.nameLabel.position.set(0, -12)
-    this.container.addChild(this.nameLabel)
+    this.addChild(this.nameLabel)
 
     const emojiStyle = new TextStyle({
       fontSize: 12,
@@ -79,13 +77,13 @@ export class AgentSprite {
     })
     this.actionLabel.anchor.set(0.5, 0)
     this.actionLabel.position.set(0, 8)
-    this.container.addChild(this.actionLabel)
+    this.addChild(this.actionLabel)
 
     // Speech
     this.speechContainer = new Container()
     this.speechContainer.position.set(0, -32)
     this.speechContainer.visible = false
-    this.container.addChild(this.speechContainer)
+    this.addChild(this.speechContainer)
 
     this.speechBg = new Graphics()
     this.speechContainer.addChild(this.speechBg)
@@ -103,7 +101,16 @@ export class AgentSprite {
     this.speechLabel.anchor.set(0.5, 0.5)
     this.speechContainer.addChild(this.speechLabel)
 
+    this.draw()
     this.updatePosition()
+  }
+
+  private draw() {
+    const color = ARCHETYPE_COLORS[this.agent.archetype] || 0xFFFFFF
+    this.circleGraphic.clear()
+    this.circleGraphic.circle(0, 0, 8)
+      .fill(color)
+      .stroke({ width: 2, color: 0xffffff, alpha: 0.5 })
   }
 
   public updateAgentData(data: Partial<AgentData>) {
@@ -116,13 +123,15 @@ export class AgentSprite {
     }
   }
 
-  public tick(_elapsed: number) {
+  public tick(deltaTime: number) {
+    // We use deltaTime to maintain consistent speed regardless of frame rate
+    const speedFactor = deltaTime
+    
     const currentGridX = this.agent.gridX
     const currentGridY = this.agent.gridY
     
-    // Smooth lerp for movement
-    const newGridX = currentGridX + (this.targetGridX - currentGridX) * this.lerpSpeed
-    const newGridY = currentGridY + (this.targetGridY - currentGridY) * this.lerpSpeed
+    const newGridX = currentGridX + (this.targetGridX - currentGridX) * this.lerpSpeed * speedFactor
+    const newGridY = currentGridY + (this.targetGridY - currentGridY) * this.lerpSpeed * speedFactor
     
     this.agent.gridX = newGridX
     this.agent.gridY = newGridY
@@ -152,11 +161,9 @@ export class AgentSprite {
   }
 
   private updatePosition() {
+    const offsetX = (64 * 32) / 2
+    const offsetY = 50
     const screenPos = gridToScreen(this.agent.gridX, this.agent.gridY)
-    this.container.position.set(screenPos.x, screenPos.y)
-  }
-
-  public getContainer(): Container {
-    return this.container
+    this.position.set(screenPos.x + offsetX, screenPos.y + offsetY)
   }
 }
