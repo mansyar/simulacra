@@ -1,4 +1,4 @@
-import { Actor, Circle, Rectangle, Color, Vector, Label, TextAlign } from 'excalibur'
+import { Container, Graphics, Text, TextStyle } from 'pixi.js'
 import { gridToScreen } from '../../lib/isometric'
 
 export interface AgentData {
@@ -23,89 +23,87 @@ const ACTION_EMOJIS: Record<string, string> = {
   exploring: '🔍',
 }
 
-const ARCHETYPE_COLORS: Record<string, string> = {
-  builder: '#3b82f6',
-  socialite: '#ec4899',
-  philosopher: '#8b5cf6',
-  explorer: '#f59e0b',
-  nurturer: '#10b981',
+const ARCHETYPE_COLORS: Record<string, number> = {
+  builder: 0x3b82f6,
+  socialite: 0xec4899,
+  philosopher: 0x8b5cf6,
+  explorer: 0xf59e0b,
+  nurturer: 0x10b981,
 }
 
-export class AgentSprite extends Actor {
+export class AgentSprite {
+  private container: Container
   private agent: AgentData
-  private circleGraphic: Circle
-  private nameLabel: Label
-  private speechLabel: Label
-  private speechBg: Actor
-  private bgRect: Rectangle
-  private actionLabel: Label
+  private circleGraphic: Graphics
+  private nameLabel: Text
+  private actionLabel: Text
+  private speechContainer: Container
+  private speechBg: Graphics
+  private speechLabel: Text
   private targetGridX: number
   private targetGridY: number
   private lerpSpeed: number = 0.1
 
   constructor(agent: AgentData) {
-    super({
-      pos: new Vector(0, 0),
-      z: 20,
-    })
-    this.agent = agent
+    this.agent = { ...agent }
     this.targetGridX = agent.gridX
     this.targetGridY = agent.gridY
 
-    const color = ARCHETYPE_COLORS[agent.archetype] || '#FFFFFF'
-
-    this.circleGraphic = new Circle({
-      radius: 8,
-      color: Color.fromHex(color),
-    })
-    this.graphics.add(this.circleGraphic)
-
-    this.nameLabel = new Label({
-      text: agent.name,
-      pos: new Vector(0, -12), 
-      color: Color.White,
-    })
-    this.nameLabel.font.size = 10
-    this.nameLabel.font.textAlign = TextAlign.Center
-    this.addChild(this.nameLabel)
-
-    this.actionLabel = new Label({
-      text: ACTION_EMOJIS[agent.currentAction || 'idle'] || '❓',
-      pos: new Vector(0, 8),
-      color: Color.White,
-    })
-    this.actionLabel.font.size = 12
-    this.actionLabel.font.textAlign = TextAlign.Center
-    this.addChild(this.actionLabel)
-
-    // Speech Background
-    this.speechBg = new Actor({
-      pos: new Vector(0, -32),
-      z: 29,
-    })
-    this.bgRect = new Rectangle({
-      width: 100,
-      height: 20,
-      color: Color.fromHex('#0f172a').clone(),
-    })
-    this.bgRect.opacity = 0.9
-    this.speechBg.graphics.add(this.bgRect)
-    this.addChild(this.speechBg)
-
-    this.speechLabel = new Label({
-      text: '',
-      pos: new Vector(0, -32),
-      color: Color.fromHex('#f8fafc'),
-      maxWidth: 150,
-    })
-    this.speechLabel.font.size = 10
-    this.speechLabel.font.bold = true
-    this.speechLabel.font.textAlign = TextAlign.Center
-    this.addChild(this.speechLabel)
+    this.container = new Container()
     
-    // Initial state
-    this.speechLabel.graphics.visible = false
-    this.speechBg.graphics.visible = false
+    const color = ARCHETYPE_COLORS[agent.archetype] || 0xFFFFFF
+
+    this.circleGraphic = new Graphics()
+    this.circleGraphic.circle(0, 0, 8)
+    this.circleGraphic.fill(color)
+    this.container.addChild(this.circleGraphic)
+
+    const labelStyle = new TextStyle({
+      fontSize: 10,
+      fill: 0xffffff,
+      align: 'center',
+    })
+
+    this.nameLabel = new Text({ text: agent.name, style: labelStyle })
+    this.nameLabel.anchor.set(0.5, 1)
+    this.nameLabel.position.set(0, -12)
+    this.container.addChild(this.nameLabel)
+
+    const emojiStyle = new TextStyle({
+      fontSize: 12,
+    })
+
+    this.actionLabel = new Text({ 
+      text: ACTION_EMOJIS[agent.currentAction || 'idle'] || '❓', 
+      style: emojiStyle 
+    })
+    this.actionLabel.anchor.set(0.5, 0)
+    this.actionLabel.position.set(0, 8)
+    this.container.addChild(this.actionLabel)
+
+    // Speech
+    this.speechContainer = new Container()
+    this.speechContainer.position.set(0, -32)
+    this.speechContainer.visible = false
+    this.container.addChild(this.speechContainer)
+
+    this.speechBg = new Graphics()
+    this.speechContainer.addChild(this.speechBg)
+
+    const speechStyle = new TextStyle({
+      fontSize: 10,
+      fill: 0xf8fafc,
+      fontWeight: 'bold',
+      align: 'center',
+      wordWrap: true,
+      wordWrapWidth: 150,
+    })
+
+    this.speechLabel = new Text({ text: '', style: speechStyle })
+    this.speechLabel.anchor.set(0.5, 0.5)
+    this.speechContainer.addChild(this.speechLabel)
+
+    this.updatePosition()
   }
 
   public updateAgentData(data: Partial<AgentData>) {
@@ -118,33 +116,47 @@ export class AgentSprite extends Actor {
     }
   }
 
-  public updateGridPosition(gridX: number, gridY: number) {
-    this.targetGridX = gridX
-    this.targetGridY = gridY
-  }
-
-  public onPreUpdate() {
+  public tick(_elapsed: number) {
     const currentGridX = this.agent.gridX
     const currentGridY = this.agent.gridY
+    
+    // Smooth lerp for movement
     const newGridX = currentGridX + (this.targetGridX - currentGridX) * this.lerpSpeed
     const newGridY = currentGridY + (this.targetGridY - currentGridY) * this.lerpSpeed
+    
     this.agent.gridX = newGridX
     this.agent.gridY = newGridY
     
-    const screenPos = gridToScreen(newGridX, newGridY)
-    this.pos = new Vector(screenPos.x, screenPos.y)
+    this.updatePosition()
 
+    // Speech visibility logic
     const now = Date.now()
     if (this.agent.speech && this.agent.lastSpeechAt && (now - this.agent.lastSpeechAt < 8000)) {
       this.speechLabel.text = this.agent.speech
-      this.speechLabel.graphics.visible = true
-      this.speechBg.graphics.visible = true
+      this.speechContainer.visible = true
       
-      const estimatedWidth = Math.min(180, Math.max(60, this.agent.speech.length * 7))
-      this.bgRect.width = estimatedWidth
+      const bounds = this.speechLabel.getBounds()
+      const padding = 8
+      this.speechBg.clear()
+      this.speechBg.roundRect(
+        -bounds.width / 2 - padding, 
+        -bounds.height / 2 - padding, 
+        bounds.width + padding * 2, 
+        bounds.height + padding * 2, 
+        4
+      )
+      this.speechBg.fill({ color: 0x0f172a, alpha: 0.9 })
     } else {
-      this.speechLabel.graphics.visible = false
-      this.speechBg.graphics.visible = false
+      this.speechContainer.visible = false
     }
+  }
+
+  private updatePosition() {
+    const screenPos = gridToScreen(this.agent.gridX, this.agent.gridY)
+    this.container.position.set(screenPos.x, screenPos.y)
+  }
+
+  public getContainer(): Container {
+    return this.container
   }
 }

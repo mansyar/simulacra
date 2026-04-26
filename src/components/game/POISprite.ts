@@ -1,4 +1,4 @@
-import { Actor, Rectangle, Color, Vector, Label } from 'excalibur'
+import { Container, Graphics, Text, TextStyle } from 'pixi.js'
 import { gridToScreen } from '../../lib/isometric'
 
 export interface POIData {
@@ -9,47 +9,46 @@ export interface POIData {
   type: string
 }
 
-const POI_COLORS: Record<string, string> = {
-  library: '#4f46e5', // Indigo
-  plaza: '#f59e0b',   // Amber
-  cafe: '#10b981',    // Emerald
-  nature: '#84cc16',  // Lime
-  default: '#64748b'  // Slate
+const POI_COLORS: Record<string, number> = {
+  library: 0x4f46e5, // Indigo
+  plaza: 0xf59e0b,   // Amber
+  cafe: 0x10b981,    // Emerald
+  nature: 0x84cc16,  // Lime
+  default: 0x64748b  // Slate
 }
 
-export class POISprite extends Actor {
-  private rectGraphic: Rectangle
-  private nameLabel: Label
+export class POISprite {
+  private container: Container
+  private rectGraphic: Graphics
+  private nameLabel: Text
 
   constructor(poi: POIData) {
+    this.container = new Container()
     const screenPos = gridToScreen(poi.gridX, poi.gridY)
-    super({
-      pos: new Vector(screenPos.x, screenPos.y),
-      width: 32,
-      height: 32,
-      z: 10,
-    })
+    this.container.position.set(screenPos.x, screenPos.y)
 
     const color = POI_COLORS[poi.type] || POI_COLORS.default
 
-    // Create a square/rect graphic (isometric-ish representation)
-    this.rectGraphic = new Rectangle({
-      width: 24,
-      height: 24,
-      color: Color.fromHex(color),
-    })
-    // Rotate 45 degrees for that isometric look
+    this.rectGraphic = new Graphics()
+    this.rectGraphic.rect(-12, -12, 24, 24)
+    this.rectGraphic.fill(color)
     this.rectGraphic.rotation = Math.PI / 4
-    this.graphics.add(this.rectGraphic)
+    this.container.addChild(this.rectGraphic)
 
-    // Create a name label floating above
-    this.nameLabel = new Label({
-      text: poi.name,
-      pos: new Vector(0, -20), 
-      color: Color.fromHex('#e2e8f0'),
+    const labelStyle = new TextStyle({
+      fontSize: 12,
+      fill: 0xe2e8f0,
+      fontWeight: 'bold',
+      align: 'center',
     })
-    this.nameLabel.font.size = 12
-    this.nameLabel.font.bold = true
-    this.addChild(this.nameLabel)
+
+    this.nameLabel = new Text({ text: poi.name, style: labelStyle })
+    this.nameLabel.anchor.set(0.5, 1)
+    this.nameLabel.position.set(0, -20)
+    this.container.addChild(this.nameLabel)
+  }
+
+  public getContainer(): Container {
+    return this.container
   }
 }

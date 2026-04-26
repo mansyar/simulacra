@@ -1,123 +1,77 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import type { Mock } from 'vitest'
+import { AgentSprite } from '../components/game/AgentSprite'
+import { POISprite } from '../components/game/POISprite'
+import { Container, Graphics, Text } from 'pixi.js'
 
-// Mock Excalibur dependencies with proper class constructors
-vi.mock('excalibur', () => {
-  class MockActor {
-    pos: { x: number; y: number }
-    graphics: { add: Mock; show: Mock; hide: Mock; visible: boolean }
-    z: number
-    constructor(options?: { pos?: { x: number; y: number }; z?: number }) {
-      this.pos = options?.pos || { x: 0, y: 0 }
-      this.z = options?.z || 0
-      this.graphics = { add: vi.fn(), show: vi.fn(), hide: vi.fn(), visible: true }
-    }
-    addChild() {}
+// Mock PixiJS
+vi.mock('pixi.js', () => {
+  const mockGraphics = {
+    circle: vi.fn().mockReturnThis(),
+    fill: vi.fn().mockReturnThis(),
+    clear: vi.fn().mockReturnThis(),
+    rect: vi.fn().mockReturnThis(),
+    roundRect: vi.fn().mockReturnThis(),
+    stroke: vi.fn().mockReturnThis(),
+    setStrokeStyle: vi.fn().mockReturnThis(),
+    poly: vi.fn().mockReturnThis(),
+    visible: true,
   }
-  
-  class MockVector {
-    constructor(public x: number, public y: number) {}
+  const mockText = {
+    style: {},
+    text: '',
+    visible: true,
+    anchor: { set: vi.fn() },
+    position: { set: vi.fn(), x: 0, y: 0 },
+    getBounds: vi.fn().mockReturnValue({ width: 100, height: 20 }),
   }
-  
-  class MockCircle {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    constructor(_options?: unknown) {}
-  }
-
-  class MockRectangle {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    constructor(_options?: unknown) {}
-  }
-  
-  class MockLabel {
-    font = { size: 0, textAlign: '' }
-    graphics = { visible: true }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    constructor(_options?: unknown) {}
-  }
-  
   return {
-    Actor: MockActor,
-    Circle: MockCircle,
-    Rectangle: MockRectangle,
-    Color: {
-      fromHex: vi.fn().mockReturnValue({ clone: () => ({}) }),
-      White: {},
-    },
-    Vector: MockVector,
-    Label: MockLabel,
-    TextAlign: { Center: 'center' },
-    Engine: vi.fn(),
+    Container: vi.fn().mockImplementation(() => ({
+      addChild: vi.fn(),
+      removeChild: vi.fn(),
+      position: { set: vi.fn(), x: 0, y: 0 },
+      children: [],
+    })),
+    Graphics: vi.fn().mockImplementation(() => mockGraphics),
+    Text: vi.fn().mockImplementation(() => mockText),
+    TextStyle: vi.fn(),
   }
 })
 
-// Mock gridToScreen
-vi.mock('../../lib/isometric', () => ({
-  gridToScreen: vi.fn().mockReturnValue({ x: 100, y: 200 }),
-}))
+describe('AgentSprite (PixiJS)', () => {
+  const mockAgent = {
+    id: 'agent_1',
+    name: 'Test Agent',
+    gridX: 10,
+    gridY: 10,
+    archetype: 'builder',
+    currentAction: 'idle',
+  }
 
-// Import AgentSprite AFTER mocking
-import { AgentSprite } from '../components/game/AgentSprite'
-import type { AgentData } from '../components/game/AgentSprite'
-
-describe('AgentSprite', () => {
-  let mockAgent: AgentData
-
-  beforeEach(() => {
-    mockAgent = {
-      id: 'test-1',
-      name: 'Test Agent',
-      gridX: 5,
-      gridY: 10,
-      archetype: 'builder',
-    }
-  })
-
-  it('should create an AgentSprite instance', () => {
+  it('should initialize and update position via tick', () => {
     const sprite = new AgentSprite(mockAgent)
-    expect(sprite).toBeTruthy()
-    expect(sprite.updateGridPosition).toBeTruthy()
-    expect(sprite.onPreUpdate).toBeTruthy()
+    expect(sprite).toBeDefined()
+    
+    // Test update (lerp)
+    sprite.tick(16) // Update should run
   })
 
-  it('should have updateGridPosition method', () => {
+  it('should update agent data', () => {
     const sprite = new AgentSprite(mockAgent)
-    expect(typeof sprite.updateGridPosition).toBe('function')
-    
-    // Call the method (should not throw)
-    sprite.updateGridPosition(15, 20)
+    sprite.updateAgentData({ currentAction: 'working' })
   })
+})
 
-  it('should have onPreUpdate method', () => {
-    const sprite = new AgentSprite(mockAgent)
-    expect(typeof sprite.onPreUpdate).toBe('function')
-    
-    // Call the method (should not throw)
-    sprite.onPreUpdate()
-  })
+describe('POISprite (PixiJS)', () => {
+  const mockPOI = {
+    id: 'poi_1',
+    name: 'Library',
+    gridX: 32,
+    gridY: 32,
+    type: 'library',
+  }
 
-  it('should use agent properties in constructor', () => {
-    const customAgent: AgentData = {
-      id: 'custom-1',
-      name: 'Custom Agent',
-      gridX: 100,
-      gridY: 200,
-      archetype: 'socialite',
-    }
-    
-    const sprite = new AgentSprite(customAgent)
-    expect(sprite).toBeTruthy()
-  })
-
-  it('should use default color for unknown archetype', () => {
-    const unknownAgent: AgentData = {
-      id: 'unknown-1',
-      name: 'Unknown',
-      gridX: 0,
-      gridY: 0,
-      archetype: 'non-existent',
-    }
-    const sprite = new AgentSprite(unknownAgent)
-    expect(sprite).toBeTruthy()
+  it('should initialize with correct data', () => {
+    const sprite = new POISprite(mockPOI)
+    expect(sprite).toBeDefined()
   })
 })
