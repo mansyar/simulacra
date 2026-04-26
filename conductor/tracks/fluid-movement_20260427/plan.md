@@ -19,9 +19,9 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Micro-Wandering' (Protocol in workflow.md) (bcdfae7)
 
 ## Phase 3: Interpolated Goal-Seeking
-- [ ] Task: Implement Time-Synced Prediction
-    - [ ] Write Tests: Verify `estimatedGridX/Y` moves towards target at calculated velocity
-    - [ ] Implement: Logic to update `estimatedGridX/Y` based on `tickInterval`
+- [x] Task: Implement Time-Synced Prediction (42329e2)
+    - [x] Write Tests: Verify `estimatedGridX/Y` moves towards target at calculated velocity
+    - [x] Implement: Logic to update `estimatedGridX/Y` based on `tickInterval`
 - [ ] Task: Implement Smooth Course Correction
     - [ ] Write Tests: Verify position blending when backend data diverges from estimate
     - [ ] Implement: 500ms lerp/blend in `updateAgentData`
