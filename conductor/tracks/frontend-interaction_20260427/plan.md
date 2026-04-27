@@ -1,7 +1,7 @@
 # Implementation Plan: Track B - Frontend Interaction
 
 ## Phase 1: Click-to-Select Agent
-- [ ] Task: Implement Click Interactivity on AgentSprite
+- [x] Task: Implement Click Interactivity on AgentSprite c7dca1a
     - [ ] Write failing test for click events on AgentSprite
     - [ ] Make `AgentSprite` interactive (`eventMode: 'static'`) and emit selection events
     - [ ] Ensure tests pass
