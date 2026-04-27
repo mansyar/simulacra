@@ -3,9 +3,11 @@ import { api } from "../../convex/_generated/api";
 import { useRouterState } from "@tanstack/react-router";
 import { MessageSquare, Move, Activity, Cloud, Zap } from "lucide-react";
 import { useRef, useEffect, useMemo, useState } from "react";
+import type { Id } from "../../convex/_generated/dataModel";
 
 export default function GlobalThoughtStream() {
   const events = useQuery(api.functions.memory.getGlobalEvents, { limit: 20 });
+  const agents = useQuery(api.functions.agents.getAll);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [filterAgent, setFilterAgent] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<string | null>(null);
@@ -14,14 +16,17 @@ export default function GlobalThoughtStream() {
   const routerState = useRouterState();
   const selectedAgentId = routerState.location.pathname.match(/\/agent\/(.+)/)?.[1] ?? null;
 
-  // Derive selected agent name from events
+  // Build a map of agent ID -> agent name for resolving the selected agent
+  const agentNameById = useMemo(() => {
+    if (!agents) return new Map<string, string>();
+    return new Map(agents.map((a) => [a._id, a.name]));
+  }, [agents]);
+
+  // Derive selected agent name from the route ID and agents map
   const selectedAgentName = useMemo(() => {
-    if (!selectedAgentId || !events) return null;
-    // getGlobalEvents returns agentName, not agentId — so we match by name if available.
-    // For now, we rely on the description or a separate lookup. The highlighting logic
-    // below uses agentName from the event data.
-    return null;
-  }, [selectedAgentId, events]);
+    if (!selectedAgentId || !agentNameById.size) return null;
+    return agentNameById.get(selectedAgentId as Id<"agents">) ?? null;
+  }, [selectedAgentId, agentNameById]);
 
   // Get unique agent names for filter tags
   const agentNames = useMemo(() => {

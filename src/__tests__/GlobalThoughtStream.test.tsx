@@ -15,15 +15,20 @@ vi.mock('../../convex/_generated/api', () => ({
       memory: {
         getGlobalEvents: 'memory:getGlobalEvents',
       },
+      agents: {
+        getAll: 'agents:getAll',
+      },
     },
   },
 }))
 
-// Mock router - default to home route (no selected agent)
+// Mock router - will be customized per test
+const mockUseRouterState = vi.fn().mockReturnValue({
+  location: { pathname: '/' },
+})
+
 vi.mock('@tanstack/react-router', () => ({
-  useRouterState: vi.fn().mockReturnValue({
-    location: { pathname: '/' },
-  }),
+  useRouterState: () => mockUseRouterState(),
 }))
 
 const mockEvents = [
@@ -34,28 +39,47 @@ const mockEvents = [
   { _id: '5', agentName: 'Bob', type: 'movement', description: 'Bob walked south', _creationTime: 5000 },
 ]
 
+const mockAgents = [
+  { _id: 'agent-123', name: 'Alice', archetype: 'builder' },
+  { _id: 'agent-456', name: 'Bob', archetype: 'socialite' },
+  { _id: 'agent-789', name: 'Charlie', archetype: 'explorer' },
+]
+
 describe('GlobalThoughtStream', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockUseRouterState.mockReturnValue({ location: { pathname: '/' } })
   })
 
   it('returns null when events data is loading (undefined)', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (useQuery as any).mockReturnValue(undefined)
+    (useQuery as any).mockImplementation((fn: any) => {
+      if (fn === 'memory:getGlobalEvents') return undefined
+      if (fn === 'agents:getAll') return undefined
+      return undefined
+    })
     const { container } = render(<GlobalThoughtStream />)
     expect(container.firstChild).toBeNull()
   })
 
   it('shows empty state when there are no events', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (useQuery as any).mockReturnValue([])
+    (useQuery as any).mockImplementation((fn: any) => {
+      if (fn === 'memory:getGlobalEvents') return []
+      if (fn === 'agents:getAll') return []
+      return []
+    })
     render(<GlobalThoughtStream />)
     expect(screen.getByText('Waiting for simulation events...')).toBeDefined()
   })
 
   it('renders all events with agent names and descriptions', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (useQuery as any).mockReturnValue(mockEvents)
+    (useQuery as any).mockImplementation((fn: any) => {
+      if (fn === 'memory:getGlobalEvents') return mockEvents
+      if (fn === 'agents:getAll') return mockAgents
+      return undefined
+    })
     render(<GlobalThoughtStream />)
     expect(screen.getByText('Alice moved to position')).toBeDefined()
     expect(screen.getByText('Bob spoke to someone')).toBeDefined()
@@ -63,9 +87,16 @@ describe('GlobalThoughtStream', () => {
   })
 
   describe('Filtering', () => {
-    it('renders "All Agents" and "All Types" and agent/type filter buttons', () => {
+    beforeEach(() => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (useQuery as any).mockReturnValue(mockEvents)
+      (useQuery as any).mockImplementation((fn: any) => {
+        if (fn === 'memory:getGlobalEvents') return mockEvents
+        if (fn === 'agents:getAll') return mockAgents
+        return undefined
+      })
+    })
+
+    it('renders filter tags for unique agent names and types', () => {
       render(<GlobalThoughtStream />)
       expect(screen.getByRole('button', { name: /All Agents/i })).toBeDefined()
       expect(screen.getByRole('button', { name: /All Types/i })).toBeDefined()
@@ -79,113 +110,125 @@ describe('GlobalThoughtStream', () => {
     })
 
     it('filters events by agent name when a name filter button is clicked', () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (useQuery as any).mockReturnValue(mockEvents)
       render(<GlobalThoughtStream />)
-
-      // Click on "Alice" filter button
       fireEvent.click(screen.getByRole('button', { name: /Alice/i }))
-
-      // Alice's events should be visible
       expect(screen.getByText('Alice moved to position')).toBeDefined()
       expect(screen.getByText('Alice found an item')).toBeDefined()
-
-      // Bob's and Charlie's events should not be visible
       expect(screen.queryByText('Bob spoke to someone')).toBeNull()
       expect(screen.queryByText('Sky turned cloudy')).toBeNull()
     })
 
     it('filters events by type when a type filter button is clicked', () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (useQuery as any).mockReturnValue(mockEvents)
       render(<GlobalThoughtStream />)
-
-      // Click on "movement" type filter button
       fireEvent.click(screen.getByRole('button', { name: /movement/i }))
-
-      // movement events should be visible
       expect(screen.getByText('Alice moved to position')).toBeDefined()
       expect(screen.getByText('Bob walked south')).toBeDefined()
-
-      // Other type events should not be visible
       expect(screen.queryByText('Bob spoke to someone')).toBeNull()
       expect(screen.queryByText('Alice found an item')).toBeNull()
     })
 
     it('clears agent filter when clicking "All Agents"', () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (useQuery as any).mockReturnValue(mockEvents)
       render(<GlobalThoughtStream />)
-
-      // First filter by Alice
       fireEvent.click(screen.getByRole('button', { name: /Alice/i }))
       expect(screen.queryByText('Bob spoke to someone')).toBeNull()
-
-      // Then click "All Agents"
       fireEvent.click(screen.getByRole('button', { name: /All Agents/i }))
-
-      // All events should be visible again
       expect(screen.getByText('Bob spoke to someone')).toBeDefined()
       expect(screen.getByText('Sky turned cloudy')).toBeDefined()
     })
 
     it('clears type filter when clicking "All Types"', () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (useQuery as any).mockReturnValue(mockEvents)
       render(<GlobalThoughtStream />)
-
-      // First filter by movement
       fireEvent.click(screen.getByRole('button', { name: /movement/i }))
       expect(screen.queryByText('Bob spoke to someone')).toBeNull()
-
-      // Then click "All Types"
       fireEvent.click(screen.getByRole('button', { name: /All Types/i }))
-
-      // All events should be visible again
       expect(screen.getByText('Bob spoke to someone')).toBeDefined()
       expect(screen.getByText('Sky turned cloudy')).toBeDefined()
     })
 
     it('toggles agent filter off when clicking the same agent button again', () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (useQuery as any).mockReturnValue(mockEvents)
       render(<GlobalThoughtStream />)
-
-      // Click Alice to filter
       fireEvent.click(screen.getByRole('button', { name: /Alice/i }))
       expect(screen.queryByText('Bob spoke to someone')).toBeNull()
-
-      // Click Alice again to toggle off
       fireEvent.click(screen.getByRole('button', { name: /Alice/i }))
-
-      // All events should be visible again
       expect(screen.getByText('Bob spoke to someone')).toBeDefined()
     })
 
-    it('shows "No events match" when all events are filtered away', () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (useQuery as any).mockReturnValue(mockEvents)
+    it('shows "no events match" message when filter yields no results', () => {
       render(<GlobalThoughtStream />)
+      // Filter by an agent+type combo that doesn't exist
+      // Bob has no weather_change events
+      fireEvent.click(screen.getByRole('button', { name: /Bob/i }))
+      fireEvent.click(screen.getByRole('button', { name: /weather_change/i }))
+      expect(screen.getByText(/No events match/i)).toBeDefined()
+    })
+  })
 
-      // Filter by a non-existent agent (not in mockEvents)
-      // The only agents are Alice, Bob, Charlie — we can't filter to "no match"
-      // if we filter by a name that doesn't exist. Instead, we filter by a
-      // type that doesn't exist in the data.
-      // Actually all event types ARE in the data. Let's use a combined filter
-      // that won't match: filter by Alice + weather_change (Alice has no weather_change event)
+  describe('Auto-scroll', () => {
+    beforeEach(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (useQuery as any).mockImplementation((fn: any) => {
+        if (fn === 'memory:getGlobalEvents') return mockEvents
+        if (fn === 'agents:getAll') return mockAgents
+        return undefined
+      })
+    })
 
-      // Wait, weather button exists but Alice doesn't have weather_change events.
-      // Let's just test a scenario where filtering produces empty results:
-      // We shouldn't have an agent that never has any events, but in this test
-      // data, we can verify: if we filter by an agent name that has no events
-      // of a specific type... Actually, let me just check: weather_change is
-      // only for Charlie. So Alice + weather_change => no results in the data.
-      // But we can only have one active filter at a time (either agent or type
-      // that we know won't match)... Actually the filters are independent.
+    it('renders a scrollable container for events', () => {
+      const { container } = render(<GlobalThoughtStream />)
+      // The scroll container is inside the component with overflow-y-auto
+      const scrollContainer = container.querySelector('.overflow-y-auto')
+      expect(scrollContainer).not.toBeNull()
+    })
+  })
 
-      // Let me just verify the "no events" case by using a more creative approach.
-      // Since we can't control filter options independently, let's test with
-      // empty events array directly.
+  describe('Highlighting', () => {
+    beforeEach(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (useQuery as any).mockImplementation((fn: any) => {
+        if (fn === 'memory:getGlobalEvents') return mockEvents
+        if (fn === 'agents:getAll') return mockAgents
+        return undefined
+      })
+    })
+
+    it('highlights events for the selected agent when on /agent/$id route', () => {
+      // Simulate being on the agent detail route for Alice (agent-123)
+      mockUseRouterState.mockReturnValue({
+        location: { pathname: '/agent/agent-123' },
+      })
+
+      const { container } = render(<GlobalThoughtStream />)
+      
+      // Alice events (2 events) should have the blue highlight class
+      const highlightedCards = container.querySelectorAll('.bg-blue-800\\/30')
+      
+      // Expect 2 Alice events to be highlighted
+      expect(highlightedCards.length).toBe(2)
+    })
+
+    it('does not highlight events when no agent is selected (home route)', () => {
+      mockUseRouterState.mockReturnValue({
+        location: { pathname: '/' },
+      })
+
+      const { container } = render(<GlobalThoughtStream />)
+      const highlightedCards = container.querySelectorAll('.bg-blue-800\\/30')
+      expect(highlightedCards.length).toBe(0)
+    })
+
+    it('highlights events by matching agent ID from route to agent name from agents list', () => {
+      // Simulate being on Charlie's detail route
+      mockUseRouterState.mockReturnValue({
+        location: { pathname: '/agent/agent-789' },
+      })
+
+      const { container } = render(<GlobalThoughtStream />)
+      
+      // Only Charlie has 1 event (weather_change) - should be highlighted
+      const highlightedCards = container.querySelectorAll('.bg-blue-800\\/30')
+      
+      // Expect 1 Charlie event to be highlighted
+      expect(highlightedCards.length).toBe(1)
     })
   })
 })
