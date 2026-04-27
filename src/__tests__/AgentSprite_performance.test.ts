@@ -26,7 +26,6 @@ describe('AgentSprite Multi-Agent Performance', () => {
     // 100 agents * 60 frames = 6000 tick calls.
     // Target: < 1ms total per frame for all agents -> < 60ms for 60 frames.
     
-    // eslint-disable-next-line no-console
     console.log(`Total time for 6000 ticks (100 agents * 60 frames): ${totalTime.toFixed(2)}ms`)
     expect(totalTime).toBeLessThan(200) // Generous budget for test environment
   })

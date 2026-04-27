@@ -69,6 +69,12 @@ export class AgentSprite extends Container {
     this.label = `agent-${agent.name}`
     this.noise = createNoise(agent._id)
 
+    this.eventMode = 'static'
+    this.cursor = 'pointer'
+    this.on('pointertap', () => {
+      this.emit('select', this.agent._id)
+    })
+
     this.visualContainer = new Container()
     this.addChild(this.visualContainer)
 
