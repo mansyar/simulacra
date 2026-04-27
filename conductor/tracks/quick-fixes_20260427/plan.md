@@ -29,3 +29,6 @@ Focus on removing boilerplate and implementing the intro UX.
     - [ ] **Implement (Green)**: Create a `IntroOverlay` component and integrate it into `src/routes/index.tsx`.
     - [ ] **Refactor**: Apply Framer Motion for a "cozy" entrance/exit animation.
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: Frontend' (Protocol in workflow.md)
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions 5c76e4b
