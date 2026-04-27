@@ -38,6 +38,7 @@ const ARCHETYPE_COLORS: Record<string, number> = {
 export class AgentSprite extends Container {
   private agent: AgentData
   private visualContainer: Container
+  private selectionRing: Graphics
   private circleGraphic: Graphics
   private nameLabel: Text
   private actionLabel: Text
@@ -68,6 +69,10 @@ export class AgentSprite extends Container {
     this.estimatedGridY = agent.gridY
     this.label = `agent-${agent.name}`
     this.noise = createNoise(agent._id)
+
+    this.selectionRing = new Graphics()
+    this.selectionRing.visible = false
+    this.addChildAt(this.selectionRing, 0)
 
     this.eventMode = 'static'
     this.cursor = 'pointer'
@@ -133,6 +138,12 @@ export class AgentSprite extends Container {
 
   private draw() {
     const color = ARCHETYPE_COLORS[this.agent.archetype] || 0xFFFFFF
+
+    // Draw selection ring
+    this.selectionRing.clear()
+    this.selectionRing.circle(0, 0, 12)
+      .stroke({ width: 3, color: 0x60a5fa, alpha: 1 }) // Blue-400
+
     this.circleGraphic.clear()
     this.circleGraphic.circle(0, 0, 8)
       .fill(color)
@@ -164,11 +175,22 @@ export class AgentSprite extends Container {
     }
   }
 
+  public setSelected(selected: boolean) {
+    this.selectionRing.visible = selected
+  }
+
   public tick(deltaTime: number) {
     // PIXI v8 deltaTime is usually ~1.0 for 60FPS. 
     // Convert to elapsed seconds for time-synced calculations.
     const elapsedSeconds = deltaTime / 60
     this.time += elapsedSeconds * 1 // Slower noise traversal
+
+    // Pulsing Ring Effect
+    if (this.selectionRing.visible) {
+      const pulse = (Math.sin(this.time * 5) + 1) / 2 // 0 to 1
+      this.selectionRing.scale.set(1 + pulse * 0.2)
+      this.selectionRing.alpha = 0.5 + pulse * 0.5
+    }
 
     if (this.blendProgress < 1.0) {
       // Smooth Course Correction (Phase 3)
