@@ -53,6 +53,48 @@ export const getById = query({
 });
 
 /**
+ * Query: Get an agent's relationships with names resolved
+ */
+export const getRelationships = query({
+  args: { agentId: v.id("agents") },
+  handler: async (ctx, { agentId }) => {
+    // Query relationships where agentId is either agentA or agentB
+    const relsA = await ctx.db
+      .query("relationships")
+      .withIndex("by_agents", (q) => q.eq("agentAId", agentId))
+      .collect();
+    
+    const relsB = await ctx.db
+      .query("relationships")
+      // We don't have a secondary index for agentBId alone on by_agents
+      // But we can use the affinity index or just filter if volume is low,
+      // or better, add an index. Looking at schema.ts, we have by_agents [agentAId, agentBId].
+      // For now, let's collect and filter if needed, but optimally we should have 2 entries per relationship
+      // or a better indexing strategy. 
+      // The current implementation of updateRelationship ensures [id1, id2] where id1 < id2.
+      // So we need to query both directions if we only store one record.
+      .collect();
+
+    // Filter relsB for cases where agentId is agentBId
+    const filteredRelsB = relsB.filter(r => r.agentBId === agentId);
+    
+    const allRels = [...relsA, ...filteredRelsB];
+    
+    const results = await Promise.all(allRels.map(async (rel) => {
+      const otherId = rel.agentAId === agentId ? rel.agentBId : rel.agentAId;
+      const otherAgent = await ctx.db.get(otherId);
+      return {
+        ...rel,
+        otherAgentName: otherAgent?.name ?? "Unknown Agent",
+      };
+    }));
+
+    // Sort by affinity descending
+    return results.sort((a, b) => b.affinity - a.affinity);
+  },
+});
+
+/**
  * Mutation: Create a new agent
  */
 export const create = mutation({

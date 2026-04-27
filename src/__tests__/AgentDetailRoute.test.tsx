@@ -12,6 +12,7 @@ vi.mock('@tanstack/react-router', () => ({
     useParams: vi.fn().mockReturnValue({ id: 'agent1' }),
   })),
   useNavigate: vi.fn(),
+  Link: ({ children, to, className }: any) => <a href={to} className={className}>{children}</a>,
 }))
 
 // Mock framer-motion
@@ -32,6 +33,10 @@ vi.mock('../../convex/_generated/api', () => ({
     functions: {
       agents: {
         getById: 'agents:getById',
+        getRelationships: 'agents:getRelationships',
+      },
+      memory: {
+        getEvents: 'memory:getEvents',
       },
     },
   },
@@ -45,7 +50,7 @@ describe('AgentDetail Route Component', () => {
     ;(useNavigate as any).mockReturnValue(mockNavigate)
   })
 
-  it('should render agent identity and needs', () => {
+  it('should render agent identity, needs, inventory, relationships and events', () => {
     const mockAgent = {
       _id: 'agent1',
       name: 'Test Agent',
@@ -55,17 +60,41 @@ describe('AgentDetail Route Component', () => {
       hunger: 40,
       energy: 80,
       social: 60,
+      inventory: ['wrench', 'hammer'],
+      currentGoal: 'Building a house',
     }
-    vi.mocked(useQuery).mockReturnValue(mockAgent)
+    const mockRelationships = [
+      { _id: 'rel1', agentAId: 'agent1', agentBId: 'agent2', otherAgentName: 'Friend Agent', affinity: 75 },
+    ]
+    const mockEvents = [
+      { _id: 'ev1', type: 'movement', description: 'Arrived at the construction site.', _creationTime: Date.now() },
+    ]
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    vi.mocked(useQuery).mockImplementation((name: any, ..._args) => {
+      if (typeof name === 'string') {
+        if (name === 'agents:getById') return mockAgent
+        if (name === 'agents:getRelationships') return mockRelationships
+        if (name === 'memory:getEvents') return mockEvents
+      } else if (name && name.name === 'getById') {
+        return mockAgent
+      } else if (name && name.name === 'getRelationships') {
+        return mockRelationships
+      } else if (name && name.name === 'getEvents') {
+        return mockEvents
+      }
+      return null
+    })
 
     // @ts-expect-error - mock component
     const AgentDetail = Route.component
     render(<AgentDetail />)
     
     expect(screen.getByRole('heading', { name: /Test Agent/i })).toBeDefined()
-    expect(screen.getByText(/builder/i)).toBeDefined()
-    expect(screen.getByText(/A test agent bio./i)).toBeDefined()
-    expect(screen.getByText(/hardworking/i)).toBeDefined()
+    expect(screen.getByText(/Building a house/i)).toBeDefined()
+    expect(screen.getByText(/wrench/i)).toBeDefined()
+    expect(screen.getByText(/Friend Agent/i)).toBeDefined()
+    expect(screen.getByText(/Arrived at the construction site/i)).toBeDefined()
   })
 
   it('should render loading state', () => {
