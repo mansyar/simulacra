@@ -8,8 +8,9 @@
 | 2 | The Heart | Convex + Real-time Sync | ✅ Complete | 1-2 weeks |
 | 3 | The Brain | LLM Integration + Memory | ✅ Complete | 2-3 weeks |
 | 4 | The Eyes | Excalibur → PixiJS Migration | ✅ Complete | 3-4 days |
-| 5 | The Social | Proximity + Chat | ⏳ Not Started | 1-2 weeks |
-| 6 | The Polish | Master Panel + Deploy | ⏳ Not Started | 1 week |
+| 5 | The Social | Proximity + Frontend Interaction | ✅ Complete (Tracks A & B) | 1-2 weeks |
+| 6 | Fluid Movement | Organic idle + Predictive pathing | ✅ Complete | 3-4 days |
+| 7 | The Polish | Master Panel + Deploy | ⏳ Not Started | 1 week |
 
 ---
 
@@ -214,11 +215,11 @@
 
 **Goal:** Multi-turn conversations, agent detail panel, and relationship-aware AI
 
-**Status:** ⏳ IN PROGRESS
+**Status:** ✅ TRACKS A & B COMPLETE
 
 > **Note:** Many Phase 5 items from the original plan were already built during
 > Phases 2–4 (distance calculation, speech bubbles, relationships table, affinity
-> tracking, thought stream). This revised plan focuses on remaining gaps only.
+> tracking, thought stream). This revised plan focused on remaining gaps only.
 
 ### Already Complete (from earlier phases)
 
@@ -242,26 +243,26 @@
 
 ### Track B: Frontend Interaction (Days 1–3)
 
-#### B1. Click-to-Select Agent (~0.5 day)
-- [ ] Set `eventMode: 'static'` on `AgentSprite` to make sprites interactive
-- [ ] Emit click events from `AgentSprite` → `GameCanvas`
-- [ ] Add selected-agent state (visual highlight ring, camera focus)
-- [ ] Wire click to navigate to `/agent/$id`
+#### B1. Click-to-Select Agent (~0.5 day) ✅
+- [x] Set `eventMode: 'static'` on `AgentSprite` to make sprites interactive
+- [x] Emit click events from `AgentSprite` → `GameCanvas`
+- [x] Add selected-agent state (visual highlight ring, camera focus)
+- [x] Wire click to navigate to `/agent/$id`
 
-#### B2. Agent Detail Panel — `/agent/$id` (~1.5 days)
-- [ ] Create TanStack route `/agent/$id` as a left-side slide-in panel
-- [ ] Display agent identity: name, archetype, bio, core traits
-- [ ] Display needs bars: hunger, energy, social (live-updating)
-- [ ] Display current goal and action
-- [ ] Display inventory
-- [ ] Display relationships list with affinity scores
-- [ ] Display recent events/memories for this agent
-- [ ] Close panel returns to `/`
+#### B2. Agent Detail Panel — `/agent/$id` (~1.5 days) ✅
+- [x] Create TanStack route `/agent/$id` as a left-side slide-in panel
+- [x] Display agent identity: name, archetype, bio, core traits
+- [x] Display needs bars: hunger, energy, social (live-updating)
+- [x] Display current goal and action
+- [x] Display inventory
+- [x] Display relationships list with affinity scores
+- [x] Display recent events/memories for this agent
+- [x] Close panel returns to `/`
 
-#### B3. Thought Stream Improvements (~0.5 day)
-- [ ] Add filter by agent name and event type
-- [ ] Auto-scroll to latest event
-- [ ] Highlight events from selected agent
+#### B3. Thought Stream Improvements (~0.5 day) ✅
+- [x] Add filter by agent name and event type
+- [x] Auto-scroll to latest event
+- [x] Highlight events from selected agent
 
 ### Track C: Social Depth (Days 3–5)
 
@@ -291,34 +292,72 @@
 ### Implementation Order
 
 ```
-A1 + A2 + A3 (quick fixes, ~1 hour)
-  → B1 (click-to-select, foundation for B2)
-  → B2 (agent detail panel — main frontend task)
+A1 + A2 + A3 (quick fixes) ✅
+  → B1 + B2 + B3 (frontend interaction) ✅
   → C1 (relationship context in AI prompts)
   → C2 (multi-turn conversations — main backend task)
-  → B3 (thought stream improvements)
   → C3 (conversation visuals — polish)
 ```
 
-**Estimated total: 4–6 days**
+**Track A + B completed: 2026-04-27**
 
 ### Phase 5 Checkpoints
 
-- [ ] Clicking an agent in the canvas opens a detail side panel on the left
-- [ ] Agent detail panel shows live needs, traits, relationships, and events
+- [x] Clicking an agent in the canvas opens a detail side panel on the left
+- [x] Agent detail panel shows live needs, traits, relationships, and events
+- [x] Thought Stream supports filtering by agent and event type
+- [x] No TanStack starter template content remains on the index route
 - [ ] Agents hold multi-turn conversations across ticks (open-ended, 1 exchange/tick)
 - [ ] AI decisions reference relationship context ("I like Alice, I'll go talk to her")
 - [ ] Conversation pairs are visually linked on the canvas
-- [ ] Thought Stream supports filtering by agent and event type
-- [ ] No TanStack starter template content remains on the index route
 
 ---
 
-## Phase 6: The Polish
+## Phase 6: Fluid Movement
+
+**Goal:** Organic idle behaviors, predictive pathing, and smooth course correction
+
+**Status:** ✅ COMPLETE
+
+### Days 1-2: Core Movement
+
+#### Organic Idle Behavior
+- [x] Integrate Simplex Noise for natural idle movements (pacing, shifting, swaying)
+- [x] Map noise output to archetype-specific speed multipliers for varied pacing
+- [x] Respect deterministic action overrides (eating/sleeping/talking bypass organic idle)
+
+#### Predictive Pathing
+- [x] Implement `predictedX/predictedY` fields on agent data model
+- [x] Frontend interpolation uses predicted position for continuous movement between ticks
+- [x] Time-synced pathing: use elapsed tick time rather than frame count
+
+### Days 3-4: Stability & Polish
+
+#### Course Correction
+- [x] On each backend state update, compute delta between predicted and actual position
+- [x] Smooth 500ms lerp to correct position drift
+- [x] Backend-reported positions remain the authoritative source (no physics drift accumulation)
+
+#### Testing
+- [x] Unit tests for Simplex noise integration
+- [x] Unit tests for predictive path interpolation
+- [x] Unit tests for course correction smoothing
+- [x] Performance test: 100 agents ticking within budget
+
+### Phase 6 Checkpoints
+
+- [x] Agents exhibit organic idle movements (not static waiting)
+- [x] Agents move smoothly between ticks (no teleportation)
+- [x] Course correction handles backend desync within 500ms
+- [x] Performance stays within budget for 100 agents
+
+---
+
+## Phase 7: The Polish
 
 **Goal:** Master panel and deployment
 
-**Status:** ⏳ NOT STARTED (Depends on Phase 5)
+**Status:** ⏳ NOT STARTED (Depends on Phase 5 Track C)
 
 ### Week 10: Master Panel
 
@@ -347,7 +386,7 @@ A1 + A2 + A3 (quick fixes, ~1 hour)
 - [ ] Deploy frontend to Vercel
 - [ ] Test production build
 
-### Phase 6 Checkpoints
+### Phase 7 Checkpoints
 
 - [ ] Master password protects admin actions
 - [ ] Weather changes reflect in world
@@ -391,10 +430,19 @@ Phase 5 (Social)
     │
     ├──► Proximity detection
     ├──► Chat system
-    └──► Relationships
+    ├──► Relationships
+    ├──► Quick fixes (Track A)
+    └──► Frontend interaction (Track B)
             │
             ▼
-Phase 6 (Polish)
+Phase 6 (Fluid Movement)
+    │
+    ├──► Simplex noise integration
+    ├──► Predictive pathing
+    └──► Course correction
+            │
+            ▼
+Phase 7 (Polish)
     │
     ├──► Master panel
     └──► Deployment
@@ -425,15 +473,16 @@ Phase 6 (Polish)
 
 ## Recommended Development Order
 
-### Current Status: Phase 5 In Progress ⚙️
+### Current Status: Phase 5 Track C Remaining 🎯
 
-1. ✅ **Start simple:** Grid rendering complete with PixiJS v8
-2. ✅ **Add one thing at a time:** Agent sprites, camera controls, tests
-3. ✅ **Done:** Install and configure Convex (Phase 2)
-4. ✅ **Done:** Implement LLM integration (Phase 3)
-5. ✅ **Done:** Migrate Excalibur → PixiJS (Phase 4)
-6. ⚙️ **Current:** Social depth, agent detail panel, multi-turn conversations (Phase 5 — Tracks A/B/C)
-7. ⏳ **Finally:** Master panel and deployment (Phase 6)
+1. ✅ **Done:** Grid rendering (Phase 1)
+2. ✅ **Done:** Convex + real-time sync (Phase 2)
+3. ✅ **Done:** LLM integration + memory (Phase 3)
+4. ✅ **Done:** PixiJS migration (Phase 4)
+5. ✅ **Done:** Quick fixes & frontend interaction (Phase 5 — Tracks A & B)
+6. ✅ **Done:** Fluid movement (Phase 6)
+7. 🎯 **Current:** Multi-turn conversations, relationship context, conversation visuals (Phase 5 — Track C)
+8. ⏳ **Next:** Master panel and deployment (Phase 7)
 
 ---
 
