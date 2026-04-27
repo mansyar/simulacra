@@ -147,6 +147,10 @@ export function GameCanvas() {
 
       // Ticker for smooth updates
       const tick = (ticker: Ticker) => {
+        if (cameraRef.current) {
+          cameraRef.current.tick(ticker.deltaTime)
+        }
+
         agentsRef.current.forEach(agent => {
           agent.tick(ticker.deltaTime)
         })
@@ -242,6 +246,16 @@ export function GameCanvas() {
     agentsData.forEach(agent => {
       if (!currentAgents.has(agent._id)) {
         const sprite = new AgentSprite(agent)
+        sprite.on('select', () => {
+          if (cameraRef.current && appRef.current) {
+            cameraRef.current.lookAt(
+              sprite.position.x,
+              sprite.position.y,
+              appRef.current.screen.width,
+              appRef.current.screen.height
+            )
+          }
+        })
         agentContainer.addChild(sprite)
         currentAgents.set(agent._id, sprite)
       } else {

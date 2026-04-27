@@ -13,6 +13,9 @@ export class CameraController {
   private targetZoom: number = 1
   private minZoom: number = 0.5
   private maxZoom: number = 2
+  private targetX: number | null = null
+  private targetY: number | null = null
+  private lerpSpeed: number = 0.1
 
   constructor(stage: Container, bounds?: CameraBounds) {
     this.stage = stage
@@ -21,6 +24,10 @@ export class CameraController {
   }
 
   public handlePan(x: number, y: number): void {
+    // Manual pan cancels auto-panning
+    this.targetX = null
+    this.targetY = null
+
     // Clamp position to bounds
     const clampedX = Math.max(this.bounds.left, Math.min(this.bounds.right, x))
     const clampedY = Math.max(this.bounds.top, Math.min(this.bounds.bottom, y))
@@ -48,6 +55,35 @@ export class CameraController {
       }
 
       this.handlePan(newScreenPos.x, newScreenPos.y)
+    }
+  }
+
+  public lookAt(worldX: number, worldY: number, viewportWidth: number, viewportHeight: number): void {
+    // targetX/Y are in screen coordinates (stage.position)
+    // To center worldX, worldY:
+    // stage.position.x = viewportWidth / 2 - worldX * stage.scale.x
+    this.targetX = viewportWidth / 2 - worldX * this.stage.scale.x
+    this.targetY = viewportHeight / 2 - worldY * this.stage.scale.y
+  }
+
+  public tick(deltaTime: number): void {
+    if (this.targetX !== null && this.targetY !== null) {
+      const dx = this.targetX - this.stage.position.x
+      const dy = this.targetY - this.stage.position.y
+      
+      if (Math.abs(dx) < 0.1 && Math.abs(dy) < 0.1) {
+        this.stage.position.set(this.targetX, this.targetY)
+        this.targetX = null
+        this.targetY = null
+      } else {
+        const nextX = this.stage.position.x + dx * this.lerpSpeed * deltaTime
+        const nextY = this.stage.position.y + dy * this.lerpSpeed * deltaTime
+        
+        // Use a variant of handlePan that doesn't clear targets
+        const clampedX = Math.max(this.bounds.left, Math.min(this.bounds.right, nextX))
+        const clampedY = Math.max(this.bounds.top, Math.min(this.bounds.bottom, nextY))
+        this.stage.position.set(clampedX, clampedY)
+      }
     }
   }
 
