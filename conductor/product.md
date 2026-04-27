@@ -153,6 +153,11 @@
   - Relationship valence history (last 5 interactions)
   - Polished World Intro Overlay with cozy animations
   - Cleaned up home route boilerplate
+- [x] **Track B: Frontend Interaction** [COMPLETE: 2026-04-27]
+  - Click-to-select agents on PixiJS canvas with pulsing ring
+  - Smooth camera pan to selected agent
+  - Agent detail panel (`/agent/$id`) with identity, needs, inventory, relationships, events
+  - Thought Stream filtering, auto-scroll, and agent highlighting
 - Master panel with password protection (Upcoming)
 - Weather control functional
 - Item spawning works
