@@ -53,7 +53,7 @@ export default defineConfig({
         'convex/functions/seed.ts',
         'src/lib/convex.ts',
         'src/components/AdminPanel.tsx',
-        'src/components/GlobalThoughtStream.tsx',
+        // 'src/components/GlobalThoughtStream.tsx',
         'convex/presence.ts',
         'src/lib/server-functions.ts',
       ],
