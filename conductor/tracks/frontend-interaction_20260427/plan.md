@@ -17,7 +17,7 @@
     - [ ] Write failing test for routing on agent click
     - [ ] On click, navigate to `/agent/$id` using TanStack Router
     - [ ] Ensure tests pass
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Click-to-Select Agent' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Click-to-Select Agent' (Protocol in workflow.md)
 
 ## Phase 2: Agent Detail Panel
 - [x] Task: Create /agent/$id Route 364075c
