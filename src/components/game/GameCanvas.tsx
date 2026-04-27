@@ -288,40 +288,38 @@ export function GameCanvas() {
       }
     })
 
-    // --- Sync Conversation Lines ---
+    // --- Sync Conversation Lines (diff-based) ---
     if (conversationLinesRef.current) {
       const conversationLines = conversationLinesRef.current;
       
       // Get all agents with active conversation states
       const agentsInConversation = agentsData.filter(a => a.conversationState);
       
-      // Clear existing conversations
-      conversationLines.clear();
-      
-      // Add conversation lines for each pair
+      // Build a lookup: pairKey -> [agent, partner]
+      const pairToAgents = new Map<string, [typeof agentsData[0], typeof agentsData[0]]>();
       for (const agent of agentsInConversation) {
-        if (agent.conversationState) {
-          const partnerId = agent.conversationState.partnerId;
-          const partner = agentsData.find(a => a._id === partnerId);
-          
-          if (partner) {
-            conversationLines.addConversation(
-              {
-                id: agent._id,
-                name: agent.name,
-                gridX: agent.gridX,
-                gridY: agent.gridY,
-                archetype: agent.archetype as 'builder' | 'socialite' | 'philosopher' | 'explorer' | 'nurturer',
-              },
-              {
-                id: partner._id,
-                name: partner.name,
-                gridX: partner.gridX,
-                gridY: partner.gridY,
-                archetype: partner.archetype as 'builder' | 'socialite' | 'philosopher' | 'explorer' | 'nurturer',
-              }
-            );
-          }
+        if (!agent.conversationState) continue;
+        const partnerId = agent.conversationState.partnerId;
+        const partner = agentsData.find(a => a._id === partnerId);
+        if (!partner) continue;
+        const key = agent._id < partnerId ? `${agent._id}-${partnerId}` : `${partnerId}-${agent._id}`;
+        pairToAgents.set(key, [agent, partner]);
+      }
+
+      // Update or add current conversations
+      for (const [agent, partner] of pairToAgents.values()) {
+        const toAgentData = (a: typeof agent) => ({
+          id: a._id,
+          name: a.name,
+          gridX: a.gridX,
+          gridY: a.gridY,
+          archetype: a.archetype as 'builder' | 'socialite' | 'philosopher' | 'explorer' | 'nurturer',
+        });
+
+        if (conversationLines.hasConversation(agent._id, partner._id)) {
+          conversationLines.updatePositions(toAgentData(agent), toAgentData(partner));
+        } else {
+          conversationLines.addConversation(toAgentData(agent), toAgentData(partner));
         }
       }
     }

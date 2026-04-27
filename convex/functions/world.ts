@@ -213,7 +213,12 @@ async function handleConversationState(ctx: any, agent: any, normalizedAction: s
       });
     }
   } else if (wasInConversation) {
+    // Clear current agent's conversation state
     await ctx.runMutation(internal.functions.agents.clearConversationState, { agentId: agent._id });
+    // Also clear partner's conversation state to keep both agents in sync
+    if (agent.conversationState?.partnerId) {
+      await ctx.runMutation(internal.functions.agents.clearConversationState, { agentId: agent.conversationState.partnerId });
+    }
   }
 }
 

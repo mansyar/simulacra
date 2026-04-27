@@ -55,6 +55,11 @@ export class ConversationLines {
     this.dirty = true;
   }
 
+  hasConversation(agentAId: string, agentBId: string): boolean {
+    const key = this.getConversationKey(agentAId, agentBId);
+    return this.conversations.has(key);
+  }
+
   removeConversation(agentAId: string, agentBId: string): void {
     const key = this.getConversationKey(agentAId, agentBId);
     const conversation = this.conversations.get(key);
@@ -81,21 +86,29 @@ export class ConversationLines {
       return;
     }
 
-    // Clear all graphics
-    this.graphicsContainer.removeChildren();
+    // Collect keys to delete first to avoid mutation during iteration
+    const keysToDelete: string[] = [];
 
-    // Redraw all conversations
+    // Process each conversation
     for (const [key, conversation] of this.conversations) {
+      conversation.graphics.clear();
+
       if (conversation.isFadingOut) {
         // Fade out animation
         conversation.fadeAlpha -= deltaTime * 0.002; // 500ms fade out
         if (conversation.fadeAlpha <= 0) {
-          this.conversations.delete(key);
+          this.graphicsContainer.removeChild(conversation.graphics);
+          keysToDelete.push(key);
           continue;
         }
       }
 
       this.drawConversationLine(conversation);
+    }
+
+    // Remove fully faded-out conversations
+    for (const key of keysToDelete) {
+      this.conversations.delete(key);
     }
 
     this.dirty = false;
@@ -148,8 +161,8 @@ export class ConversationLines {
       builder: 0x8B4513,      // Brown
       socialite: 0xFF69B4,    // Pink
       philosopher: 0x9370DB,  // Purple
-      explorer: 0x32CD32,     // Green
-      nurturer: 0xFFD700,     // Gold
+      explorer: 0x228B22,     // Forest Green
+      nurturer: 0xFFA07A,     // Light Salmon
     };
     return colors[archetype] || 0xFFFFFF;
   }
