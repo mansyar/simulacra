@@ -5,7 +5,7 @@
     - [ ] Write failing test for click events on AgentSprite
     - [ ] Make `AgentSprite` interactive (`eventMode: 'static'`) and emit selection events
     - [ ] Ensure tests pass
-- [ ] Task: Implement Visual Selection State
+- [x] Task: Implement Visual Selection State 627d062
     - [ ] Write failing test for selected agent highlighting
     - [ ] Render a pulsing ring beneath the selected agent sprite
     - [ ] Ensure tests pass
