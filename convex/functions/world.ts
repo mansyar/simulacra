@@ -203,7 +203,7 @@ async function handleConversationState(ctx: any, agent: any, normalizedAction: s
   const isTalking = normalizedAction === "talking";
   
   if (isTalking && targetAgentId) {
-    const partner = await ctx.db.get(targetAgentId);
+    const partner = await ctx.runQuery(api.functions.agents.getById, { agentId: targetAgentId });
     if (partner) {
       const newTurnCount = wasInConversation ? (agent.conversationState?.turnCount || 0) + 1 : 1;
       await ctx.runMutation(internal.functions.agents.setConversationState, {
