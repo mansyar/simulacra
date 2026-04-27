@@ -8,9 +8,12 @@
 | 2 | The Heart | Convex + Real-time Sync | ✅ Complete | 1-2 weeks |
 | 3 | The Brain | LLM Integration + Memory | ✅ Complete | 2-3 weeks |
 | 4 | The Eyes | Excalibur → PixiJS Migration | ✅ Complete | 3-4 days |
-| 5 | The Social | Proximity + Frontend Interaction | ✅ Complete (Tracks A & B) | 1-2 weeks |
+| 5 | The Social | Proximity + Frontend Interaction | ✅ Complete (All Tracks) | 1-2 weeks |
 | 6 | Fluid Movement | Organic idle + Predictive pathing | ✅ Complete | 3-4 days |
-| 7 | The Polish | Master Panel + Deploy | ⏳ Not Started | 1 week |
+| 7 | The Mind | AI Context Fidelity | ⏳ Not Started | 1 week |
+| 8 | The Backbone | Robustness & Scaling | ⏳ Not Started | 1 week |
+| 9 | The Soul | Deeper Social Dynamics | ⏳ Not Started | 1 week |
+| X | The Polish | Master Panel + Deploy | ⏳ Not Started | 1 week |
 
 ---
 
@@ -215,7 +218,7 @@
 
 **Goal:** Multi-turn conversations, agent detail panel, and relationship-aware AI
 
-**Status:** ✅ TRACKS A & B COMPLETE
+**Status:** ✅ ALL TRACKS COMPLETE
 
 > **Note:** Many Phase 5 items from the original plan were already built during
 > Phases 2–4 (distance calculation, speech bubbles, relationships table, affinity
@@ -266,26 +269,26 @@
 
 ### Track C: Social Depth (Days 3–5)
 
-#### C1. Relationship Context in AI Prompts (~0.5 day)
-- [ ] Query `relationships` table for the deciding agent
-- [ ] Include relationship data in `buildFullContext` (e.g. "You like Alice (affinity: +14), you distrust Bob (affinity: -8)")
-- [ ] Verify AI decisions reference relationship context
+#### C1. Relationship Context in AI Prompts (~0.5 day) ✅
+- [x] Query `relationships` table for the deciding agent
+- [x] Include relationship data in `buildFullContext` (e.g. "You like Alice (affinity: +14), you distrust Bob (affinity: -8)")
+- [x] Verify AI decisions reference relationship context
 
-#### C2. Multi-Turn Conversations (~1.5 days)
+#### C2. Multi-Turn Conversations (~1.5 days) ✅
 
 > **Design:** Open-ended, one exchange per tick. Agent A initiates on tick N,
 > Agent B responds on tick N+1, and so on until one agent decides to end the
 > conversation or walks away.
 
-- [ ] Add `conversationState` to agent schema: `{ partnerId, role: "initiator" | "responder", turnCount }`
-- [ ] On tick: if agent has an active conversation, generate a response instead of a fresh decision
-- [ ] Conversation ends when: agent decides to stop, partner walks away, or `turnCount` exceeds a cap (e.g. 5)
-- [ ] Store each exchange as a `"conversation"` event with partner reference
-- [ ] Both agents show speech bubbles during active conversations
+- [x] Add `conversationState` to agent schema: `{ partnerId, role: "initiator" | "responder", turnCount }`
+- [x] On tick: if agent has an active conversation, generate a response instead of a fresh decision
+- [x] Conversation ends when: agent decides to stop, partner walks away, or `turnCount` exceeds a cap (e.g. 5)
+- [x] Store each exchange as a `"conversation"` event with partner reference
+- [x] Both agents show speech bubbles during active conversations
 
-#### C3. Conversation Visual Indicators (~0.5 day)
-- [ ] Draw a subtle dotted line or glow arc between two agents in active conversation
-- [ ] Show a chat icon above conversing agent pairs
+#### C3. Conversation Visual Indicators (~0.5 day) ✅
+- [x] Draw a subtle dotted line or glow arc between two agents in active conversation
+- [x] Show a chat icon above conversing agent pairs
 
 ---
 
@@ -294,12 +297,13 @@
 ```
 A1 + A2 + A3 (quick fixes) ✅
   → B1 + B2 + B3 (frontend interaction) ✅
-  → C1 (relationship context in AI prompts)
-  → C2 (multi-turn conversations — main backend task)
-  → C3 (conversation visuals — polish)
+   → C1 (relationship context in AI prompts) ✅
+  → C2 (multi-turn conversations — main backend task) ✅
+  → C3 (conversation visuals — polish) ✅
 ```
 
 **Track A + B completed: 2026-04-27**
+**Track C completed: 2026-04-28**
 
 ### Phase 5 Checkpoints
 
@@ -307,9 +311,9 @@ A1 + A2 + A3 (quick fixes) ✅
 - [x] Agent detail panel shows live needs, traits, relationships, and events
 - [x] Thought Stream supports filtering by agent and event type
 - [x] No TanStack starter template content remains on the index route
-- [ ] Agents hold multi-turn conversations across ticks (open-ended, 1 exchange/tick)
-- [ ] AI decisions reference relationship context ("I like Alice, I'll go talk to her")
-- [ ] Conversation pairs are visually linked on the canvas
+- [x] Agents hold multi-turn conversations across ticks (open-ended, 1 exchange/tick)
+- [x] AI decisions reference relationship context ("I like Alice, I'll go talk to her")
+- [x] Conversation pairs are visually linked on the canvas
 
 ---
 
@@ -353,11 +357,162 @@ A1 + A2 + A3 (quick fixes) ✅
 
 ---
 
-## Phase 7: The Polish
+## Phase 7: The Mind
+
+**Goal:** Fix how AI context is built and passed to the LLM so agents actually use their full sensory data, memories, relationships, and archetype personality in every decision.
+
+**Status:** ⏳ NOT STARTED
+
+### Track A: Sensory Buffer in LLM Context
+
+**Problem:** The `events` table stores the last 10 sensory events per agent (Tier 1 memory), but `buildFullContext()` only queries the `memories` table (Tier 2 vector store). The LLM has no awareness of what just happened to the agent.
+
+- [ ] Add sensory event retrieval to `buildFullContext()` action in `convex/functions/ai.ts`
+- [ ] Include last 10 sensory events in the context string passed to the LLM
+- [ ] Format events as a chronologically ordered list prefixed with `"## Recent Events"`
+- [ ] Write test verifying sensory events appear in LLM decision context
+
+### Track B: User Prompt Restructuring
+
+**Problem:** The `contextOverride` parameter appends rich context (bio, traits, goals, relationships, memories) to the *system prompt* while the *user prompt* remains bare-bones (`"Agent Name: Bob. State: ... What is your next action?"`). LLMs deprioritize system prompt content and may ignore the rich context.
+
+- [ ] Replace `contextOverride` mechanism in `convex/functions/ai.ts` — move rich context from system prompt appendage into the user message
+- [ ] Restructure user prompt to explicitly reference and instruct the LLM to use: bio, core traits, current goal, relationships, recent events, and retrieved memories
+- [ ] Add inline `## Context` section to the user prompt that the LLM can clearly see
+- [ ] Verify the `DECISION_SYSTEM_PROMPT` remains focused on output format only
+- [ ] Remove `contextOverride` from `decision` action args if no longer needed (or keep as deprecated shim)
+- [ ] Write test verifying context fields appear in decision log records
+
+### Track C: Archetype & Relationship Prompt Enhancement
+
+**Problem:** When `contextOverride` is provided, it replaces `ARCHETYPE_PROMPTS[args.archetype]` entirely — the archetype personality is lost. Additionally, `DECISION_SYSTEM_PROMPT` doesn't instruct the LLM to consider relationships.
+
+- [ ] Fix `decision` action: always include `ARCHETYPE_PROMPTS[args.archetype]` regardless of `contextOverride`
+- [ ] Update `DECISION_SYSTEM_PROMPT` to explicitly list "Your Relationships" and "Your Recent Events" as factors to consider
+- [ ] Ensure relationship context includes natural-language sentiment (e.g. "You like Alice (+14), you are neutral toward Bob (-2)")
+- [ ] Write test that archetype prompts are always present in system content
+- [ ] Write test that relationship data is referenced in decision output
+
+### Phase 7 Checkpoints
+
+- [ ] Sensory events appear in LLM decision context (verified via test + log inspection)
+- [ ] User prompt contains all context sections (bio, traits, goals, relationships, memories, events)
+- [ ] Archetype prompts are always present alongside context override
+- [ ] DECISION_SYSTEM_PROMPT explicitly instructs LLM to consider relationships and events
+- [ ] All tests pass with >80% coverage
+
+---
+
+## Phase 8: The Backbone
+
+**Goal:** Unbottleneck the world tick, optimize for scaling to 50+ agents, and clean up technical debt. Leverages the new (no-limit) chat API to parallelize aggressively while respecting the embedding 100 RPM cap.
+
+**Status:** ⏳ NOT STARTED
+
+### Track A: Unbottleneck the World Tick
+
+**Problem:** The tick currently processes agents in batches of 3 with 1-second delays (`BATCH_SIZE = 3, BATCH_DELAY_MS = 1000`). This was designed to avoid chat API rate limits — but the chat model has **no concurrency limit**. The 1s delay is pure waste. Additionally, a single agent failure cascades and blocks the entire batch.
+
+- [ ] **Parallelize all agents:** Remove batching — replace 3-at-a-time with full parallel execution (`Promise.all(agents.map(...))`)
+- [ ] **Remove inter-batch delay:** Delete `BATCH_DELAY_MS = 1000` and the `await new Promise(...)` between batches
+- [ ] **Error isolation:** Wrap each `processAgent` call in a try-catch so one failure doesn't block other agents
+- [ ] **Simplify chat retry:** Update `fetchWithRetry` in `ai_helpers.ts` to remove 429-specific backoff for chat calls (no rate limits), keeping retries only for network errors (5xx, timeouts)
+- [ ] **Verify tick duration:** With all agents in parallel, tick time should drop from ~4s to ~2-3s (LLM latency bound)
+- [ ] Write test for partial batch failure recovery (9 agents succeed, 1 fails)
+
+### Track B: Spatial Query Optimization
+
+**Problem:** Both `recordPassivePerception` and the nearby-agent check in `processAgent()` load ALL agents into memory and brute-force Euclidean distance O(n²). This is fine for 10 agents but prevents scaling to 25+ agents without performance degradation.
+
+- [ ] Replace brute-force agent scans with Convex `by_position` index queries in both locations
+- [ ] Implement bounded-range query with `gte`/`lte` on `gridX` + `gridY` to return only nearby agents
+- [ ] Add performance benchmark test for 50+ agent scaling (verify tick duration < 30s)
+- [ ] Document optimized query patterns in code comments and `docs/ARCHITECTURE.md`
+
+### Track C: Embedding Pipeline & Configuration Cleanup
+
+**Problem:** Four accumulating issues around the embedding layer and configuration hygiene:
+1. Each agent's `retrieveMemoriesAction` makes a **separate embedding API call** — 10 calls/tick at 180s = only 3.3 RPM, but this doesn't scale (50 agents at 60s = 50 RPM, close to the 100 RPM limit).
+2. Embedding results for similar query texts are recomputed every tick.
+3. `coreTraits` grows unbounded (append-only).
+4. Magic thresholds like `480` ticks aren't documented.
+
+- [ ] **Batch embedding calls:** Create a `batchEmbed` action that sends multiple texts in a single API call (`input: [text1, text2, ...]`), reducing 10 individual calls to 1 per tick
+- [ ] **Per-tick embedding cache:** Cache query embeddings in memory keyed by text content hash, so agents with overlapping contexts share the same embedding
+- [ ] **Trait Cap:** In `updateIdentity`, cap `coreTraits` at 10 items, dropping oldest entries when new traits arrive via reflection
+- [ ] **Named Constants:** Replace magic number `480` in world.ts with `const REFLECTION_INTERVAL_TICKS = 480` and add inline comment: `// 480 ticks ≈ 10 simulated days (48 ticks/day, +30 min per tick)`
+- [ ] Write test for batch embedding correctness (single vs batched produce same results)
+- [ ] Write test for trait capping behavior
+- [ ] Write test that configuration constants can be overridden via config table
+
+### Phase 8 Checkpoints
+
+- [ ] All 10 agents fire LLM calls in parallel — tick duration drops to LLM latency (~2-3s)
+- [ ] One agent failure doesn't block other agents in the tick
+- [ ] 50+ agent tick completes within acceptable duration (<30s)
+- [ ] Embedding calls reduced from 10/tick to 1/tick (batched)
+- [ ] coreTraits never exceeds 10 entries
+- [ ] All magic thresholds replaced with named constants and documented
+- [ ] All tests pass with >80% coverage
+
+---
+
+## Phase 9: The Soul
+
+**Goal:** Dynamic relationship updates during conversations, lifecycle cleanup for stale conversation state, and runtime configurability.
+
+**Status:** ⏳ NOT STARTED
+
+### Track A: Sentiment-Based Affinity During Conversations
+
+**Problem:** `updateRelationship` with +2 delta only fires when an agent initiates talking. Multi-turn conversations don't adjust affinity further, so even warm conversations leave relationships unchanged. The `valenceHistory` isn't updated per-turn either.
+
+- [ ] Add speech sentiment analysis helper in `convex/functions/ai.ts` (keyword-based: positive words → +1 to +3, negative words → -1 to -3, neutral → 0)
+- [ ] After each LLM decision with `action === "talking"`, analyze the `speech` field for sentiment
+- [ ] Apply dynamic affinity delta on each conversation turn (not just initiation)
+- [ ] Update `valenceHistory` on every turn (maintaining last 5 entries)
+- [ ] Write test verifying affinity changes across a multi-turn conversation
+
+### Track B: Conversation TTL & Cleanup
+
+**Problem:** `conversationState` persists forever with no real-time timeout. If the tick interval is 180s and max 5 turns, conversations span ~15 minutes. If both agents are idle, the conversation state never cleans up.
+
+- [ ] Add `lastTurnAt` timestamp to `conversationState` schema (or use `startedAt` + last tick)
+- [ ] Add stale conversation cleanup routine at the start of `tick()` action
+- [ ] Clear any conversation where `Date.now() - conversationState.startedAt > CONVERSATION_MAX_TTL_MS`
+- [ ] Add `CONVERSATION_MAX_TTL_MS` (default 30 minutes) to config or environment variables
+- [ ] Log cleanup events to sensory buffer when conversations are force-ended
+- [ ] Write test for stale conversation auto-cleanup
+
+### Track C: Runtime Configuration & Integration Testing
+
+**Problem:** Several thresholds remain as magic numbers or disconnected values across files. No integration tests verify config-driven behavior end-to-end.
+
+- [ ] Extract to config table (with env var fallbacks):
+  - `MAX_TRAITS` (default 10)
+  - `REFLECTION_INTERVAL_TICKS` (default 480)
+  - `CONVERSATION_MAX_TTL_MS` (default 1800000 = 30 min)
+  - `SENTIMENT_AFFINITY_BOOST` (default 2)
+  - `MAX_CONVERSATION_TURNS` (default 5)
+- [ ] Update all affected files to read from config or env var with fallback to defaults
+- [ ] Add integration test: set config → run tick → verify behavior matches config values
+- [ ] Add integration test: disable sleep mode → run tick → verify agents process
+
+### Phase 9 Checkpoints
+
+- [ ] Affinity scores change dynamically during multi-turn conversations
+- [ ] Stale conversations auto-cleanup after timeout
+- [ ] All thresholds configurable via config table
+- [ ] Integration tests verify config-driven behavior
+- [ ] All tests pass with >80% coverage
+
+---
+
+## Phase X: The Polish (Upcoming)
 
 **Goal:** Master panel and deployment
 
-**Status:** ⏳ NOT STARTED (Depends on Phase 5 Track C)
+**Status:** ⏳ NOT STARTED
 
 ### Week 10: Master Panel
 
@@ -386,7 +541,7 @@ A1 + A2 + A3 (quick fixes) ✅
 - [ ] Deploy frontend to Vercel
 - [ ] Test production build
 
-### Phase 7 Checkpoints
+### Phase X Checkpoints
 
 - [ ] Master password protects admin actions
 - [ ] Weather changes reflect in world
@@ -442,7 +597,28 @@ Phase 6 (Fluid Movement)
     └──► Course correction
             │
             ▼
-Phase 7 (Polish)
+Phase 7 (Mind)
+    │
+    ├──► Sensory buffer in LLM context
+    ├──► User prompt restructuring
+    └──► Archetype & relationship prompting
+            │
+            ▼
+Phase 8 (Backbone)
+    │
+    ├──► Unbottleneck the world tick (parallel agents, remove delays, error isolation)
+    ├──► Spatial query optimization
+    └──► Embedding pipeline (batch + cache) & configuration cleanup
+            │
+            ▼
+Phase 9 (Soul)
+    │
+    ├──► Sentiment-based affinity
+    ├──► Conversation TTL & cleanup
+    └──► Runtime configuration
+            │
+            ▼
+Phase X (Polish)
     │
     ├──► Master panel
     └──► Deployment
@@ -473,16 +649,19 @@ Phase 7 (Polish)
 
 ## Recommended Development Order
 
-### Current Status: Phase 5 Track C Remaining 🎯
+### Current Status: Phase 7 (The Mind) Remaining 🎯
 
 1. ✅ **Done:** Grid rendering (Phase 1)
 2. ✅ **Done:** Convex + real-time sync (Phase 2)
 3. ✅ **Done:** LLM integration + memory (Phase 3)
 4. ✅ **Done:** PixiJS migration (Phase 4)
 5. ✅ **Done:** Quick fixes & frontend interaction (Phase 5 — Tracks A & B)
-6. ✅ **Done:** Fluid movement (Phase 6)
-7. 🎯 **Current:** Multi-turn conversations, relationship context, conversation visuals (Phase 5 — Track C)
-8. ⏳ **Next:** Master panel and deployment (Phase 7)
+6. ✅ **Done:** Multi-turn conversations, relationship context, conversation visuals (Phase 5 — Track C)
+7. ✅ **Done:** Fluid movement (Phase 6)
+8. 🎯 **Next:** AI context fidelity (Phase 7 — The Mind)
+9. ⏳ **Planned:** Robustness & scaling (Phase 8 — The Backbone)
+10. ⏳ **Planned:** Deeper social dynamics (Phase 9 — The Soul)
+11. ⏳ **Planned:** Master panel and deployment (Phase X — The Polish)
 
 ---
 
