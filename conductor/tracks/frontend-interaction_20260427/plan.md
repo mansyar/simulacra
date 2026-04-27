@@ -47,9 +47,9 @@
     - [x] Add Clickable Tags UI to filter events by agent name and event type
     - [x] Wire up filtering logic to the displayed events
     - [x] Ensure tests pass
-- [ ] Task: Implement Auto-scroll and Highlighting
-    - [ ] Write failing test for auto-scroll and highlight behavior
-    - [ ] Auto-scroll the stream to the newest event when new thoughts arrive
-    - [ ] Visually highlight events associated with the currently selected agent
-    - [ ] Ensure tests pass
+- [x] Task: Implement Auto-scroll and Highlighting 3eae042
+    - [x] Write failing test for auto-scroll and highlight behavior
+    - [x] Auto-scroll the stream to the newest event when new thoughts arrive
+    - [x] Visually highlight events associated with the currently selected agent
+    - [x] Ensure tests pass
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: Thought Stream Improvements' (Protocol in workflow.md)
