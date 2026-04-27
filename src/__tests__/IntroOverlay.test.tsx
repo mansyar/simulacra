@@ -1,16 +1,8 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, fireEvent, act } from '@testing-library/react'
+import { describe, it, expect, vi } from 'vitest'
+import { render, fireEvent, waitFor } from '@testing-library/react'
 import { IntroOverlay } from '../components/ui/IntroOverlay'
 
 describe('IntroOverlay', () => {
-  beforeEach(() => {
-    vi.useFakeTimers()
-  })
-
-  afterEach(() => {
-    vi.useRealTimers()
-  })
-
   it('should render with welcome message', () => {
     const { getByText, getAllByText } = render(<IntroOverlay onDismiss={vi.fn()} />)
     expect(getByText(/Welcome to/i)).toBeTruthy()
@@ -18,7 +10,7 @@ describe('IntroOverlay', () => {
     expect(getByText(/A living, breathing isometric world/i)).toBeTruthy()
   })
 
-  it('should call onDismiss after animation delay when the button is clicked', () => {
+  it('should call onDismiss after animation delay when the button is clicked', async () => {
     const onDismiss = vi.fn()
     const { getByRole } = render(<IntroOverlay onDismiss={onDismiss} />)
     const button = getByRole('button', { name: /Enter World/i })
@@ -28,11 +20,9 @@ describe('IntroOverlay', () => {
     // onDismiss shouldn't be called immediately
     expect(onDismiss).not.toHaveBeenCalled()
     
-    // Advance time
-    act(() => {
-      vi.advanceTimersByTime(800)
-    })
-    
-    expect(onDismiss).toHaveBeenCalledTimes(1)
+    // Wait for the exit animation to complete (duration 0.8s)
+    await waitFor(() => {
+      expect(onDismiss).toHaveBeenCalledTimes(1)
+    }, { timeout: 2000 })
   })
 })

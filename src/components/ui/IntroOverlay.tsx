@@ -10,12 +10,10 @@ export function IntroOverlay({ onDismiss }: IntroOverlayProps) {
 
   const handleDismiss = () => {
     setIsVisible(false)
-    // Wait for animation to finish before calling onDismiss
-    setTimeout(onDismiss, 800)
   }
 
   return (
-    <AnimatePresence>
+    <AnimatePresence onExitComplete={onDismiss}>
       {isVisible && (
         <motion.div
           initial={{ opacity: 0 }}
