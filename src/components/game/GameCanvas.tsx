@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Application, Container, Ticker } from 'pixi.js'
 import { useQuery } from 'convex/react'
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, useParams } from '@tanstack/react-router'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { IsometricGrid } from './IsometricGrid'
@@ -21,6 +21,7 @@ interface ExtendedApplication extends Application {
 
 export function GameCanvas() {
   const navigate = useNavigate()
+  const { id: selectedAgentId } = useParams({ from: '/agent/$id', shouldThrow: false }) as { id?: string }
   const containerRef = useRef<HTMLDivElement>(null)
   const appRef = useRef<ExtendedApplication | null>(null)
   const gridRef = useRef<IsometricGrid | null>(null)
@@ -270,6 +271,15 @@ export function GameCanvas() {
       }
     })
   }, [agentsData, poisData, isReady])
+
+  // Sync Selection State
+  useEffect(() => {
+    if (!isReady) return
+    
+    agentsRef.current.forEach((sprite, id) => {
+      sprite.setSelected(id === selectedAgentId)
+    })
+  }, [selectedAgentId, isReady])
 
   // Handle visibility change
   useEffect(() => {
