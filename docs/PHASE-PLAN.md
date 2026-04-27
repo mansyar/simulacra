@@ -200,13 +200,13 @@
 
 ### Phase 4 Checkpoints
 
-- [ ] PixiJS renders identical isometric grid to previous Excalibur version
-- [ ] All agents display with correct colors, names, actions, and speech
-- [ ] Camera pan/zoom works identically
-- [ ] No Excalibur references remain in codebase
-- [ ] Performance improvement confirmed (measure FPS before/after)
-- [ ] Bundle size reduced (~200KB Excalibur → ~150KB PixiJS)
-- [ ] Existing tests pass or are updated
+- [x] PixiJS renders identical isometric grid to previous Excalibur version
+- [x] All agents display with correct colors, names, actions, and speech
+- [x] Camera pan/zoom works identically
+- [x] No Excalibur references remain in codebase
+- [x] Performance improvement confirmed (measure FPS before/after)
+- [x] Bundle size reduced (~200KB Excalibur → ~150KB PixiJS)
+- [x] Existing tests pass or are updated
 
 ---
 
@@ -236,9 +236,9 @@
 
 ### Track A: Quick Fixes (Day 1, ~1 hour)
 
-- [ ] **A1. Configurable interaction radius** — Move hardcoded `5` from `world.ts:333` and `agents.ts:277` to the `config` table
-- [ ] **A2. Fix relationship valence bug** — `updateRelationship` never updates `lastInteractionType` on subsequent interactions (only on insert)
-- [ ] **A3. Remove TanStack starter content** — Clean up `index.tsx` route; `/` should show only the game canvas (already rendered by `__root.tsx`)
+- [x] **A1. Configurable interaction radius** (bc95135) — Move hardcoded `5` from `world.ts:333` and `agents.ts:277` to the `config` table
+- [x] **A2. Fix relationship valence bug** (43dc049) — `updateRelationship` never updates `lastInteractionType` on subsequent interactions (only on insert)
+- [x] **A3. Remove TanStack starter content** (63d9ebf, cfcdefd) — Clean up `index.tsx` route; `/` should show only the game canvas (already rendered by `__root.tsx`)
 
 ### Track B: Frontend Interaction (Days 1–3)
 
