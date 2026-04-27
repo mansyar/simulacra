@@ -63,7 +63,7 @@ vi.mock('../../convex/_generated/api', () => ({
   },
 }))
 
-let lastAgentSpriteInstance: { on: any; position: { x: number; y: number }; updateAgentData: any; tick: any; addChild: any } | null = null
+let lastAgentSpriteInstance: { on: any; position: { x: number; y: number }; updateAgentData: any; tick: any; addChild: any; setSelected: any } | null = null
 
 // Mock AgentSprite
 vi.mock('../components/game/AgentSprite', () => {
@@ -75,6 +75,7 @@ vi.mock('../components/game/AgentSprite', () => {
         updateAgentData: vi.fn(),
         tick: vi.fn(),
         addChild: vi.fn(),
+        setSelected: vi.fn(),
       }
       lastAgentSpriteInstance = instance
       return instance
@@ -85,6 +86,7 @@ vi.mock('../components/game/AgentSprite', () => {
 // Mock useNavigate
 vi.mock('@tanstack/react-router', () => ({
   useNavigate: vi.fn(),
+  useParams: vi.fn().mockReturnValue({ id: 'agent1' }),
 }))
 
 describe('GameCanvas Navigation', () => {
@@ -122,6 +124,11 @@ describe('GameCanvas Navigation', () => {
     expect(mockNavigate).toHaveBeenCalledWith({
       to: '/agent/$id',
       params: { id: 'agent1' }
+    })
+
+    // Verify setSelected was called (sync effect will trigger it)
+    await waitFor(() => {
+      expect(lastAgentSpriteInstance!.setSelected).toHaveBeenCalledWith(true)
     })
   })
 })
