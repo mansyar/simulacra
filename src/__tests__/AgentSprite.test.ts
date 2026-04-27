@@ -10,9 +10,18 @@ vi.mock('pixi.js', () => {
     position = { x: 0, y: 0, set: vi.fn() }
     visible = true
     label = ''
+    eventMode = 'none'
+    cursor = 'default'
+    scale = { x: 1, y: 1, set: vi.fn() }
+    alpha = 1
     addChild = vi.fn()
     removeChild = vi.fn()
     addChildAt = vi.fn()
+    on = vi.fn()
+    emit = vi.fn()
+    get interactive() {
+      return this.eventMode !== 'none'
+    }
   }
 
   const mockGraphics = {

@@ -52,6 +52,12 @@ vi.mock('convex/react', () => ({
   useMutation: vi.fn().mockReturnValue(vi.fn()),
 }))
 
+// Mock TanStack Router
+vi.mock('@tanstack/react-router', () => ({
+  useNavigate: () => vi.fn(),
+  useParams: () => ({ id: undefined }),
+}))
+
 vi.mock('../../convex/_generated/api', () => ({
   api: {
     functions: {

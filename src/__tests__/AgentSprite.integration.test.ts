@@ -30,12 +30,22 @@ vi.mock('pixi.js', () => {
     position = { x: 0, y: 0, set: vi.fn() }
     visible = true
     label = ''
+    eventMode = 'none'
+    cursor = 'default'
+    scale = { x: 1, y: 1, set: vi.fn() }
+    alpha = 1
     addChild = vi.fn().mockImplementation((child) => {
       this.children.push(child)
       return child
     })
+    addChildAt = vi.fn()
     removeChild = vi.fn()
+    on = vi.fn()
+    emit = vi.fn()
     getBounds = vi.fn().mockReturnValue({ width: 100, height: 20 })
+    get interactive() {
+      return this.eventMode !== 'none'
+    }
   }
 
   return {

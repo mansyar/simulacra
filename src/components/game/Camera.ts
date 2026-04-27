@@ -15,9 +15,10 @@ export class CameraController {
   private maxZoom: number = 2
   private targetX: number | null = null
   private targetY: number | null = null
-  private lerpSpeed: number = 0.1
+  private lerpSpeed: number
 
-  constructor(stage: Container, bounds?: CameraBounds) {
+  constructor(stage: Container, bounds?: CameraBounds, lerpSpeed: number = 0.1) {
+    this.lerpSpeed = lerpSpeed
     this.stage = stage
     this.bounds = bounds ?? { left: -Infinity, right: Infinity, top: -Infinity, bottom: Infinity }
     this.targetZoom = stage.scale.x

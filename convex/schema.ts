@@ -103,6 +103,7 @@ export default defineSchema({
     valenceHistory: v.array(v.union(v.literal("positive"), v.literal("negative"), v.literal("neutral"))),
   })
     .index("by_agents", ["agentAId", "agentBId"])
+    .index("by_agentB", ["agentBId"])
     .index("by_affinity", ["affinity"]),
 
   pois: defineTable({
