@@ -41,7 +41,7 @@
     - [ ] Ensure tests pass
 - [x] Task: Conductor - User Manual Verification 'Phase 2: Agent Detail Panel' (Protocol in workflow.md)
 
-## Phase 3: Thought Stream Improvements
+## Phase 3: Thought Stream Improvements [checkpoint: 948c6a1]
 - [x] Task: Implement Thought Stream Filtering aa58068
     - [x] Write failing test for Thought Stream filters
     - [x] Add Clickable Tags UI to filter events by agent name and event type
@@ -52,4 +52,4 @@
     - [x] Auto-scroll the stream to the newest event when new thoughts arrive
     - [x] Visually highlight events associated with the currently selected agent
     - [x] Ensure tests pass
-- [~] Task: Conductor - User Manual Verification 'Phase 3: Thought Stream Improvements' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Thought Stream Improvements' (Protocol in workflow.md) 948c6a1
