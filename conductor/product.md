@@ -135,7 +135,7 @@
 - Integrated WorldHUD for real-time state display
 
 ### Phase 3 - The Brain [COMPLETE: 2026-04-25]
-- Provider-agnostic LLM integration via Convex Actions
+- Provider-agnostic LLM integration via Convex Actions (Configurable via database)
 - Vector index configured for memory storage
 - Agents make decisions based on memory
 - Sensory buffer stores recent events
@@ -148,7 +148,12 @@
 - Cognitive Loop: Reflection and Memory RAG context.
 
 ### Phase 5 - The Polish
-- Master panel with password protection
+- [x] **Track A: Quick Fixes** [COMPLETE: 2026-04-27]
+  - Configurable interaction radius (database-driven)
+  - Relationship valence history (last 5 interactions)
+  - Polished World Intro Overlay with cozy animations
+  - Cleaned up home route boilerplate
+- Master panel with password protection (Upcoming)
 - Weather control functional
 - Item spawning works
 - World restart with confirmation

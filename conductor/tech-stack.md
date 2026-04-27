@@ -105,6 +105,7 @@ simulacra/
 │   │   ├── ui/
 │   │   │   ├── Header.tsx          # Weather + Master toggle
 │   │   │   ├── GlobalThoughtStream.tsx # AI thought sidebar
+│   │   │   ├── IntroOverlay.tsx    # Welcome experience
 │   │   │   ├── AdminPanel.tsx     # God-mode controls
 │   │   │   └── WorldHUD.tsx       # Top-left status
 │   │   └── index.ts

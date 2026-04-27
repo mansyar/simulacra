@@ -6,7 +6,7 @@
 - **Style**: 16-bit isometric pixel art (Stardew Valley-inspired)
 - **Palette**: Earthy tones - forest green, warm brown, sky blue
 - **Font**: Pixel-style (VT323 or similar)
-- **Animations**: Organic noise-based pacing and breathing on idle, continuous time-synced movement, smooth pan/zoom.
+- **Animations**: Organic noise-based pacing and breathing on idle, continuous time-synced movement, smooth pan/zoom, and "cozy" UI transitions (spring-based scaling and fades).
 
 ### 1.2 Color System
 | Role | Color | Hex |
