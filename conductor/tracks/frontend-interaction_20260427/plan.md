@@ -30,23 +30,23 @@
     - [ ] Fetch agent data from Convex and display name, archetype, bio, core traits
     - [ ] Build and bind live-updating needs bars (hunger, energy, social)
     - [ ] Ensure tests pass
-- [ ] Task: Implement Inventory and Relationships Display
+- [x] Task: Implement Inventory and Relationships Display a637d59
     - [ ] Write failing test for inventory and relationships display
     - [ ] Display agent inventory and current goal/action
     - [ ] Render the relationships list with affinity scores
     - [ ] Ensure tests pass
-- [ ] Task: Implement Event/Memory Stream
+- [x] Task: Implement Event/Memory Stream a637d59
     - [ ] Write failing test for agent-specific event stream
     - [ ] Fetch and display recent events/memories specific to this agent
     - [ ] Ensure tests pass
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Agent Detail Panel' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Agent Detail Panel' (Protocol in workflow.md)
 
 ## Phase 3: Thought Stream Improvements
-- [ ] Task: Implement Thought Stream Filtering
-    - [ ] Write failing test for Thought Stream filters
-    - [ ] Add Clickable Tags UI to filter events by agent name and event type
-    - [ ] Wire up filtering logic to the displayed events
-    - [ ] Ensure tests pass
+- [x] Task: Implement Thought Stream Filtering aa58068
+    - [x] Write failing test for Thought Stream filters
+    - [x] Add Clickable Tags UI to filter events by agent name and event type
+    - [x] Wire up filtering logic to the displayed events
+    - [x] Ensure tests pass
 - [ ] Task: Implement Auto-scroll and Highlighting
     - [ ] Write failing test for auto-scroll and highlight behavior
     - [ ] Auto-scroll the stream to the newest event when new thoughts arrive
