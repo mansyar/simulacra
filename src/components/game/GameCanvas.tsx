@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Application, Container, Ticker } from 'pixi.js'
 import { useQuery } from 'convex/react'
+import { useNavigate } from '@tanstack/react-router'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { IsometricGrid } from './IsometricGrid'
@@ -19,6 +20,7 @@ interface ExtendedApplication extends Application {
 }
 
 export function GameCanvas() {
+  const navigate = useNavigate()
   const containerRef = useRef<HTMLDivElement>(null)
   const appRef = useRef<ExtendedApplication | null>(null)
   const gridRef = useRef<IsometricGrid | null>(null)
@@ -247,6 +249,10 @@ export function GameCanvas() {
       if (!currentAgents.has(agent._id)) {
         const sprite = new AgentSprite(agent)
         sprite.on('select', () => {
+          navigate({
+            to: '/agent/$id',
+            params: { id: agent._id }
+          })
           if (cameraRef.current && appRef.current) {
             cameraRef.current.lookAt(
               sprite.position.x,
