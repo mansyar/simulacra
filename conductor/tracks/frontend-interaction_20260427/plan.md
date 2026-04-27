@@ -13,14 +13,14 @@
     - [ ] Write failing test for camera focusing on a target
     - [ ] Implement smooth panning logic to center the camera on the selected agent
     - [ ] Ensure tests pass
-- [ ] Task: Connect Selection to Routing
+- [x] Task: Connect Selection to Routing 364075c
     - [ ] Write failing test for routing on agent click
     - [ ] On click, navigate to `/agent/$id` using TanStack Router
     - [ ] Ensure tests pass
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Click-to-Select Agent' (Protocol in workflow.md)
 
 ## Phase 2: Agent Detail Panel
-- [ ] Task: Create `/agent/$id` Route
+- [x] Task: Create /agent/$id Route 364075c
     - [ ] Write failing test for new route component
     - [ ] Define the TanStack route for `/agent/$id`
     - [ ] Implement Framer Motion slide-in animation overlaying the canvas
