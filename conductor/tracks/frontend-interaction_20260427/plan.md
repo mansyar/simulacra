@@ -25,7 +25,7 @@
     - [ ] Define the TanStack route for `/agent/$id`
     - [ ] Implement Framer Motion slide-in animation overlaying the canvas
     - [ ] Ensure tests pass
-- [ ] Task: Implement Identity and Needs Display
+- [x] Task: Implement Identity and Needs Display a637d59
     - [ ] Write failing test for identity and needs data binding
     - [ ] Fetch agent data from Convex and display name, archetype, bio, core traits
     - [ ] Build and bind live-updating needs bars (hunger, energy, social)
