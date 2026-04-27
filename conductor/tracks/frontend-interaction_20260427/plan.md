@@ -9,7 +9,7 @@
     - [ ] Write failing test for selected agent highlighting
     - [ ] Render a pulsing ring beneath the selected agent sprite
     - [ ] Ensure tests pass
-- [ ] Task: Implement Camera Pan to Selection
+- [x] Task: Implement Camera Pan to Selection 8db6561
     - [ ] Write failing test for camera focusing on a target
     - [ ] Implement smooth panning logic to center the camera on the selected agent
     - [ ] Ensure tests pass
