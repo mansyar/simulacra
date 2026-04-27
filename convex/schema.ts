@@ -70,6 +70,14 @@ export default defineSchema({
     lastThought: v.optional(v.string()),
     speech: v.optional(v.string()),
     lastSpeechAt: v.optional(v.number()),
+    // Multi-turn conversation state
+    conversationState: v.optional(v.object({
+      partnerId: v.id("agents"),
+      role: v.union(v.literal("initiator"), v.literal("responder")),
+      turnCount: v.number(),
+      lastPartnerSpeech: v.optional(v.string()),
+      startedAt: v.number(),
+    })),
   })
     .index("by_active", ["isActive"])
     .index("by_position", ["gridX", "gridY"])

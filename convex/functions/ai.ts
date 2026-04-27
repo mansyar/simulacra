@@ -152,6 +152,67 @@ export const decision = action({
 });
 
 /**
+ * Action: Compute recency-weighted affinity
+ */
+export const computeRecencyWeightedAffinity = action({
+  args: {
+    lastInteractionAt: v.number(),
+    currentTime: v.number(),
+    affinity: v.number(),
+  },
+  handler: async (_ctx, args): Promise<number> => {
+    // Calculate days since last interaction
+    const daysSince = (args.currentTime - args.lastInteractionAt) / (1000 * 60 * 60 * 24);
+    
+    // Decay factor: weight = exp(-daysSince * 0.1)
+    const weight = Math.exp(-daysSince * 0.1);
+    
+    // Weighted affinity
+    const weightedAffinity = args.affinity * weight;
+    
+    return weightedAffinity;
+  },
+});
+
+/**
+ * Action: Build relationship context string for an agent
+ */
+export const buildRelationshipContext = action({
+  args: {
+    agentId: v.id("agents"),
+  },
+  handler: async (ctx, args): Promise<string> => {
+    // Get all relationships for this agent
+    const relationships = await ctx.runQuery(api.functions.agents.getRelationships, {
+      agentId: args.agentId,
+    });
+
+    if (relationships.length === 0) {
+      return "You have no established relationships with other agents.\n";
+    }
+
+    const currentTime = Date.now();
+    let context = "Your Relationships:\n";
+
+    for (const rel of relationships) {
+      // Compute recency-weighted affinity
+      const weightedAffinity = await ctx.runAction(api.functions.ai.computeRecencyWeightedAffinity, {
+        lastInteractionAt: rel.lastInteractionAt,
+        currentTime,
+        affinity: rel.affinity,
+      });
+
+      const affinitySign = weightedAffinity > 0 ? "+" : "";
+      const sentiment = weightedAffinity > 10 ? "like" : weightedAffinity > 0 ? "are friendly with" : weightedAffinity < -10 ? "dislike" : "are neutral toward";
+      
+      context += `- You ${sentiment} ${rel.otherAgentName} (affinity: ${affinitySign}${weightedAffinity.toFixed(1)})\n`;
+    }
+
+    return context;
+  },
+});
+
+/**
  * Internal Query: Build prompt context for an agent
  */
 export const buildAgentContext = internalQuery({
@@ -184,7 +245,7 @@ export const buildAgentContext = internalQuery({
 });
 
 /**
- * Action: Build full context with identity and memories
+ * Action: Build full context with identity, relationships, and memories
  */
 export const buildFullContext = action({
   args: {
@@ -196,12 +257,20 @@ export const buildFullContext = action({
       agentId: args.agentId,
     });
 
+    const relationshipContext = await ctx.runAction(api.functions.ai.buildRelationshipContext, {
+      agentId: args.agentId,
+    });
+
     const memories = await ctx.runAction(api.functions.memory.retrieveMemoriesAction, {
       agentId: args.agentId,
       query: args.query,
     });
 
     let fullContext: string = agentContext;
+    
+    // Append relationship context
+    fullContext += relationshipContext;
+
     if (memories && (memories as any[]).length > 0) {
       fullContext += "\nRelevant Memories:\n";
       (memories as any[]).forEach((m: any) => {

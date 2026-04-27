@@ -14,6 +14,13 @@ export interface AgentData {
   targetY?: number
   speech?: string
   lastSpeechAt?: number
+  conversationState?: {
+    partnerId: Id<'agents'>
+    role: 'initiator' | 'responder'
+    turnCount: number
+    lastPartnerSpeech?: string
+    startedAt: number
+  }
 }
 
 const ACTION_EMOJIS: Record<string, string> = {
@@ -45,6 +52,8 @@ export class AgentSprite extends Container {
   private speechContainer: Container
   private speechBg: Graphics
   private speechLabel: Text
+  private chatIconContainer: Container
+  private chatIcon: Text
   private targetGridX: number
   private targetGridY: number
   private estimatedGridX: number
@@ -131,6 +140,20 @@ export class AgentSprite extends Container {
     this.speechLabel = new Text({ text: '', style: speechStyle })
     this.speechLabel.anchor.set(0.5, 0.5)
     this.speechContainer.addChild(this.speechLabel)
+
+    // Chat icon for active conversations
+    this.chatIconContainer = new Container()
+    this.chatIconContainer.position.set(0, -24)
+    this.chatIconContainer.visible = false
+    this.addChild(this.chatIconContainer)
+
+    const chatIconStyle = new TextStyle({
+      fontSize: 12,
+    })
+
+    this.chatIcon = new Text({ text: '💬', style: chatIconStyle })
+    this.chatIcon.anchor.set(0.5, 0.5)
+    this.chatIconContainer.addChild(this.chatIcon)
 
     this.draw()
     this.updatePosition()
@@ -276,6 +299,16 @@ export class AgentSprite extends Container {
       this.speechBg.fill({ color: 0x0f172a, alpha: 0.9 })
     } else {
       this.speechContainer.visible = false
+    }
+
+    // Chat icon visibility for active conversations
+    const isInConversation = this.agent.conversationState !== undefined;
+    this.chatIconContainer.visible = isInConversation;
+    
+    // Pulse animation for chat icon
+    if (isInConversation) {
+      const pulse = (Math.sin(this.time * 6) + 1) / 2;
+      this.chatIcon.scale.set(0.6 + pulse * 0.1);
     }
   }
 

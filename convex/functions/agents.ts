@@ -418,6 +418,58 @@ export const updateIdentity = internalMutation({
 });
 
 /**
+ * Internal Mutation: Set conversation state for an agent
+ */
+export const setConversationState = internalMutation({
+  args: {
+    agentId: v.id("agents"),
+    partnerId: v.id("agents"),
+    role: v.union(v.literal("initiator"), v.literal("responder")),
+    turnCount: v.number(),
+    lastPartnerSpeech: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.agentId, {
+      conversationState: {
+        partnerId: args.partnerId,
+        role: args.role,
+        turnCount: args.turnCount,
+        lastPartnerSpeech: args.lastPartnerSpeech,
+        startedAt: Date.now(),
+      },
+    });
+  },
+});
+
+/**
+ * Internal Mutation: Clear conversation state for an agent
+ */
+export const clearConversationState = internalMutation({
+  args: {
+    agentId: v.id("agents"),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.agentId, {
+      conversationState: undefined,
+    });
+  },
+});
+
+/**
+ * Query: Get all agents with active conversation states
+ */
+export const getActiveConversations = query({
+  args: {},
+  handler: async (ctx) => {
+    const agents = await ctx.db
+      .query("agents")
+      .filter((q) => q.neq(q.field("conversationState"), undefined))
+      .collect();
+    return agents;
+  },
+});
+
+/**
  * Mutation: Migrate deprecated archetypes to supported ones
  */
 export const migrateArchetypes = mutation({

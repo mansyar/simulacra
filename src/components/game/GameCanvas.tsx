@@ -10,6 +10,7 @@ import { IsometricGrid } from './IsometricGrid'
 import { CameraController } from './Camera'
 import { AgentSprite } from './AgentSprite'
 import { POISprite } from './POISprite'
+import { ConversationLines } from './ConversationLines'
 
 interface ExtendedApplication extends Application {
   _handleMouseMove?: (e: MouseEvent) => void
@@ -31,6 +32,7 @@ export function GameCanvas() {
   const poisRef = useRef<Map<Id<'pois'>, POISprite>>(new Map())
   const agentContainerRef = useRef<Container | null>(null)
   const poiContainerRef = useRef<Container | null>(null)
+  const conversationLinesRef = useRef<ConversationLines | null>(null)
   const [isReady, setIsReady] = useState(false)
 
   const agentsData = useQuery(api.functions.agents.getAll)
@@ -89,6 +91,11 @@ export function GameCanvas() {
       agentContainer.zIndex = 11
       app.stage.addChild(agentContainer)
       agentContainerRef.current = agentContainer
+
+      // Add conversation lines container
+      const conversationLines = new ConversationLines()
+      conversationLinesRef.current = conversationLines
+      app.stage.addChild(conversationLines.getContainer())
 
       const camera = new CameraController(app.stage)
       cameraRef.current = camera
@@ -158,6 +165,11 @@ export function GameCanvas() {
         agentsRef.current.forEach(agent => {
           agent.tick(ticker.deltaTime)
         })
+
+        // Update conversation lines
+        if (conversationLinesRef.current) {
+          conversationLinesRef.current.update(ticker.deltaTime)
+        }
         
         // Spec compliance: Viewport Culling
         if (gridRef.current) {
@@ -209,6 +221,10 @@ export function GameCanvas() {
       cameraRef.current = null
       agentsRef.current.clear()
       poisRef.current.clear()
+      if (conversationLinesRef.current) {
+        conversationLinesRef.current.clear()
+      }
+      conversationLinesRef.current = null
       setIsReady(false)
     }
   }, [])
@@ -271,6 +287,44 @@ export function GameCanvas() {
         sprite?.updateAgentData(agent)
       }
     })
+
+    // --- Sync Conversation Lines ---
+    if (conversationLinesRef.current) {
+      const conversationLines = conversationLinesRef.current;
+      
+      // Get all agents with active conversation states
+      const agentsInConversation = agentsData.filter(a => a.conversationState);
+      
+      // Clear existing conversations
+      conversationLines.clear();
+      
+      // Add conversation lines for each pair
+      for (const agent of agentsInConversation) {
+        if (agent.conversationState) {
+          const partnerId = agent.conversationState.partnerId;
+          const partner = agentsData.find(a => a._id === partnerId);
+          
+          if (partner) {
+            conversationLines.addConversation(
+              {
+                id: agent._id,
+                name: agent.name,
+                gridX: agent.gridX,
+                gridY: agent.gridY,
+                archetype: agent.archetype as 'builder' | 'socialite' | 'philosopher' | 'explorer' | 'nurturer',
+              },
+              {
+                id: partner._id,
+                name: partner.name,
+                gridX: partner.gridX,
+                gridY: partner.gridY,
+                archetype: partner.archetype as 'builder' | 'socialite' | 'philosopher' | 'explorer' | 'nurturer',
+              }
+            );
+          }
+        }
+      }
+    }
   }, [agentsData, poisData, isReady])
 
   // Sync Selection State

@@ -103,7 +103,6 @@ export const checkSleepMode = action({
   args: {},
   handler: async (ctx): Promise<{ sleeping: boolean; reason: string; timeSinceLastTick?: number }> => {
     const enableSleepMode = process.env.ENABLE_SLEEP_MODE === "true";
-    
     if (!enableSleepMode) {
       return { sleeping: false, reason: "Sleep mode disabled" };
     }
@@ -115,7 +114,6 @@ export const checkSleepMode = action({
 
     const now = Date.now();
     const roomId = process.env.PRESENCE_ROOM_ID || "main-app";
-    
     // Check real-time presence
     const activeUsers = await ctx.runQuery(api.presence.list, { roomToken: roomId });
     const userCount = activeUsers.length;
@@ -124,39 +122,23 @@ export const checkSleepMode = action({
 
     if (userCount > 0) {
       // Users are present, update activity timestamp
-      await ctx.runMutation(api.functions.world.updateState, {
-        lastUserActivityAt: now,
-      });
-      return { 
-        sleeping: false, 
-        reason: `${userCount} active users present` 
-      };
+      await ctx.runMutation(api.functions.world.updateState, { lastUserActivityAt: now });
+      return { sleeping: false, reason: `${userCount} active users present` };
     }
 
     // No users present, check grace period
     const lastActivity = state.lastUserActivityAt || state.lastTickAt || 0;
     const timeSinceLastActivity = now - lastActivity;
     const gracePeriod = parseInt(process.env.SLEEP_MODE_GRACE_PERIOD || "30000");
-
     if (timeSinceLastActivity < gracePeriod) {
-      return { 
-        sleeping: false, 
-        reason: `No users, but within grace period (${Math.round((gracePeriod - timeSinceLastActivity) / 1000)}s left)` 
-      };
+      return { sleeping: false, reason: `No users, but within grace period (${Math.round((gracePeriod - timeSinceLastActivity) / 1000)}s left)` };
     }
-
     // Beyond grace period, stop immediately
-    return { 
-      sleeping: true, 
-      reason: `Inactive for ${Math.round(timeSinceLastActivity / 1000)}s (grace period: ${gracePeriod/1000}s)`,
-      timeSinceLastTick: now - (state.lastTickAt || now)
-    };
+    return { sleeping: true, reason: `Inactive for ${Math.round(timeSinceLastActivity / 1000)}s (grace period: ${gracePeriod/1000}s)`, timeSinceLastTick: now - (state.lastTickAt || now) };
   },
 });
 
-/**
- * Normalizes an action string from the AI to a valid AgentAction
- */
+// Normalizes an action string from the AI to a valid AgentAction
 function normalizeAction(action: string): "idle" | "walking" | "eating" | "sleeping" | "talking" | "working" | "exploring" {
   const validActions = ["idle", "walking", "eating", "sleeping", "talking", "working", "exploring"];
   if (validActions.includes(action)) {
@@ -174,27 +156,23 @@ function normalizeAction(action: string): "idle" | "walking" | "eating" | "sleep
   return "idle";
 }
 
-/**
- * Internal Mutation: Advance simulated time and update weather
- */
+// Internal Mutation: Advance simulated time and update weather
 export const advanceWorldState = internalMutation({
   args: {},
   handler: async (ctx) => {
     const state = await ctx.db.query("world_state").first();
     if (!state) return;
 
-    // 1. Advance Time (Assume 1 tick = 30 simulated minutes)
-    // 30 mins * 48 ticks = 1440 mins (24 hours)
+    // 1. Advance Time (Assume 1 tick = 30 simulated minutes, 30 mins * 48 ticks = 1440 mins (24 hours))
     let newTime = (state.timeOfDay || 0) + 30;
     let newDayCount = state.dayCount || 1;
-
     if (newTime >= 1440) {
       newTime = newTime % 1440;
       newDayCount += 1;
     }
 
     // 2. Stochastic Weather (80% chance to stay same)
-    const weatherOptions: ("sunny" | "cloudy" | "rainy" | "stormy")[] = ["sunny", "cloudy", "rainy", "stormy"];
+    const weatherOptions = ["sunny", "cloudy", "rainy", "stormy"] as const;
     let newWeather = state.weather;
     
     if (Math.random() > 0.8) {
@@ -219,271 +197,166 @@ export const advanceWorldState = internalMutation({
     });
   },
 });
+// Internal function to handle conversation state updates
+async function handleConversationState(ctx: any, agent: any, normalizedAction: string, targetAgentId: string | undefined, speech: string | undefined): Promise<void> {
+  const wasInConversation = agent.conversationState !== undefined;
+  const isTalking = normalizedAction === "talking";
+  
+  if (isTalking && targetAgentId) {
+    const partner = await ctx.db.get(targetAgentId);
+    if (partner) {
+      const newTurnCount = wasInConversation ? (agent.conversationState?.turnCount || 0) + 1 : 1;
+      await ctx.runMutation(internal.functions.agents.setConversationState, {
+        agentId: agent._id, partnerId: targetAgentId,
+        role: wasInConversation ? agent.conversationState!.role : "initiator",
+        turnCount: newTurnCount, lastPartnerSpeech: speech,
+      });
+    }
+  } else if (wasInConversation) {
+    await ctx.runMutation(internal.functions.agents.clearConversationState, { agentId: agent._id });
+  }
+}
 
-/**
- * Action: Process a world tick
- */
+// Helper function to process a single agent
+async function processAgent(ctx: any, agent: any, agents: any[], worldState: any, interactionRadius: number, speedMultiplier: number): Promise<void> {
+  // Safety Layer: Check for critical needs
+  if (agent.hunger > 90 || agent.energy < 10) {
+    const survivalAction = agent.hunger > 90 ? "eating" : "sleeping";
+    await ctx.runMutation(internal.functions.agents.updateAction, { agentId: agent._id, action: survivalAction });
+    await ctx.runMutation(api.functions.memory.addEvent, {
+      agentId: agent._id,
+      type: survivalAction === "eating" ? "interaction" : "movement",
+      description: `My ${survivalAction === "eating" ? "hunger" : "exhaustion"} is critical. I must stop to ${survivalAction}.`,
+      gridX: agent.gridX, gridY: agent.gridY,
+    });
+    return;
+  }
+  if (agent.currentAction === "listening") return;
+
+  await ctx.runMutation(internal.functions.agents.updateNeeds, { agentId: agent._id });
+
+  // Reflection Logic
+  const currentTicks = worldState?.totalTicks || 0;
+  const lastReflected = agent.lastReflectedTick || 0;
+  const jitter = Math.floor(Math.random() * 40) - 20;
+  if (currentTicks - lastReflected > (480 + jitter)) {
+    void ctx.runAction(api.functions.ai.reflect, { agentId: agent._id });
+    await ctx.runMutation(internal.functions.agents.updateIdentity, { agentId: agent._id, newTraits: [], lastReflectedTick: currentTicks });
+  }
+
+  // Movement Resolution
+  if (agent.targetX !== undefined && agent.targetY !== undefined) {
+    const result = await ctx.runMutation(internal.functions.agents.resolveMovement, { agentId: agent._id, speedMultiplier });
+    if (result?.arrived) {
+      await ctx.runMutation(api.functions.memory.addEvent, {
+        agentId: agent._id, type: "movement",
+        description: `Arrived at destination (${Math.round(result.newX)}, ${Math.round(result.newY)})`,
+        gridX: result.newX, gridY: result.newY,
+      });
+    }
+  }
+  await ctx.runMutation(internal.functions.agents.recordPassivePerception, { agentId: agent._id });
+
+  const nearbyAgents = agents.filter((a: any) => a._id !== agent._id && Math.sqrt((a.gridX - agent.gridX)**2 + (a.gridY - agent.gridY)**2) < interactionRadius).map((a: any) => a.name);
+  const validArchetypes = ["builder", "socialite", "philosopher", "explorer", "nurturer"];
+  const aiArchetype = validArchetypes.includes(agent.archetype) ? agent.archetype : "builder";
+
+  // Conversation context
+  let conversationContext = "";
+  if (agent.conversationState) {
+    const convState = agent.conversationState;
+    const partner = agents.find((a: any) => a._id === convState.partnerId);
+    const partnerName = partner?.name || "Unknown";
+    conversationContext = `\n\nACTIVE CONVERSATION:\nYou are in a conversation with ${partnerName}.\nYour role: ${convState.role}\nTurn count: ${convState.turnCount}/5\n`;
+    if (convState.lastPartnerSpeech) conversationContext += `What ${partnerName} just said: "${convState.lastPartnerSpeech}"\n`;
+    conversationContext += `If you want to continue the conversation, respond to what ${partnerName} said. To end it, change your action to something other than 'talking'.\n`;
+  }
+
+  const nearbyAgentNames = nearbyAgents.length > 0 ? nearbyAgents.join(", ") : "no one";
+  const fullContext = await ctx.runAction(api.functions.ai.buildFullContext, {
+    agentId: agent._id, query: `What should I do next given my goal ${agent.currentGoal}, current state, and interactions with ${nearbyAgentNames}?`,
+  });
+
+  const decision = await ctx.runAction(api.functions.ai.decision, {
+    agentState: { name: agent.name, hunger: agent.hunger, energy: agent.energy, social: agent.social, model: agent.model },
+    nearbyAgents, archetype: aiArchetype, contextOverride: fullContext + conversationContext,
+  });
+
+  const normalizedAction = normalizeAction(decision.action);
+  let targetAgentId: Id<"agents"> | undefined;
+  if (normalizedAction === "talking") {
+    const targetAgent = agents.find((a: any) => a.name === decision.target);
+    if (targetAgent && targetAgent._id !== agent._id) {
+      targetAgentId = targetAgent._id;
+      await ctx.runMutation(internal.functions.agents.updateAction, { agentId: targetAgentId, action: "listening", interactionPartnerId: agent._id });
+      await ctx.runMutation(internal.functions.agents.updateRelationship, { agentAId: agent._id, agentBId: targetAgentId, delta: 2 });
+    }
+  }
+
+  let targetX: number | undefined, targetY: number | undefined;
+  if (decision.target && decision.target !== "none" && normalizedAction !== "talking") {
+    const coords = decision.target.split(",");
+    if (coords.length === 2) {
+      const x = parseFloat(coords[0]), y = parseFloat(coords[1]);
+      if (!isNaN(x) && !isNaN(y)) { targetX = x; targetY = y; }
+    }
+    if (targetX === undefined) {
+      const targetAgent = agents.find((a: any) => a.name === decision.target);
+      if (targetAgent) { targetX = targetAgent.gridX; targetY = targetAgent.gridY; }
+    }
+  }
+
+  await handleConversationState(ctx, agent, normalizedAction, targetAgentId, decision.speech);
+  await ctx.runMutation(internal.functions.agents.updateAction, {
+    agentId: agent._id, action: normalizedAction, targetX, targetY, interactionPartnerId: targetAgentId,
+    lastThought: decision.thought, speech: decision.speech, lastSpeechAt: decision.speech ? Date.now() : undefined,
+  });
+
+  if (normalizedAction === "exploring" && targetX === undefined) {
+    const randomX = Math.floor(Math.random() * 64), randomY = Math.floor(Math.random() * 64);
+    await ctx.runMutation(internal.functions.agents.updateAction, { agentId: agent._id, action: "exploring", targetX: randomX, targetY: randomY });
+  }
+
+  let description = `Thought: ${decision.thought} | Action: ${normalizedAction}`;
+  if (decision.speech) description += ` | Said: "${decision.speech}"`;
+  await ctx.runMutation(api.functions.memory.addEvent, { agentId: agent._id, type: decision.speech ? "conversation" : "movement", description, gridX: agent.gridX, gridY: agent.gridY });
+}
+
+// Action: Process a world tick
 export const tick = action({
-  args: {
-    skipSleep: v.optional(v.boolean()),
-  },
+  args: { skipSleep: v.optional(v.boolean()) },
   handler: async (ctx, args): Promise<{ success: boolean; skipped?: boolean; reason?: string; agentCount?: number }> => {
     console.log("[WORLD] Starting tick processing...");
-    // Check sleep mode
     const enableSleepMode = process.env.ENABLE_SLEEP_MODE === "true";
     const skipSleep = args.skipSleep ?? false;
     
     if (enableSleepMode && !skipSleep) {
       const sleepStatus = await ctx.runAction(api.functions.world.checkSleepMode);
-      
       if (sleepStatus.sleeping) {
         console.log(`[WORLD] Skipping tick - sleep mode active: ${sleepStatus.reason}`);
-        return { 
-          success: true, 
-          skipped: true, 
-          reason: sleepStatus.reason 
-        };
+        return { success: true, skipped: true, reason: sleepStatus.reason };
       }
     }
 
-    // 1. Get all active agents
     const agents = await ctx.runQuery(api.functions.agents.getAll);
     console.log(`[WORLD] Processing ${agents.length} active agents`);
-    
-    // 2. Process each agent
     const worldState = await ctx.runQuery(api.functions.world.getState);
     const config = await ctx.runQuery(api.functions.config.get);
     const interactionRadius = config?.interactionRadius ?? 5;
-
     const weather = worldState?.weather || "sunny";
-    const weatherMultipliers: Record<string, number> = {
-      sunny: 1.0,
-      cloudy: 1.0,
-      rainy: 0.8,
-      stormy: 0.5,
-    };
+    const weatherMultipliers: Record<string, number> = { sunny: 1.0, cloudy: 1.0, rainy: 0.8, stormy: 0.5 };
     const speedMultiplier = weatherMultipliers[weather] || 1.0;
-
-    const BATCH_SIZE = 3;
-    const BATCH_DELAY_MS = 1000;
+    const BATCH_SIZE = 3, BATCH_DELAY_MS = 1000;
 
     for (let i = 0; i < agents.length; i += BATCH_SIZE) {
       const batch = agents.slice(i, i + BATCH_SIZE);
       console.log(`[WORLD] Processing batch ${i / BATCH_SIZE + 1} of ${Math.ceil(agents.length / BATCH_SIZE)}`);
-      
-      await Promise.all(batch.map(async (agent: any) => {
-        // 2.1 Safety Layer: Check for critical needs (Survival overrides)
-        if (agent.hunger > 90 || agent.energy < 10) {
-          const survivalAction = agent.hunger > 90 ? "eating" : "sleeping";
-          console.log(`[WORLD] Agent ${agent.name} in survival mode: ${survivalAction}`);
-          await ctx.runMutation(internal.functions.agents.updateAction, {
-            agentId: agent._id,
-            action: survivalAction,
-          });
-
-          // Log survival event to the thought stream
-          await ctx.runMutation(api.functions.memory.addEvent, {
-            agentId: agent._id,
-            type: survivalAction === "eating" ? "interaction" : "movement",
-            description: `My ${survivalAction === "eating" ? "hunger" : "exhaustion"} is critical. I must stop to ${survivalAction}.`,
-            gridX: agent.gridX,
-            gridY: agent.gridY,
-          });
-          return;
-        }
-
-        // 2.2 Social Handshaking: Skip if listening (someone is talking to us)
-        if (agent.currentAction === "listening") {
-          return;
-        }
-
-        // 2.3 Update needs based on current action
-        await ctx.runMutation(internal.functions.agents.updateNeeds, {
-          agentId: agent._id,
-        });
-
-        // 2.4 Reflection Logic (every ~24 simulated hours / 480 ticks)
-        const currentTicks = worldState?.totalTicks || 0;
-        const lastReflected = agent.lastReflectedTick || 0;
-        // Add random jitter between -20 and +20 ticks to avoid batch processing spikes
-        const jitter = Math.floor(Math.random() * 40) - 20;
-        
-        if (currentTicks - lastReflected > (480 + jitter)) {
-          console.log(`[WORLD] Triggering reflection for agent ${agent.name}`);
-          // Trigger async reflection (non-blocking)
-          void ctx.runAction(api.functions.ai.reflect, {
-            agentId: agent._id,
-          });
-          
-          // Update last reflected tick immediately to avoid duplicate triggers
-          await ctx.runMutation(internal.functions.agents.updateIdentity, {
-            agentId: agent._id,
-            newTraits: [], 
-            lastReflectedTick: currentTicks,
-          });
-        }
-
-        // 2.5 Movement Resolution
-        if (agent.targetX !== undefined && agent.targetY !== undefined) {
-          const result = await ctx.runMutation(internal.functions.agents.resolveMovement, {
-            agentId: agent._id,
-            speedMultiplier,
-          });
-
-          if (result?.arrived) {
-            console.log(`[WORLD] Agent ${agent.name} arrived at target`);
-            await ctx.runMutation(api.functions.memory.addEvent, {
-              agentId: agent._id,
-              type: "movement",
-              description: `Arrived at destination (${Math.round(result.newX)}, ${Math.round(result.newY)})`,
-              gridX: result.newX,
-              gridY: result.newY,
-            });
-          }
-        }
-
-        // 2.5 Passive Perception: Record nearby sightings
-        await ctx.runMutation(internal.functions.agents.recordPassivePerception, {
-          agentId: agent._id,
-        });
-
-        // 2.6 Get nearby agents for decision making
-        const nearbyAgents = agents
-          .filter((a: any) => a._id !== agent._id)
-          .filter((a: any) => {
-            const dx = a.gridX - agent.gridX;
-            const dy = a.gridY - agent.gridY;
-            return Math.sqrt(dx*dx + dy*dy) < interactionRadius; // Interaction radius
-          })
-          .map((a: any) => a.name);
-
-        // Archetype mapping
-        let aiArchetype: "builder" | "socialite" | "philosopher" | "explorer" | "nurturer" = "builder";
-        const validArchetypes = ["builder", "socialite", "philosopher", "explorer", "nurturer"];
-        if (validArchetypes.includes(agent.archetype)) {
-          aiArchetype = agent.archetype as any;
-        }
-
-        // Call AI for decision
-        console.log(`[WORLD] Requesting decision for agent ${agent.name}...`);
-        // FETCH FULL CONTEXT (Identity + RAG Memories)
-        const fullContext = await ctx.runAction(api.functions.ai.buildFullContext, {
-          agentId: agent._id,
-          query: `What should I do next given my goal ${agent.currentGoal} and current state?`,
-        });
-
-        const decision = await ctx.runAction(api.functions.ai.decision, {
-          agentState: {
-            name: agent.name,
-            hunger: agent.hunger, 
-            energy: agent.energy,
-            social: agent.social,
-            model: agent.model,
-          },
-          nearbyAgents,
-          archetype: aiArchetype,
-          contextOverride: fullContext, // New field to support RAG
-        });
-
-        console.log(`[WORLD] Agent ${agent.name} decided: ${decision.action}`);
-        // Normalize action to ensure it matches schema literals
-        const normalizedAction = normalizeAction(decision.action);
-
-        // 2.7 Social Handshaking: Handle Talking/Listening states
-        let targetAgentId: Id<"agents"> | undefined;
-        if (normalizedAction === "talking") {
-          const targetAgent = agents.find((a: any) => a.name === decision.target);
-          if (targetAgent && targetAgent._id !== agent._id) {
-            targetAgentId = targetAgent._id;
-            
-            // Set partner to listening
-            await ctx.runMutation(internal.functions.agents.updateAction, {
-              agentId: targetAgentId,
-              action: "listening",
-              interactionPartnerId: agent._id,
-            });
-
-            // UPDATE RELATIONSHIP AFFINITY
-            await ctx.runMutation(internal.functions.agents.updateRelationship, {
-              agentAId: agent._id,
-              agentBId: targetAgentId,
-              delta: 2, // Small positive boost for talking
-            });
-          }
-        }
-
-        // Update action
-        let targetX: number | undefined;
-        let targetY: number | undefined;
-        if (decision.target && decision.target !== "none" && normalizedAction !== "talking") {
-          const coords = decision.target.split(",");
-          if (coords.length === 2) {
-            const x = parseFloat(coords[0]);
-            const y = parseFloat(coords[1]);
-            if (!isNaN(x) && !isNaN(y)) {
-              targetX = x;
-              targetY = y;
-            }
-          }
-          if (targetX === undefined) {
-            const targetAgent = agents.find((a: any) => a.name === decision.target);
-            if (targetAgent) {
-              targetX = targetAgent.gridX;
-              targetY = targetAgent.gridY;
-            }
-          }
-        }
-
-        await ctx.runMutation(internal.functions.agents.updateAction, {
-          agentId: agent._id,
-          action: normalizedAction,
-          targetX,
-          targetY,
-          interactionPartnerId: targetAgentId,
-          lastThought: decision.thought,
-          speech: decision.speech,
-          lastSpeechAt: decision.speech ? Date.now() : undefined,
-        });
-
-        // 2.8 Autonomous Exploration: If exploring but no target, pick a random spot
-        if (normalizedAction === "exploring" && targetX === undefined) {
-          const randomX = Math.floor(Math.random() * 64);
-          const randomY = Math.floor(Math.random() * 64);
-          console.log(`[WORLD] Agent ${agent.name} is wandering to (${randomX}, ${randomY})`);
-          await ctx.runMutation(internal.functions.agents.updateAction, {
-            agentId: agent._id,
-            action: "exploring",
-            targetX: randomX,
-            targetY: randomY,
-          });
-        }
-
-        // Add event to sensory buffer with thought and speech
-        let description = `Thought: ${decision.thought} | Action: ${normalizedAction}`;
-        if (decision.speech) {
-          description += ` | Said: "${decision.speech}"`;
-        }
-        
-        console.log(`[WORLD] Logging event for agent ${agent.name}`);
-        await ctx.runMutation(api.functions.memory.addEvent, {
-          agentId: agent._id,
-          type: decision.speech ? "conversation" : "movement",
-          description,
-          gridX: agent.gridX,
-          gridY: agent.gridY,
-        });
-      }));
-
-      // Delay between batches to respect RPM
-      if (i + BATCH_SIZE < agents.length) {
-        await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
-      }
+      await Promise.all(batch.map(async (agent: any) => processAgent(ctx, agent, agents, worldState, interactionRadius, speedMultiplier)));
+      if (i + BATCH_SIZE < agents.length) await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
     }
 
-    // 3. Advance world state (time, weather, etc.)
     console.log("[WORLD] Advancing world state...");
     await ctx.runMutation(internal.functions.world.advanceWorldState);
-
     console.log("[WORLD] Tick processing complete.");
     return { success: true, skipped: false, agentCount: agents.length };
   },
