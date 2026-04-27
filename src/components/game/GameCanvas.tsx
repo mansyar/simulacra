@@ -21,7 +21,8 @@ interface ExtendedApplication extends Application {
 
 export function GameCanvas() {
   const navigate = useNavigate()
-  const { id: selectedAgentId } = useParams({ from: '/agent/$id', shouldThrow: false }) as { id?: string }
+  const routeParams = useParams({ from: '/agent/$id', shouldThrow: false })
+  const selectedAgentId = routeParams?.id
   const containerRef = useRef<HTMLDivElement>(null)
   const appRef = useRef<ExtendedApplication | null>(null)
   const gridRef = useRef<IsometricGrid | null>(null)

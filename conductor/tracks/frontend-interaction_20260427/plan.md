@@ -52,4 +52,4 @@
     - [x] Auto-scroll the stream to the newest event when new thoughts arrive
     - [x] Visually highlight events associated with the currently selected agent
     - [x] Ensure tests pass
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Thought Stream Improvements' (Protocol in workflow.md)
+- [~] Task: Conductor - User Manual Verification 'Phase 3: Thought Stream Improvements' (Protocol in workflow.md)
