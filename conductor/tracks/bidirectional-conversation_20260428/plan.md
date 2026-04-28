@@ -3,23 +3,23 @@
 **Track ID:** `bidirectional-conversation_20260428`
 **Phase:** Phase 9 — Track A
 
-## Phase 1: Schema & Mutation Refactoring
+## Phase 1: Schema & Mutation Refactoring [checkpoint: de5efa7]
 
 **Goal:** Remove `lastPartnerSpeech` field, add `myLastSpeech` field, update all mutations.
 
-- [ ] Task: Write failing tests for new field schema
-    - [ ] Write test: `myLastSpeech` field exists on `setConversationState` and persists in conversationState
-    - [ ] Write test: `lastPartnerSpeech` no longer exists in conversationState
-    - [ ] Run tests and confirm they fail (Red phase)
-- [ ] Task: Update schema.ts
-    - [ ] Remove `lastPartnerSpeech: v.optional(v.string())` from `conversationState` object
-    - [ ] Add `myLastSpeech: v.optional(v.string())` to `conversationState` object
-- [ ] Task: Update mutations in agents.ts
-    - [ ] Update `setConversationState` mutation args: replace `lastPartnerSpeech` with `myLastSpeech`
-    - [ ] Update `setConversationState` handler to write `myLastSpeech` and preserve existing `startedAt` (don't overwrite)
-- [ ] Task: Make schema tests pass (Green phase)
-    - [ ] Run tests and confirm they pass
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Schema & Mutation Refactoring' (Protocol in workflow.md)
+- [x] Task: Write failing tests for new field schema
+    - [x] Write test: `myLastSpeech` field exists on `setConversationState` and persists in conversationState
+    - [x] Write test: `lastPartnerSpeech` no longer exists in conversationState
+    - [x] Run tests and confirm they fail (Red phase)
+- [x] Task: Update schema.ts
+    - [x] Remove `lastPartnerSpeech: v.optional(v.string())` from `conversationState` object
+    - [x] Add `myLastSpeech: v.optional(v.string())` to `conversationState` object
+- [x] Task: Update mutations in agents.ts
+    - [x] Update `setConversationState` mutation args: replace `lastPartnerSpeech` with `myLastSpeech`
+    - [x] Update `setConversationState` handler to write `myLastSpeech` and preserve existing `startedAt` (don't overwrite)
+- [x] Task: Make schema tests pass (Green phase)
+    - [x] Run tests and confirm they pass
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Schema & Mutation Refactoring' (Protocol in workflow.md)
 
 ## Phase 2: Backend Logic Refactoring
 
