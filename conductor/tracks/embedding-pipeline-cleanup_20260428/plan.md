@@ -7,26 +7,27 @@
 
 ## Phase: Embedding Pipeline & Configuration Cleanup
 
-### Task 1: Batch Embedding Action (R1)
+### Task 1: Batch Embedding Action (R1) [32d5fd7]
 
-- [ ] **Sub-task 1.1: Write failing test for `batchEmbed`**
-    - [ ] Create test in `convex/embedding_batch.test.ts` following `convex-test` pattern
-    - [ ] Write test verifying `batchEmbed([text1, text2])` returns embeddings in the same order as input
-    - [ ] Write test verifying `batchEmbed` with single text returns same result as `embed` (mock API equivalence)
-    - [ ] Run tests and confirm they fail (no `batchEmbed` action exists yet)
-- [ ] **Sub-task 1.2: Implement `batchEmbed` action in `ai_helpers.ts`**
-    - [ ] Create `batchEmbed` action with args: `{ texts: v.array(v.string()) }`
-    - [ ] Send API call with `{ model, input: args.texts }` (OpenAI-compatible batch endpoint)
-    - [ ] Handle Google Gemini variant (separate calls internally if batch not supported)
-    - [ ] Preserve 429 backoff for embedding calls (same as current `embed`)
-    - [ ] Return `number[][]` with one embedding per input text in order
-- [ ] **Sub-task 1.3: Integrate `batchEmbed` into memory retrieval**
-    - [ ] Modify `retrieveMemoriesAction` to accept optional `embedding?: number[]` param
-    - [ ] If `embedding` is provided, skip the individual `embed` call entirely
-    - [ ] Ensure backward compatibility: existing callers without `embedding` still work
-- [ ] **Sub-task 1.4: Verify all tests pass**
-    - [ ] Run `pnpm test` and confirm embedding batch tests pass
-    - [ ] Run existing memory/rag tests to confirm backward compatibility
+- [x] **Sub-task 1.1: Write failing test for `batchEmbed`**
+    - [x] Create test in `convex/embedding_batch.test.ts` following `convex-test` pattern
+    - [x] Write test verifying `batchEmbed([text1, text2])` returns embeddings in the same order as input
+    - [x] Write test verifying `batchEmbed` with single text returns same result as `embed` (mock API equivalence)
+    - [x] Run tests and confirm they fail (no `batchEmbed` action exists yet)
+    - [x] Implemented `batchEmbed` action — all 4 tests pass
+- [x] **Sub-task 1.2: Implement `batchEmbed` action in `ai_helpers.ts`**
+    - [x] Create `batchEmbed` action with args: `{ texts: v.array(v.string()) }`
+    - [x] Send API call with `{ model, input: args.texts }` (OpenAI-compatible batch endpoint)
+    - [x] Handle Google Gemini variant (separate calls internally if batch not supported)
+    - [x] Preserve 429 backoff for embedding calls via `fetchWithRetry` (same as current `embed`)
+    - [x] Return `number[][]` with one embedding per input text in order
+- [x] **Sub-task 1.3: Integrate `batchEmbed` into memory retrieval**
+    - [x] Modify `retrieveMemoriesAction` to accept optional `embedding?: number[]` param
+    - [x] If `embedding` is provided, skip the individual `embed` call entirely
+    - [x] Ensure backward compatibility: existing callers without `embedding` still work
+- [x] **Sub-task 1.4: Verify all tests pass**
+    - [x] Run `pnpm test` and confirm embedding batch tests pass
+    - [x] Run existing memory/rag tests to confirm backward compatibility
 
 ### Task 2: Per-Tick Embedding Cache (R2)
 
