@@ -41,11 +41,11 @@
 
 ## Phase 3: Integration & Verification
 
-- [ ] Task 3.1: Add tick duration monitoring
+- [x] Task 3.1: Add tick duration monitoring
     - [ ] Add runtime logging to capture tick execution duration
     - [ ] Assert tick duration drops from ~4s to ~2-3s (LLM latency bound) — log-based verification
 
-- [ ] Task 3.2: Run full test suite and coverage
+- [~] Task 3.2: Run full test suite and coverage
     - [ ] Run `CI=true pnpm test` — all tests pass
     - [ ] Run coverage — verify >80%
     - [ ] Run `npx tsc --noEmit` — no type errors

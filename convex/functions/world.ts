@@ -335,7 +335,8 @@ async function processAgent(ctx: any, agent: any, agents: any[], worldState: any
 // Action: Process a world tick
 export const tick = action({
   args: { skipSleep: v.optional(v.boolean()) },
-  handler: async (ctx, args): Promise<{ success: boolean; skipped?: boolean; reason?: string; agentCount?: number }> => {
+  handler: async (ctx, args): Promise<{ success: boolean; skipped?: boolean; reason?: string; agentCount?: number; tickDurationMs?: number }> => {
+    const tickStart = Date.now();
     console.log("[WORLD] Starting tick processing...");
     const enableSleepMode = process.env.ENABLE_SLEEP_MODE === "true";
     const skipSleep = args.skipSleep ?? false;
@@ -343,8 +344,9 @@ export const tick = action({
     if (enableSleepMode && !skipSleep) {
       const sleepStatus = await ctx.runAction(api.functions.world.checkSleepMode);
       if (sleepStatus.sleeping) {
-        console.log(`[WORLD] Skipping tick - sleep mode active: ${sleepStatus.reason}`);
-        return { success: true, skipped: true, reason: sleepStatus.reason };
+        const tickDuration = Date.now() - tickStart;
+        console.log(`[WORLD] Skipping tick in ${tickDuration}ms - sleep mode active: ${sleepStatus.reason}`);
+        return { success: true, skipped: true, reason: sleepStatus.reason, tickDurationMs: tickDuration };
       }
     }
 
@@ -397,9 +399,9 @@ export const tick = action({
       }
     }));
 
-    console.log("[WORLD] Advancing world state...");
     await ctx.runMutation(internal.functions.world.advanceWorldState);
-    console.log("[WORLD] Tick processing complete.");
-    return { success: true, skipped: false, agentCount: agents.length };
+    const tickDuration = Date.now() - tickStart;
+    console.log(`[WORLD] Tick processing complete in ${tickDuration}ms (${agents.length} agents, ${(tickDuration / agents.length).toFixed(1)}ms/agent avg)`);
+    return { success: true, skipped: false, agentCount: agents.length, tickDurationMs: tickDuration };
   },
 });

@@ -130,54 +130,34 @@ test("ai:embed handles API error", async () => {
   vi.unstubAllGlobals();
 });
 
-test("ai:decision retry on 429", async () => {
+test("ai:decision does not retry 429 (chat calls skip 429 backoff)", async () => {
   const t = convexTest(schema, modules);
   process.env.OPENAI_API_KEY = "sk-test-key";
 
-  // Mock fetch to return 429 then 200
-  const mockDecision = {
-    thought: "Test",
-    action: "idle",
-    target: "none",
-    speech: "",
-    confidence: 1.0,
-  };
-
+  // Mock fetch to return 429 — chat calls now skip 429 backoff
   const mockFetch = vi.fn()
-    .mockResolvedValueOnce({
+    .mockResolvedValue({
       status: 429,
       ok: false,
       text: async () => "Rate limit",
-    })
-    .mockResolvedValueOnce({
-      status: 200,
-      ok: true,
-      json: async () => ({
-        choices: [{ message: { content: JSON.stringify(mockDecision) } }],
-      }),
     });
   vi.stubGlobal("fetch", mockFetch);
 
-  // We need to speed up the test by reducing the base delay if possible, 
-  // but ai.ts has a hardcoded baseDelay of 1000ms. 
-  // We can mock setTimeout to resolve immediately.
-  vi.spyOn(global, "setTimeout").mockImplementation((handler: any) => {
-    if (typeof handler === "function") handler();
-    return 0 as any;
-  });
-
+  // Chat calls (ai.decision) use skip429Backoff=true — 429 returned immediately
+  // decision's catch block handles the error and falls back to mock response
   const response = await t.action(api.functions.ai.decision, {
     agentState: { name: "Test", hunger: 50, energy: 50, social: 50 },
     nearbyAgents: [],
     archetype: "builder",
   });
 
-  expect(mockFetch).toHaveBeenCalledTimes(2);
+  // Fetch was called only once (no 429 retry for chat calls)
+  expect(mockFetch).toHaveBeenCalledTimes(1);
+  // Decision falls back to mock response on error
   expect(response.action).toBe("idle");
 
   delete process.env.OPENAI_API_KEY;
   vi.unstubAllGlobals();
-  vi.restoreAllMocks();
 });
 
 test("ai:decision failure after retries", async () => {
