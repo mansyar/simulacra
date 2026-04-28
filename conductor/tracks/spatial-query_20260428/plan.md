@@ -53,11 +53,11 @@ Optimize brute-force agent proximity scans using Convex `by_position` index quer
 
 ### Phase 4: Performance Benchmark
 
-- [ ] **Task: Write 50+ agent scaling benchmark test**
-    - [ ] Create benchmark test that seeds 50+ agents across the 64×64 grid
-    - [ ] Execute a full tick and measure duration
-    - [ ] Assert tick duration < 30,000ms
-    - [ ] Run the benchmark to verify
+- [x] **Task: Write 50+ agent scaling benchmark test** [f5bc109]
+    - [x] Create benchmark test that seeds 50+ agents across the 64×64 grid
+    - [x] Execute a full tick and measure duration
+    - [x] Assert tick duration < 30,000ms
+    - [x] Run the benchmark to verify
 
 ---
 

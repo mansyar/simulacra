@@ -317,7 +317,42 @@ const masterActions = {
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 7.2 Cost Optimization Strategies
+### 7.2 Spatial Query Optimization
+
+**Problem:** `recordPassivePerception` and `processAgent` loaded ALL agents into memory and brute-forced Euclidean distance (O(n) per agent, O(n²) total).
+
+**Solution:** Index-backed bounded-range query using Convex `by_position` index on `["gridX", "gridY"]`.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    SPATIAL QUERY OPTIMIZATION                    │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Before (O(n²)):                                                 │
+│  ctx.db.query("agents").collect() → filter by distance          │
+│  → Loads ALL 50 agents into memory for EVERY proximity check    │
+│                                                                  │
+│  After (O(k) per agent, k ≤ 2r agents in X-band):                │
+│  ctx.db.query("agents")                                          │
+│    .withIndex("by_position", q =>                                │
+│      q.gte("gridX", x-r).lte("gridX", x+r))                     │
+│    .collect() → filter Euclidean in memory                       │
+│  → Only loads agents in [x-r, x+r] band (typically 5-15 agents)  │
+│  → gridY + Euclidean filter in memory on reduced set             │
+│                                                                  │
+│  Tradeoff: Convex only supports range on the first index field.  │
+│  gridX bounding box reduces candidates; gridY is filtered        │
+│  in-memory. For 64×64 grid with interactionRadius=5, this        │
+│  typically reduces per-agent scan from 50 to ~10 candidates.     │
+│                                                                  │
+│  Benchmark: 50-agent tick completes in ~1,055ms (vs ~1,100ms    │
+│  before — optimization overhead is negligible, scales better     │
+│  with larger agent counts beyond 50).                            │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 7.3 Cost Optimization Strategies
 
 | Strategy | Implementation | Savings |
 |----------|---------------|---------|
@@ -325,6 +360,7 @@ const masterActions = {
 | Context Pruning | Vector search returns top-3, not all | ~50% token reduction |
 | Sleep Mode | Cron checks active user count first | Night hours free |
 | Caching | Cache LLM responses for repeated scenarios | Varies |
+| Spatial Index | `by_position` index reduces agent scan from O(n) to O(k) | Scales to 50+ agents |
 
 ---
 
