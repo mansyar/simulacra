@@ -262,7 +262,11 @@ async function processAgent(ctx: any, agent: any, agents: any[], worldState: any
   }
   await ctx.runMutation(internal.functions.agents.recordPassivePerception, { agentId: agent._id });
 
-  const nearbyAgents = agents.filter((a: any) => a._id !== agent._id && Math.sqrt((a.gridX - agent.gridX)**2 + (a.gridY - agent.gridY)**2) < interactionRadius).map((a: any) => a.name);
+  // Use by_position index query instead of brute-force filter — O(k) vs O(n)
+  const nearbyDocs = await ctx.runQuery(internal.functions.agents.getNearbyAgents, {
+    agentId: agent._id, gridX: agent.gridX, gridY: agent.gridY, radius: interactionRadius,
+  });
+  const nearbyAgents = nearbyDocs.map((a: any) => a.name);
   const validArchetypes = ["builder", "socialite", "philosopher", "explorer", "nurturer"];
   const aiArchetype = validArchetypes.includes(agent.archetype) ? agent.archetype : "builder";
 

@@ -1,4 +1,5 @@
 import { query, mutation, internalQuery, internalMutation } from "../_generated/server";
+import { internal } from "../_generated/api";
 import { v } from "convex/values";
 import type { Doc } from "../_generated/dataModel";
 
@@ -291,11 +292,12 @@ export const recordPassivePerception = internalMutation({
     const config = await ctx.db.query("config").first();
     const interactionRadius = config?.interactionRadius ?? 5;
 
-    const allAgents = await ctx.db.query("agents").collect();
-    const nearbyAgents = allAgents.filter(a => 
-      a._id !== agent._id && 
-      Math.sqrt(Math.pow(a.gridX - agent.gridX, 2) + Math.pow(a.gridY - agent.gridY, 2)) < interactionRadius
-    );
+    const nearbyAgents = await ctx.runQuery(internal.functions.agents.getNearbyAgents, {
+      agentId: args.agentId,
+      gridX: agent.gridX,
+      gridY: agent.gridY,
+      radius: interactionRadius,
+    });
 
     for (const nearby of nearbyAgents) {
       // Use the proper addEvent logic via a internal call if possible, 
