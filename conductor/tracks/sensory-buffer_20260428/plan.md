@@ -15,7 +15,7 @@
     - [x] Prepend the `"## Recent Events"` section at the top of the full context string (before relationships and memories)
     - [x] Handle empty events case: emit `"## Recent Events\n(No recent events)"`
     - [x] Run tests and confirm they pass (Green phase)
-- [ ] Task: Verify coverage and code quality
+- [x] Task: Verify coverage and code quality
     - [ ] Run `pnpm test:coverage` to verify >80% coverage target
     - [ ] Run `npx tsc --noEmit` for type checking
-- [ ] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
+- [~] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
