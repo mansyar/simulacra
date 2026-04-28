@@ -37,7 +37,7 @@
     - [x] Preserve 429 backoff for embedding calls unchanged
     - [x] RUN tests and confirm they pass (Green phase)
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
+- [ ] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md) [377c771]
 
 ## Phase 3: Integration & Verification
 
