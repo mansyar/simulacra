@@ -10,7 +10,7 @@
 | 4 | The Eyes | Excalibur → PixiJS Migration | ✅ Complete | 3-4 days |
 | 5 | The Social | Proximity + Frontend Interaction | ✅ Complete (All Tracks) | 1-2 weeks |
 | 6 | Fluid Movement | Organic idle + Predictive pathing | ✅ Complete | 3-4 days |
-| 7 | The Mind | AI Context Fidelity | ⏳ Not Started | 1 week |
+| 7 | The Mind | AI Context Fidelity | 🔄 In Progress (Track A ✅) | 1 week |
 | 8 | The Backbone | Robustness & Scaling | ⏳ Not Started | 1 week |
 | 9 | The Soul | Deeper Social Dynamics | ⏳ Not Started | 1 week |
 | X | The Polish | Master Panel + Deploy | ⏳ Not Started | 1 week |
@@ -361,16 +361,18 @@ A1 + A2 + A3 (quick fixes) ✅
 
 **Goal:** Fix how AI context is built and passed to the LLM so agents actually use their full sensory data, memories, relationships, and archetype personality in every decision.
 
-**Status:** ⏳ NOT STARTED
+**Status:** 🔄 IN PROGRESS (Track A ✅, Tracks B-C ⏳)
 
-### Track A: Sensory Buffer in LLM Context
+> **Completed:** 2026-04-28 — Track A: Sensory Buffer in LLM Context
+
+### Track A: Sensory Buffer in LLM Context [COMPLETE: 2026-04-28]
 
 **Problem:** The `events` table stores the last 10 sensory events per agent (Tier 1 memory), but `buildFullContext()` only queries the `memories` table (Tier 2 vector store). The LLM has no awareness of what just happened to the agent.
 
-- [ ] Add sensory event retrieval to `buildFullContext()` action in `convex/functions/ai.ts`
-- [ ] Include last 10 sensory events in the context string passed to the LLM
-- [ ] Format events as a chronologically ordered list prefixed with `"## Recent Events"`
-- [ ] Write test verifying sensory events appear in LLM decision context
+- [x] Add sensory event retrieval to `buildFullContext()` action in `convex/functions/ai.ts` ([7d0f8d1](https://github.com/))
+- [x] Include last 10 sensory events in the context string passed to the LLM
+- [x] Format events as a chronologically ordered list prefixed with `"## Recent Events"` with relative timestamps `"- [X min ago] <type>: <description>"`
+- [x] Write test verifying sensory events appear in LLM decision context (`convex/sensory_context.test.ts` — 4 tests)
 
 ### Track B: User Prompt Restructuring
 
@@ -395,11 +397,11 @@ A1 + A2 + A3 (quick fixes) ✅
 
 ### Phase 7 Checkpoints
 
-- [ ] Sensory events appear in LLM decision context (verified via test + log inspection)
-- [ ] User prompt contains all context sections (bio, traits, goals, relationships, memories, events)
-- [ ] Archetype prompts are always present alongside context override
-- [ ] DECISION_SYSTEM_PROMPT explicitly instructs LLM to consider relationships and events
-- [ ] All tests pass with >80% coverage
+- [x] Sensory events appear in LLM decision context (verified via test + log inspection) — Track A
+- [ ] User prompt contains all context sections (bio, traits, goals, relationships, memories, events) — Track B
+- [ ] Archetype prompts are always present alongside context override — Track C
+- [ ] DECISION_SYSTEM_PROMPT explicitly instructs LLM to consider relationships and events — Track C
+- [x] All tests pass with >80% coverage (196/196 tests, 84.62% coverage) — Track A
 
 ---
 
@@ -658,7 +660,8 @@ Phase X (Polish)
 5. ✅ **Done:** Quick fixes & frontend interaction (Phase 5 — Tracks A & B)
 6. ✅ **Done:** Multi-turn conversations, relationship context, conversation visuals (Phase 5 — Track C)
 7. ✅ **Done:** Fluid movement (Phase 6)
-8. 🎯 **Next:** AI context fidelity (Phase 7 — The Mind)
+8. ✅ **Done:** Sensory Buffer in LLM Context (Phase 7 — Track A)
+   🎯 **Next:** User Prompt Restructuring (Phase 7 — Track B)
 9. ⏳ **Planned:** Robustness & scaling (Phase 8 — The Backbone)
 10. ⏳ **Planned:** Deeper social dynamics (Phase 9 — The Soul)
 11. ⏳ **Planned:** Master panel and deployment (Phase X — The Polish)
