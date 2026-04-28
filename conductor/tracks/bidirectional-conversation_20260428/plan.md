@@ -77,3 +77,7 @@
     - [x] Convex backend functions: 77.89% lines, 86.15% functions
     - [x] Coverage threshold failure is pre-existing (includes untestable frontend files)
 - [x] Task: Conductor - User Manual Verification 'Phase 4: Test Suite Completion' (Protocol in workflow.md)
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions [f513119]
+    - [x] Add `resetConversationEnd` dedicated mutation to safely clear partner state on conversation end (replacing fragile `updateAction` with `undefined` values)
