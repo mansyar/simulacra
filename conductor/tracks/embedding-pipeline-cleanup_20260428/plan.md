@@ -60,15 +60,14 @@
 - [x] **Sub-task 3.3: Verify all tests pass**
     - [x] All 8 agent tests pass (6 existing + 2 new)
 
-### Task 4: Named Constants — Magic Number 480 (R4)
+### Task 4: Named Constants — Magic Number 480 (R4) [5316265]
 
-- [ ] **Sub-task 4.1: Replace magic number in `world.ts`**
-    - [ ] Add at top of file (or near reflection logic):
-      `const REFLECTION_INTERVAL_TICKS = 480;  // 480 ticks ≈ 10 simulated days (48 ticks/day, ~30 min per tick)`
-    - [ ] Replace line 247: `if (currentTicks - lastReflected > (480 + jitter))` →
-      `if (currentTicks - lastReflected > (REFLECTION_INTERVAL_TICKS + jitter))`
-- [ ] **Sub-task 4.2: Verify build passes**
-    - [ ] Run `npx tsc --noEmit` to confirm no type errors
+- [x] **Sub-task 4.1: Replace magic number in `world.ts`**
+    - [x] Add `const REFLECTION_INTERVAL_TICKS = 480;` with documentation comment
+    - [x] Replace `480` → `REFLECTION_INTERVAL_TICKS` in reflection logic
+- [x] **Sub-task 4.2: Verify build passes**
+    - [x] `npx tsc --noEmit` — no errors
+    - [x] Full test suite — 225/225 passing
 
 ### Task 5: Conductor — User Manual Verification 'Embedding Pipeline & Configuration Cleanup' (Protocol in workflow.md)
 
