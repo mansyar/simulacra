@@ -63,15 +63,15 @@ Optimize brute-force agent proximity scans using Convex `by_position` index quer
 
 ### Phase 5: Documentation & Cleanup
 
-- [ ] **Task: Add code comments for optimized query patterns**
-    - [ ] Document the bounded range query pattern in `getNearbyAgents`
-    - [ ] Explain the tradeoff: Convex index range on gridX + in-memory Euclidean filter
+- [x] **Task: Add code comments for optimized query patterns** [7a3175f]
+    - [x] Document the bounded range query pattern in `getNearbyAgents`
+    - [x] Explain the tradeoff: Convex index range on gridX + in-memory Euclidean filter
 
-- [ ] **Task: Update docs/ARCHITECTURE.md**
-    - [ ] Add spatial query optimization section to Performance Architecture
-    - [ ] Document the bounded-range query pattern and its O(k) vs O(n) benefit
+- [x] **Task: Update docs/ARCHITECTURE.md** [7a3175f]
+    - [x] Add spatial query optimization section to Performance Architecture
+    - [x] Document the bounded-range query pattern and its O(k) vs O(n) benefit
 
-- [ ] **Task: Final verification**
-    - [ ] Run full test suite to confirm all tests pass
-    - [ ] Run coverage report to verify >80%
-    - [ ] Verify the final implementation matches the specification
+- [x] **Task: Final verification** [7a3175f]
+    - [x] Run full test suite to confirm all tests pass (214 tests, 58 files)
+    - [x] Run coverage report to verify >80%
+    - [x] Verify the final implementation matches the specification
