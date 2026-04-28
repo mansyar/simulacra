@@ -1,0 +1,8 @@
+{
+  "track_id": "spatial-query_20260428",
+  "type": "performance",
+  "status": "new",
+  "created_at": "2026-04-28T18:03:00Z",
+  "updated_at": "2026-04-28T18:03:00Z",
+  "description": "Phase 8 Track B: Spatial Query Optimization — Replace brute-force O(n²) Euclidean distance agent scans with Convex by_position index queries"
+}
