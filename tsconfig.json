@@ -25,6 +25,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
     "incremental": true,
-    "incrementalFileDir": "."
   }
 }
