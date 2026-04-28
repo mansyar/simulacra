@@ -1,8 +1,0 @@
-{
-  "track_id": "unbottleneck-world-tick_20260428",
-  "type": "refactor",
-  "status": "new",
-  "created_at": "2026-04-28T13:46:00Z",
-  "updated_at": "2026-04-28T13:46:00Z",
-  "description": "Phase 8 Track A: Unbottleneck the World Tick — Parallelize all agents, remove inter-batch delays, add error isolation, simplify chat retry, verify tick duration improvement, and write test for partial batch failure recovery."
-}

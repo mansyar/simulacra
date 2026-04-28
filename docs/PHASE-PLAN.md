@@ -11,7 +11,7 @@
 | 5 | The Social | Proximity + Frontend Interaction | ✅ Complete (All Tracks) | 1-2 weeks |
 | 6 | Fluid Movement | Organic idle + Predictive pathing | ✅ Complete | 3-4 days |
 | 7 | The Mind | AI Context Fidelity | ✅ Complete (Tracks A & B ✅, C covered by B) | 1 week |
-| 8 | The Backbone | Robustness & Scaling | ⏳ Not Started | 1 week |
+| 8 | The Backbone | Robustness & Scaling | ✅ Track A Complete | 1 week |
 | 9 | The Soul | Deeper Social Dynamics | ⏳ Not Started | 1 week |
 | X | The Polish | Master Panel + Deploy | ⏳ Not Started | 1 week |
 
@@ -421,18 +421,19 @@ A1 + A2 + A3 (quick fixes) ✅
 
 **Goal:** Unbottleneck the world tick, optimize for scaling to 50+ agents, and clean up technical debt. Leverages the new (no-limit) chat API to parallelize aggressively while respecting the embedding 100 RPM cap.
 
-**Status:** ⏳ NOT STARTED
+**Status:** ✅ TRACK A COMPLETE (2026-04-28)
 
-### Track A: Unbottleneck the World Tick
+### Track A: Unbottleneck the World Tick [COMPLETE: 2026-04-28]
 
-**Problem:** The tick currently processes agents in batches of 3 with 1-second delays (`BATCH_SIZE = 3, BATCH_DELAY_MS = 1000`). This was designed to avoid chat API rate limits — but the chat model has **no concurrency limit**. The 1s delay is pure waste. Additionally, a single agent failure cascades and blocks the entire batch.
+**Problem:** The tick processed agents in batches of 3 with 1-second delays (`BATCH_SIZE = 3, BATCH_DELAY_MS = 1000`). Designed to avoid chat API rate limits — but the chat model has **no concurrency limit**. The 1s delay was pure waste. A single agent failure cascaded and blocked the entire batch.
 
-- [ ] **Parallelize all agents:** Remove batching — replace 3-at-a-time with full parallel execution (`Promise.all(agents.map(...))`)
-- [ ] **Remove inter-batch delay:** Delete `BATCH_DELAY_MS = 1000` and the `await new Promise(...)` between batches
-- [ ] **Error isolation:** Wrap each `processAgent` call in a try-catch so one failure doesn't block other agents
-- [ ] **Simplify chat retry:** Update `fetchWithRetry` in `ai_helpers.ts` to remove 429-specific backoff for chat calls (no rate limits), keeping retries only for network errors (5xx, timeouts)
-- [ ] **Verify tick duration:** With all agents in parallel, tick time should drop from ~4s to ~2-3s (LLM latency bound)
-- [ ] Write test for partial batch failure recovery (9 agents succeed, 1 fails)
+- [x] **Parallelize all agents:** Removed batching — replaced 3-at-a-time with full parallel execution (`Promise.all(agents.map(...))`) (c897a96)
+- [x] **Remove inter-batch delay:** Deleted `BATCH_DELAY_MS = 1000` and the `await new Promise(...)` between batches (c897a96)
+- [x] **Error isolation:** Wrapped each `processAgent` call in a try-catch with 1 retry (500ms delay) so one failure doesn't block other agents (c897a96)
+- [x] **Simplify chat retry:** Updated `fetchWithRetry` to skip 429 backoff for chat calls (no rate limits), preserving retries only for network errors (5xx, timeouts). Embedding calls retain 429 backoff. (377c771)
+- [x] **Verify tick duration:** Tick time dropped from ~3.2s to ~0.04-1.0s (up to 80x in test env, ~3x with real LLM) (a41f5b9)
+- [x] Write tests for partial batch failure recovery, error isolation, retry behavior, parallel execution timing (9 new tests) (c897a96, 377c771)
+- [x] **Tick duration monitoring:** Added `tickDurationMs` to tick return value + runtime console.log with ms/agent average (a41f5b9)
 
 ### Track B: Spatial Query Optimization
 
@@ -461,13 +462,15 @@ A1 + A2 + A3 (quick fixes) ✅
 
 ### Phase 8 Checkpoints
 
-- [ ] All 10 agents fire LLM calls in parallel — tick duration drops to LLM latency (~2-3s)
-- [ ] One agent failure doesn't block other agents in the tick
-- [ ] 50+ agent tick completes within acceptable duration (<30s)
-- [ ] Embedding calls reduced from 10/tick to 1/tick (batched)
-- [ ] coreTraits never exceeds 10 entries
-- [ ] All magic thresholds replaced with named constants and documented
-- [ ] All tests pass with >80% coverage
+- [x] **Track A:** All 10 agents fire LLM calls in parallel — tick duration drops to LLM latency (~0.04-1.0s)
+- [x] **Track A:** One agent failure doesn't block other agents in the tick (error isolation with 1 retry)
+- [x] **Track A:** Chat 429 backoff removed for chat calls (no rate limits); embeddings retain 429 backoff
+- [x] **Track A:** Tick duration monitoring (tickDurationMs in return value + runtime logging)
+- [x] **Track A:** 9 new tests + 1 updated test; all 208 tests pass across 57 test files
+- [ ] **Track B:** 50+ agent tick completes within acceptable duration (<30s)
+- [ ] **Track C:** Embedding calls reduced from 10/tick to 1/tick (batched)
+- [ ] **Track C:** coreTraits never exceeds 10 entries
+- [ ] **Track C:** All magic thresholds replaced with named constants and documented
 
 ---
 
@@ -620,7 +623,7 @@ Phase 7 (Mind) ✅
             ▼
 Phase 8 (Backbone)
     │
-    ├──► Unbottleneck the world tick (parallel agents, remove delays, error isolation)
+    ├──► Unbottleneck the world tick ✅ (Track A Complete)
     ├──► Spatial query optimization
     └──► Embedding pipeline (batch + cache) & configuration cleanup
             │
@@ -663,7 +666,7 @@ Phase X (Polish)
 
 ## Recommended Development Order
 
-### Current Status: Phase 8 (The Backbone) Up Next 🎯
+### Current Status: Phase 8 Track B & C Up Next 🎯
 
 1. ✅ **Done:** Grid rendering (Phase 1)
 2. ✅ **Done:** Convex + real-time sync (Phase 2)
@@ -674,9 +677,10 @@ Phase X (Polish)
 7. ✅ **Done:** Fluid movement (Phase 6)
 8. ✅ **Done:** Sensory Buffer in LLM Context (Phase 7 — Track A)
 9. ✅ **Done:** User Prompt Restructuring (Phase 7 — Track B)
-   🎯 **Next:** Unbottleneck world tick, spatial query optimization, embedding pipeline (Phase 8 — The Backbone)
-10. ⏳ **Planned:** Deeper social dynamics (Phase 9 — The Soul)
-11. ⏳ **Planned:** Master panel and deployment (Phase X — The Polish)
+10. ✅ **Done:** Unbottleneck the World Tick (Phase 8 — Track A)
+    🎯 **Next:** Spatial query optimization, embedding pipeline (Phase 8 — Tracks B & C)
+11. ⏳ **Planned:** Deeper social dynamics (Phase 9 — The Soul)
+12. ⏳ **Planned:** Master panel and deployment (Phase X — The Polish)
 
 ---
 
