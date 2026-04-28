@@ -3,6 +3,9 @@ import { v } from "convex/values";
 import { api, internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 
+// Reflection interval: 480 ticks ≈ 10 simulated days (48 ticks/day, ~30 min per tick)
+const REFLECTION_INTERVAL_TICKS = 480;
+
 /**
  * Query: Get the current world state
  */
@@ -244,7 +247,7 @@ async function processAgent(ctx: any, agent: any, agents: any[], worldState: any
   const currentTicks = worldState?.totalTicks || 0;
   const lastReflected = agent.lastReflectedTick || 0;
   const jitter = Math.floor(Math.random() * 40) - 20;
-  if (currentTicks - lastReflected > (480 + jitter)) {
+  if (currentTicks - lastReflected > (REFLECTION_INTERVAL_TICKS + jitter)) {
     void ctx.runAction(api.functions.ai.reflect, { agentId: agent._id });
     await ctx.runMutation(internal.functions.agents.updateIdentity, { agentId: agent._id, newTraits: [], lastReflectedTick: currentTicks });
   }
