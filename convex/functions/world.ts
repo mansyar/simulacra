@@ -206,21 +206,24 @@ async function handleConversationState(ctx: any, agent: any, normalizedAction: s
   const isTalking = normalizedAction === "talking";
   
   if (isTalking && targetAgentId) {
-    const partner = await ctx.runQuery(api.functions.agents.getById, { agentId: targetAgentId });
-    if (partner) {
-      const newTurnCount = wasInConversation ? (agent.conversationState?.turnCount || 0) + 1 : 1;
-      await ctx.runMutation(internal.functions.agents.setConversationState, {
-        agentId: agent._id, partnerId: targetAgentId,
-        role: wasInConversation ? agent.conversationState!.role : "initiator",
-        turnCount: newTurnCount, lastPartnerSpeech: speech,
-      });
-    }
+    const newTurnCount = wasInConversation ? (agent.conversationState?.turnCount || 0) + 1 : 1;
+    await ctx.runMutation(internal.functions.agents.setConversationState, {
+      agentId: agent._id, partnerId: targetAgentId,
+      role: wasInConversation ? agent.conversationState!.role : "initiator",
+      turnCount: newTurnCount, myLastSpeech: speech,
+    });
+    // Note: No writes to partner's document — partner reads current agent's myLastSpeech
+    // from the in-memory agents array during their own tick (FR4.2)
   } else if (wasInConversation) {
     // Clear current agent's conversation state
     await ctx.runMutation(internal.functions.agents.clearConversationState, { agentId: agent._id });
-    // Also clear partner's conversation state to keep both agents in sync
+    // Clear partner's conversation state AND reset partner's action
     if (agent.conversationState?.partnerId) {
-      await ctx.runMutation(internal.functions.agents.clearConversationState, { agentId: agent.conversationState.partnerId });
+      const partnerId = agent.conversationState.partnerId;
+      await ctx.runMutation(internal.functions.agents.clearConversationState, { agentId: partnerId });
+      await ctx.runMutation(internal.functions.agents.updateAction, {
+        agentId: partnerId, action: "idle", interactionPartnerId: undefined, speech: undefined,
+      });
     }
   }
 }
@@ -239,7 +242,8 @@ async function processAgent(ctx: any, agent: any, agents: any[], worldState: any
     });
     return;
   }
-  if (agent.currentAction === "listening") return;
+  // REMOVED: listening skip guard — every agent gets an LLM call every tick
+  // Agents that AI-chose "listening" can change their action on the next tick
 
   await ctx.runMutation(internal.functions.agents.updateNeeds, { agentId: agent._id });
 
@@ -273,14 +277,18 @@ async function processAgent(ctx: any, agent: any, agents: any[], worldState: any
   const validArchetypes = ["builder", "socialite", "philosopher", "explorer", "nurturer"];
   const aiArchetype = validArchetypes.includes(agent.archetype) ? agent.archetype : "builder";
 
-  // Conversation context
+  // Conversation context — reads partner's myLastSpeech from in-memory agents array
   let conversationContext = "";
   if (agent.conversationState) {
     const convState = agent.conversationState;
     const partner = agents.find((a: any) => a._id === convState.partnerId);
     const partnerName = partner?.name || "Unknown";
+    const myLastSpeech = agent.conversationState?.myLastSpeech;
+    const partnerLastSpeech = partner?.conversationState?.myLastSpeech;
     conversationContext = `\n\nACTIVE CONVERSATION:\nYou are in a conversation with ${partnerName}.\nYour role: ${convState.role}\nTurn count: ${convState.turnCount}/5\n`;
-    if (convState.lastPartnerSpeech) conversationContext += `What ${partnerName} just said: "${convState.lastPartnerSpeech}"\n`;
+    if (myLastSpeech) conversationContext += `What you last said: "${myLastSpeech}"\n`;
+    if (partnerLastSpeech) conversationContext += `What ${partnerName} last said: "${partnerLastSpeech}"\n`;
+    else conversationContext += `You just initiated the conversation. ${partnerName} hasn't responded yet.\n`;
     conversationContext += `If you want to continue the conversation, respond to what ${partnerName} said. To end it, change your action to something other than 'talking'.\n`;
   }
 
@@ -305,8 +313,9 @@ async function processAgent(ctx: any, agent: any, agents: any[], worldState: any
     const targetAgent = agents.find((a: any) => a.name === decision.target);
     if (targetAgent && targetAgent._id !== agent._id) {
       targetAgentId = targetAgent._id;
-      await ctx.runMutation(internal.functions.agents.updateAction, { agentId: targetAgentId, action: "listening", interactionPartnerId: agent._id });
-      await ctx.runMutation(internal.functions.agents.updateRelationship, { agentAId: agent._id, agentBId: targetAgentId, delta: 2 });
+      // REMOVED: forced listening on partner + relationship update
+      // Partner is no longer force-set to "listening" — they make their own AI decision.
+      // Relationship affinity will be handled in Track B (sentiment-based).
     }
   }
 
