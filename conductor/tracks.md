@@ -4,7 +4,7 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [ ] **Track: Embedding Pipeline & Configuration Cleanup**
+- [~] **Track: Embedding Pipeline & Configuration Cleanup**
 *Link: [./tracks/embedding-pipeline-cleanup_20260428/](./tracks/embedding-pipeline-cleanup_20260428/)*
 
 
