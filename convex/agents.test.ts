@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 import { convexTest } from "convex-test";
 import { expect, test } from "vitest";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import schema from "./schema";
 
 const modules = import.meta.glob("./**/*.ts");
@@ -93,6 +93,47 @@ test("getById returns correct agent", async () => {
   expect(agent).toBeTruthy();
   expect(agent?.name).toBe("Agent 2");
   expect(agent?.gridX).toBe(10);
+});
+
+test("updateIdentity caps coreTraits at 10 when adding beyond limit", async () => {
+  const t = convexTest(schema, modules);
+
+  // Create an agent
+  const agentId = await t.mutation(api.functions.agents.create, {
+    name: "Trait Tester",
+    archetype: "builder",
+    gridX: 5,
+    gridY: 5,
+  });
+
+  // Add 12 unique traits — should be capped at 10
+  await t.mutation(internal.functions.agents.updateIdentity as any, {
+    agentId,
+    newTraits: ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"],
+  });
+
+  const agent = await t.query(api.functions.agents.getById, { agentId });
+  expect(agent?.coreTraits).toHaveLength(10);
+});
+
+test("updateIdentity does not cap when traits are under 10", async () => {
+  const t = convexTest(schema, modules);
+
+  const agentId = await t.mutation(api.functions.agents.create, {
+    name: "Trait Tester 2",
+    archetype: "socialite",
+    gridX: 10,
+    gridY: 10,
+  });
+
+  // Add 7 unique traits — no cap should trigger
+  await t.mutation(internal.functions.agents.updateIdentity as any, {
+    agentId,
+    newTraits: ["a", "b", "c", "d", "e", "f", "g"],
+  });
+
+  const agent = await t.query(api.functions.agents.getById, { agentId });
+  expect(agent?.coreTraits).toHaveLength(7);
 });
 
 test("updatePosition updates agent coordinates", async () => {

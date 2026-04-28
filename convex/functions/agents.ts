@@ -385,8 +385,8 @@ export const updateIdentity = internalMutation({
     const agent = await ctx.db.get(args.agentId);
     if (!agent) return;
 
-    // Merge traits and keep unique ones, limited to 5
-    const combinedTraits = Array.from(new Set([...agent.coreTraits, ...args.newTraits])).slice(0, 5);
+    // Merge traits and keep unique ones, limited to 10
+    const combinedTraits = Array.from(new Set([...agent.coreTraits, ...args.newTraits])).slice(0, 10);
 
     const patch: any = {
       coreTraits: combinedTraits,
