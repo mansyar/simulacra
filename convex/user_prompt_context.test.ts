@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 import { convexTest } from "convex-test";
 import { expect, test, vi } from "vitest";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import schema from "./schema";
 
 const modules = import.meta.glob("./**/*.ts");
@@ -96,6 +96,146 @@ test("ai:decision user prompt contains all context sections when API key is set"
   expect(result).toHaveProperty("target");
   expect(result).toHaveProperty("speech");
   expect(result).toHaveProperty("confidence");
+
+  delete process.env.OPENAI_API_KEY;
+  vi.unstubAllGlobals();
+});
+
+test("ai:decision system prompt includes archetype-specific prompt for the agent", async () => {
+  const t = convexTest(schema, modules);
+  process.env.OPENAI_API_KEY = "sk-test-key";
+
+  let capturedBody: any = null;
+
+  const mockFetch = vi.fn().mockImplementation(async (_url: string, options: any) => {
+    capturedBody = JSON.parse(options.body);
+    return {
+      ok: true,
+      json: async () => ({
+        choices: [{
+          message: {
+            content: JSON.stringify({
+              thought: "I should build something.",
+              action: "working",
+              target: "none",
+              speech: "",
+              confidence: 0.8,
+            }),
+          },
+        }],
+      }),
+    };
+  });
+  vi.stubGlobal("fetch", mockFetch);
+
+  await t.action(api.functions.ai.decision, {
+    agentState: { name: "Test", hunger: 50, energy: 50, social: 50 },
+    nearbyAgents: [],
+    archetype: "builder",
+  });
+
+  const systemMessage = capturedBody.messages.find((m: any) => m.role === "system").content;
+
+  // Verify the builder archetype prompt is present in the system message
+  expect(systemMessage).toContain("You are a builder");
+  expect(systemMessage).toContain("organized, productive, and detail-oriented");
+
+  // Verify DECISION_SYSTEM_PROMPT (JSON schema) is also present
+  expect(systemMessage).toContain("thought");
+  expect(systemMessage).toContain("action");
+  expect(systemMessage).toContain("confidence");
+
+  delete process.env.OPENAI_API_KEY;
+  vi.unstubAllGlobals();
+});
+
+test("ai:decision user prompt includes relationship data from real DB agents via buildFullContext pipeline", async () => {
+  const t = convexTest(schema, modules);
+
+  // Create two agents
+  const agentAId = await t.mutation(api.functions.agents.create, {
+    name: "Alice",
+    archetype: "socialite",
+    gridX: 0,
+    gridY: 0,
+  });
+
+  const agentBId = await t.mutation(api.functions.agents.create, {
+    name: "Bob",
+    archetype: "builder",
+    gridX: 1,
+    gridY: 1,
+  });
+
+  // Create a relationship between them
+  await t.mutation(internal.functions.agents.updateRelationship, {
+    agentAId,
+    agentBId,
+    delta: 10,
+  });
+
+  // Build full context — should include relationship data
+  const context = await t.action(api.functions.ai.buildFullContext, {
+    agentId: agentAId,
+    query: "What should I do?",
+  });
+
+  expect(context.relationshipContext).toContain("Bob");
+  expect(context.relationshipContext).toContain("affinity");
+  expect(context.agentContext).toContain("Alice");
+  expect(context.agentContext).toContain("socialite");
+
+  // Now call decision with this context and a mock API key
+  process.env.OPENAI_API_KEY = "sk-test-key";
+
+  let capturedBody: any = null;
+
+  const mockFetch = vi.fn().mockImplementation(async (_url: string, options: any) => {
+    capturedBody = JSON.parse(options.body);
+    return {
+      ok: true,
+      json: async () => ({
+        choices: [{
+          message: {
+            content: JSON.stringify({
+              thought: "I should talk to Bob.",
+              action: "talking",
+              target: "Bob",
+              speech: "Hi Bob, nice to see you!",
+              confidence: 0.9,
+            }),
+          },
+        }],
+      }),
+    };
+  });
+  vi.stubGlobal("fetch", mockFetch);
+
+  await t.action(api.functions.ai.decision, {
+    agentState: { name: "Alice", hunger: 50, energy: 50, social: 50 },
+    nearbyAgents: ["Bob"],
+    archetype: "socialite",
+    agentContext: context.agentContext,
+    relationshipContext: context.relationshipContext,
+    events: context.events,
+    memories: context.memories,
+  });
+
+  const userMessage = capturedBody.messages.find((m: any) => m.role === "user").content;
+
+  // Verify relationship context data is in the user prompt
+  expect(userMessage).toContain("## Your Relationships");
+  expect(userMessage).toContain("Bob");
+  expect(userMessage).toContain("affinity");
+
+  // Verify identity data is present
+  expect(userMessage).toContain("## Your Identity");
+  expect(userMessage).toContain("Alice");
+  expect(userMessage).toContain("socialite");
+
+  // Verify state data is present
+  expect(userMessage).toContain("## Your State");
+  expect(userMessage).toContain("Hunger: 50");
 
   delete process.env.OPENAI_API_KEY;
   vi.unstubAllGlobals();
