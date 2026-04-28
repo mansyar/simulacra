@@ -8,19 +8,19 @@ Optimize brute-force agent proximity scans using Convex `by_position` index quer
 
 ### Phase 1: Add `getNearbyAgents` Internal Query
 
-- [ ] **Task: Write failing tests for getNearbyAgents**
-    - [ ] Write test: query returns agents within radius using by_position index
-    - [ ] Write test: query excludes the querying agent from results
-    - [ ] Write test: query returns empty array when no agents are nearby
-    - [ ] Write test: agent far outside radius is not included in results
-    - [ ] Run tests to confirm they fail (Red phase)
+- [x] **Task: Write failing tests for getNearbyAgents** [4be5159]
+    - [x] Write test: query returns agents within radius using by_position index
+    - [x] Write test: query excludes the querying agent from results
+    - [x] Write test: query returns empty array when no agents are nearby
+    - [x] Write test: agent far outside radius is not included in results
+    - [x] Run tests to confirm they fail (Red phase)
 
-- [ ] **Task: Implement getNearbyAgents internal query**
-    - [ ] Add `getNearbyAgents` internal query in `convex/functions/agents.ts`
-    - [ ] Accept args: `agentId`, `gridX`, `gridY`, `radius`
-    - [ ] Use `withIndex("by_position", q => q.gte("gridX", gridX-radius).lte("gridX", gridX+radius))` for bounding box
-    - [ ] Filter results by Euclidean distance and exclude self
-    - [ ] Run tests to confirm they pass (Green phase)
+- [x] **Task: Implement getNearbyAgents internal query** [4be5159]
+    - [x] Add `getNearbyAgents` internal query in `convex/functions/agents.ts`
+    - [x] Accept args: `agentId`, `gridX`, `gridY`, `radius`
+    - [x] Use `withIndex("by_position", q => q.gte("gridX", gridX-radius).lte("gridX", gridX+radius))` for bounding box
+    - [x] Filter results by Euclidean distance and exclude self
+    - [x] Run tests to confirm they pass (Green phase)
 
 ---
 
