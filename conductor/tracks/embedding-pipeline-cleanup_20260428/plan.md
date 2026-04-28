@@ -47,18 +47,18 @@
     - [x] All 9 embedding_batch tests pass
     - [x] Existing memory/rag/agents tests backward compatible
 
-### Task 3: Trait Cap at 10 (R3)
+### Task 3: Trait Cap at 10 (R3) [9e764cd]
 
-- [ ] **Sub-task 3.1: Write failing test for trait capping**
-    - [ ] Write test in `convex/agents.test.ts` verifying:
-        - Agent with 10 traits, adding 1 more → oldest dropped, length stays 10
-        - Agent with 5 traits, adding 2 → length becomes 7 (no cap triggered)
-    - [ ] Run tests and confirm failures (current cap is 5, not 10, and behavior may differ)
-- [ ] **Sub-task 3.2: Modify `updateIdentity` in `agents.ts`**
-    - [ ] Change `.slice(0, 5)` to `.slice(0, 10)` in `updateIdentity` internal mutation
-    - [ ] Keep uniqueness dedup logic (`Array.from(new Set(...))`)
-- [ ] **Sub-task 3.3: Verify all tests pass**
-    - [ ] Run `pnpm test` and confirm trait cap tests pass
+- [x] **Sub-task 3.1: Write failing test for trait capping**
+    - [x] Write test in `convex/agents.test.ts` verifying:
+        - Agent with 12 traits → capped at 10
+        - Agent with 7 traits → stays at 7 (no cap triggered)
+    - [x] Run tests and confirm failures (current cap is 5)
+- [x] **Sub-task 3.2: Modify `updateIdentity` in `agents.ts`**
+    - [x] Change `.slice(0, 5)` to `.slice(0, 10)` in `updateIdentity` internal mutation
+    - [x] Keep uniqueness dedup logic (`Array.from(new Set(...))`)
+- [x] **Sub-task 3.3: Verify all tests pass**
+    - [x] All 8 agent tests pass (6 existing + 2 new)
 
 ### Task 4: Named Constants — Magic Number 480 (R4)
 
