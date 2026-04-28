@@ -270,15 +270,15 @@ export const buildFullContext = action({
       agentId: args.agentId,
     });
 
-    // Build the "## Recent Events" section (sensory buffer) at the top
+    // Provide LLM with recent sensory context so decisions account for immediate history
     let sensorySection = "## Recent Events\n";
-    if (events && (events as any[]).length > 0) {
-      // Sort events oldest-first by _creationTime
-      const sortedEvents = (events as any[]).sort(
-        (a: any, b: any) => a._creationTime - b._creationTime,
+    if (events && events.length > 0) {
+      // Copy before sorting to avoid mutating the original array
+      const sortedEvents = [...events].sort(
+        (a, b) => a._creationTime - b._creationTime,
       );
       const now = Date.now();
-      sortedEvents.forEach((event: any) => {
+      sortedEvents.forEach((event) => {
         const minutesAgo = Math.floor((now - event._creationTime) / 60000);
         const timeLabel = minutesAgo < 1 ? "<1 min ago" : `${minutesAgo} min ago`;
         sensorySection += `- [${timeLabel}] ${event.type}: ${event.description}\n`;
