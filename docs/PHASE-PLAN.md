@@ -500,19 +500,23 @@ A1 + A2 + A3 (quick fixes) ✅
 
 **Problem:** The conversation system uses a one-sided model where the initiator drives everything and the partner is forced into `action: "listening"`. The partner is skipped (`if listening → return`) across ticks, so they never generate a response. When the conversation ends, the partner's action is never reset, permanently freezing them.
 
-- [ ] **Remove forced `"listening"` action** — In `processAgent()`, stop calling `updateAction(partner, "listening")` when an agent initiates talking. The partner keeps their own action.
-- [ ] **Remove `listening` skip** — Delete the `if (agent.currentAction === "listening") return;` guard. Every agent gets an LLM call every tick.
-- [ ] **Implement bidirectional conversation state** — Add `partnerLastSpeech` to the `conversationState` schema so each agent stores:
-  - `myLastSpeech`: what THIS agent last said
-  - `partnerLastSpeech`: what the partner said to THIS agent (set by the partner's `handleConversationState`)
-- [ ] **Fix `handleConversationState`** — When Alice talks to Bob, write Bob's `partnerLastSpeech` on Bob's document (so Bob knows Alice spoke to him) AND write Alice's `myLastSpeech` on Alice's document. Each agent only writes to the OTHER's `partnerLastSpeech` field.
-- [ ] **Build conversation context from both agents' states** — When building the LLM prompt, read from the agent's own `conversationState` (what they said, what was said to them) and the partner's state for full context.
-- [ ] **Fix conversation end** — When either agent returns a non-`"talking"` action, clear both agents' `conversationState` AND reset both agents' actions to `"idle"` (fixes the permanently frozen partner).
+**Design decisions (revised 2026-04-28):**
+- Each agent stores ONLY their own `myLastSpeech` in `conversationState`. No `partnerLastSpeech` field — the partner's speech is read from the in-memory agents array during LLM context building. This avoids cross-document `conversationState` overwrites (Convex patches the entire nested object, not individual fields).
+- The `if (listening) return` guard is removed entirely — it recreates the same freeze bug for AI-chosen listening.
+- When a conversation ends, only the partner's action is reset to `"idle"` (the ending agent keeps their AI-chosen action, since `updateAction` at line 327 runs after `handleConversationState` and overwrites any reset).
+
+- [ ] **Remove forced `"listening"` action** — In `processAgent()`, stop calling `updateAction(partner, "listening")` when an agent initiates talking. The partner keeps their own action. Also remove the `+2` relationship update from this branch (deferred to Track B).
+- [ ] **Remove `listening` skip** — Delete the `if (agent.currentAction === "listening") return;` guard. Every agent gets an LLM call every tick. AI-chosen `"listening"` self-recovers naturally on the next tick.
+- [ ] **Add `myLastSpeech` to conversationState** — Add `myLastSpeech: v.optional(v.string())` to the `conversationState` schema. Remove `lastPartnerSpeech` entirely (not renamed — deleted).
+- [ ] **Fix `handleConversationState`** — When Alice talks to Bob, write ONLY `myLastSpeech: speech` to Alice's `conversationState`. Do NOT write to Bob's document. Bob reads Alice's `myLastSpeech` from the in-memory agents array when building his LLM context.
+- [ ] **Build conversation context from agents array** — When building the LLM prompt for Bob, find Alice in the `agents` array and read `alice.conversationState.myLastSpeech` as "what Alice said." Handle undefined gracefully (partner hasn't spoken yet).
+- [ ] **Fix conversation end** — When either agent returns a non-`"talking"` action: clear current agent's `conversationState`; clear partner's `conversationState`; reset partner's `currentAction` to `"idle"` AND clear partner's `interactionPartnerId`. (Current agent's action is set by `updateAction` at line 327 — no reset needed.)
 - [ ] **Write tests:**
-  - Test: agent B responds to agent A's initiation (bidirectional flow)
+  - Test: agent B responds to agent A's initiation (bidirectional flow — B not skipped)
   - Test: agent B can ignore agent A and choose a different action
-  - Test: agent B is not stuck after conversation ends (action reset to idle)
-  - Test: `partnerLastSpeech` is correctly attributed (Alice's words stored as Bob's `partnerLastSpeech`)
+  - Test: agent B is not stuck after conversation ends (action reset to idle, interactionPartnerId cleared)
+  - Test: Conversation context for Bob includes Alice's `myLastSpeech` (read from agents array)
+  - Test: AI-chosen `"listening"` does not permanently freeze the agent
   - Run test suite and confirm all existing tests still pass
 
 ### Track B: Sentiment-Based Affinity During Conversations
