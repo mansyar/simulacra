@@ -6,6 +6,8 @@ import { api, internal } from "../_generated/api";
 /**
  * Simple string hash function for cache key generation.
  * Converts a string into a stable, reproducible hash string.
+ * Uses a 32-bit integer hash — collisions are possible but negligibly rare
+ * given the ephemeral cache scope (~10 texts per tick).
  */
 export function simpleHash(str: string): string {
   let hash = 0;
