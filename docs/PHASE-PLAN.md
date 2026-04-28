@@ -11,7 +11,7 @@
 | 5 | The Social | Proximity + Frontend Interaction | ✅ Complete (All Tracks) | 1-2 weeks |
 | 6 | Fluid Movement | Organic idle + Predictive pathing | ✅ Complete | 3-4 days |
 | 7 | The Mind | AI Context Fidelity | ✅ Complete (Tracks A & B ✅, C covered by B) | 1 week |
-| 8 | The Backbone | Robustness & Scaling | ✅ Track A Complete | 1 week |
+| 8 | The Backbone | Robustness & Scaling | ✅ Track A & B Complete | 1 week |
 | 9 | The Soul | Deeper Social Dynamics | ⏳ Not Started | 1 week |
 | X | The Polish | Master Panel + Deploy | ⏳ Not Started | 1 week |
 
@@ -421,7 +421,10 @@ A1 + A2 + A3 (quick fixes) ✅
 
 **Goal:** Unbottleneck the world tick, optimize for scaling to 50+ agents, and clean up technical debt. Leverages the new (no-limit) chat API to parallelize aggressively while respecting the embedding 100 RPM cap.
 
-**Status:** ✅ TRACK A COMPLETE (2026-04-28)
+**Status:** ✅ TRACK A & B COMPLETE (2026-04-28)
+
+> **Track A completed: 2026-04-28**
+> **Track B completed: 2026-04-28**
 
 ### Track A: Unbottleneck the World Tick [COMPLETE: 2026-04-28]
 
@@ -435,14 +438,14 @@ A1 + A2 + A3 (quick fixes) ✅
 - [x] Write tests for partial batch failure recovery, error isolation, retry behavior, parallel execution timing (9 new tests) (c897a96, 377c771)
 - [x] **Tick duration monitoring:** Added `tickDurationMs` to tick return value + runtime console.log with ms/agent average (a41f5b9)
 
-### Track B: Spatial Query Optimization
+### Track B: Spatial Query Optimization [COMPLETE: 2026-04-28]
 
 **Problem:** Both `recordPassivePerception` and the nearby-agent check in `processAgent()` load ALL agents into memory and brute-force Euclidean distance O(n²). This is fine for 10 agents but prevents scaling to 25+ agents without performance degradation.
 
-- [ ] Replace brute-force agent scans with Convex `by_position` index queries in both locations
-- [ ] Implement bounded-range query with `gte`/`lte` on `gridX` + `gridY` to return only nearby agents
-- [ ] Add performance benchmark test for 50+ agent scaling (verify tick duration < 30s)
-- [ ] Document optimized query patterns in code comments and `docs/ARCHITECTURE.md`
+- [x] Replace brute-force agent scans with Convex `by_position` index queries in both locations (4be5159, c846884)
+- [x] Implement bounded-range query with `gte`/`lte` on `gridX` then filter Euclidean in memory (4be5159)
+- [x] Add performance benchmark test for 50+ agent scaling (verify tick duration < 30s — achieved: 1,055ms) (f5bc109)
+- [x] Document optimized query patterns in code comments and `docs/ARCHITECTURE.md` (7a3175f)
 
 ### Track C: Embedding Pipeline & Configuration Cleanup
 
@@ -467,7 +470,10 @@ A1 + A2 + A3 (quick fixes) ✅
 - [x] **Track A:** Chat 429 backoff removed for chat calls (no rate limits); embeddings retain 429 backoff
 - [x] **Track A:** Tick duration monitoring (tickDurationMs in return value + runtime logging)
 - [x] **Track A:** 9 new tests + 1 updated test; all 208 tests pass across 57 test files
-- [ ] **Track B:** 50+ agent tick completes within acceptable duration (<30s)
+- [x] **Track B:** 50+ agent tick completes within acceptable duration (<30s — achieved: 1,055ms)
+- [x] **Track B:** `recordPassivePerception` and `processAgent` both use `by_position` index (O(k) vs O(n))
+- [x] **Track B:** Spatial query pattern documented in `docs/ARCHITECTURE.md` §7.2
+- [x] **Track B:** 6 new tests (4 spatial query + 1 perception + 1 benchmark); all 214 tests pass across 58 files
 - [ ] **Track C:** Embedding calls reduced from 10/tick to 1/tick (batched)
 - [ ] **Track C:** coreTraits never exceeds 10 entries
 - [ ] **Track C:** All magic thresholds replaced with named constants and documented
@@ -624,7 +630,7 @@ Phase 7 (Mind) ✅
 Phase 8 (Backbone)
     │
     ├──► Unbottleneck the world tick ✅ (Track A Complete)
-    ├──► Spatial query optimization
+    ├──► Spatial query optimization ✅ (Track B Complete)
     └──► Embedding pipeline (batch + cache) & configuration cleanup
             │
             ▼
@@ -666,7 +672,7 @@ Phase X (Polish)
 
 ## Recommended Development Order
 
-### Current Status: Phase 8 Track B & C Up Next 🎯
+### Current Status: Phase 8 Track C Up Next 🎯
 
 1. ✅ **Done:** Grid rendering (Phase 1)
 2. ✅ **Done:** Convex + real-time sync (Phase 2)
@@ -678,8 +684,9 @@ Phase X (Polish)
 8. ✅ **Done:** Sensory Buffer in LLM Context (Phase 7 — Track A)
 9. ✅ **Done:** User Prompt Restructuring (Phase 7 — Track B)
 10. ✅ **Done:** Unbottleneck the World Tick (Phase 8 — Track A)
-    🎯 **Next:** Spatial query optimization, embedding pipeline (Phase 8 — Tracks B & C)
-11. ⏳ **Planned:** Deeper social dynamics (Phase 9 — The Soul)
+11. ✅ **Done:** Spatial Query Optimization (Phase 8 — Track B)
+    🎯 **Next:** Embedding pipeline & configuration cleanup (Phase 8 — Track C)
+12. ⏳ **Planned:** Deeper social dynamics (Phase 9 — The Soul)
 12. ⏳ **Planned:** Master panel and deployment (Phase X — The Polish)
 
 ---
