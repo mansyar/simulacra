@@ -3,6 +3,44 @@ import type { ActionCtx } from "../_generated/server";
 import { v } from "convex/values";
 import { api, internal } from "../_generated/api";
 
+/**
+ * Simple string hash function for cache key generation.
+ * Converts a string into a stable, reproducible hash string.
+ */
+export function simpleHash(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash).toString(36);
+}
+
+/**
+ * Get a cached embedding, or fetch and cache it if missing.
+ * Uses a plain Map as an ephemeral per-invocation cache.
+ *
+ * @param cache - The ephemeral Map to check/store in
+ * @param text - The text to embed
+ * @param fetchFn - Function that fetches embeddings for uncached texts (e.g., batchEmbed)
+ * @returns The embedding vector (number[])
+ */
+export async function getCachedEmbedding(
+  cache: Map<string, number[]>,
+  text: string,
+  fetchFn: (texts: string[]) => Promise<number[][]>,
+): Promise<number[]> {
+  const key = simpleHash(text);
+  const cached = cache.get(key);
+  if (cached) return cached;
+
+  const embeddings = await fetchFn([text]);
+  const embedding = embeddings[0];
+  cache.set(key, embedding);
+  return embedding;
+}
+
 export const ARCHETYPE_PROMPTS = {
   builder: "You are a builder. You are organized, productive, and detail-oriented. You love creating and improving things. Your tone is practical and focused.",
   socialite: "You are a socialite. You are friendly, charming, and love talking to others. You prioritize building relationships and learning about people. Your tone is warm and engaging.",

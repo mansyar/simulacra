@@ -3,6 +3,7 @@ import { convexTest } from "convex-test";
 import { expect, test, vi } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
+import { simpleHash, getCachedEmbedding } from "./functions/ai_helpers";
 
 const modules = import.meta.glob("./**/*.ts");
 
@@ -74,6 +75,58 @@ test("batchEmbed handles empty texts array", async () => {
   expect(results).toHaveLength(0);
 
   delete process.env.OPENAI_API_KEY;
+});
+
+test("simpleHash returns consistent hash for same input", () => {
+  const hash1 = simpleHash("Hello, world!");
+  const hash2 = simpleHash("Hello, world!");
+  expect(hash1).toBe(hash2);
+});
+
+test("simpleHash returns different hashes for different inputs", () => {
+  const hash1 = simpleHash("Hello, world!");
+  const hash2 = simpleHash("Goodbye, world!");
+  expect(hash1).not.toBe(hash2);
+});
+
+test("getCachedEmbedding reuses cached results", async () => {
+  const cache = new Map<string, number[]>();
+  const mockEmbedding = new Array(768).fill(0.5);
+  const fetchFn = vi.fn().mockResolvedValue([mockEmbedding]);
+
+  // First call — should invoke fetchFn
+  const result1 = await getCachedEmbedding(cache, "Test query", fetchFn);
+  expect(result1).toEqual(mockEmbedding);
+  expect(fetchFn).toHaveBeenCalledTimes(1);
+
+  // Second call with same text — should use cache
+  const result2 = await getCachedEmbedding(cache, "Test query", fetchFn);
+  expect(result2).toEqual(mockEmbedding);
+  expect(fetchFn).toHaveBeenCalledTimes(1); // Still only 1 call
+});
+
+test("getCachedEmbedding cache is ephemeral (fresh cache = fresh fetch)", async () => {
+  const cache1 = new Map<string, number[]>();
+  const cache2 = new Map<string, number[]>();
+  const mockEmbedding = new Array(768).fill(0.5);
+  const fetchFn = vi.fn().mockResolvedValue([mockEmbedding]);
+
+  // First cache instance
+  await getCachedEmbedding(cache1, "Test query", fetchFn);
+  expect(fetchFn).toHaveBeenCalledTimes(1);
+
+  // Second cache instance — different Map, should call fetch again
+  await getCachedEmbedding(cache2, "Test query", fetchFn);
+  expect(fetchFn).toHaveBeenCalledTimes(2);
+});
+
+test("getCachedEmbedding handles API error gracefully", async () => {
+  const cache = new Map<string, number[]>();
+  const fetchFn = vi.fn().mockRejectedValue(new Error("API Error"));
+
+  await expect(
+    getCachedEmbedding(cache, "Test query", fetchFn)
+  ).rejects.toThrow("API Error");
 });
 
 test("batchEmbed handles API error gracefully", async () => {

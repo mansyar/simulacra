@@ -313,6 +313,7 @@ export const buildFullContext = action({
   args: {
     agentId: v.id("agents"),
     query: v.string(),
+    embedding: v.optional(v.array(v.float64())),
   },
   handler: async (ctx, args): Promise<{
     agentContext: string;
@@ -331,6 +332,7 @@ export const buildFullContext = action({
     const memoriesResult = await ctx.runAction(api.functions.memory.retrieveMemoriesAction, {
       agentId: args.agentId,
       query: args.query,
+      embedding: args.embedding,
     });
 
     const events = await ctx.runQuery(api.functions.memory.getEvents, {
