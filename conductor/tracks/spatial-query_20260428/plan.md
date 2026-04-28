@@ -26,28 +26,28 @@ Optimize brute-force agent proximity scans using Convex `by_position` index quer
 
 ### Phase 2: Optimize `recordPassivePerception`
 
-- [ ] **Task: Write failing test for optimized recordPassivePerception**
-    - [ ] Read existing `perception.test.ts` to understand current test patterns
-    - [ ] Write test: recordPassivePerception still detects nearby agents after optimization
-    - [ ] Run tests to confirm they fail (Red phase)
+- [x] **Task: Write failing test for optimized recordPassivePerception** [c846884]
+    - [x] Read existing `perception.test.ts` to understand current test patterns
+    - [x] Write test: recordPassivePerception still detects nearby agents after optimization
+    - [x] Run tests to confirm they fail (Red phase)
 
-- [ ] **Task: Refactor recordPassivePerception to use index query**
-    - [ ] Replace `ctx.db.query("agents").collect()` + filter with `ctx.runQuery(internal.functions.agents.getNearbyAgents, {...})`
-    - [ ] Keep events insertion and cleanup logic unchanged
-    - [ ] Run tests to confirm they pass (Green phase)
+- [x] **Task: Refactor recordPassivePerception to use index query** [c846884]
+    - [x] Replace `ctx.db.query("agents").collect()` + filter with `ctx.runQuery(internal.functions.agents.getNearbyAgents, {...})`
+    - [x] Keep events insertion and cleanup logic unchanged
+    - [x] Run tests to confirm they pass (Green phase)
 
 ---
 
 ### Phase 3: Optimize `processAgent` Nearby Check
 
-- [ ] **Task: Write failing test for optimized processAgent nearby check**
-    - [ ] Write test: processAgent correctly identifies nearby agents using index-backed query
-    - [ ] Run tests to confirm they fail (Red phase)
+- [x] **Task: Write failing test for optimized processAgent nearby check** [c846884]
+    - [x] Write test: processAgent correctly identifies nearby agents using index-backed query
+    - [x] Run tests to confirm they fail (Red phase)
 
-- [ ] **Task: Refactor processAgent to use getNearbyAgents query**
-    - [ ] Replace line 265 filter with `await ctx.runQuery(internal.functions.agents.getNearbyAgents, ...)`
-    - [ ] Keep full `agents` array parameter for partner/target lookups
-    - [ ] Run tests to confirm they pass (Green phase)
+- [x] **Task: Refactor processAgent to use getNearbyAgents query** [c846884]
+    - [x] Replace line 265 filter with `await ctx.runQuery(internal.functions.agents.getNearbyAgents, ...)`
+    - [x] Keep full `agents` array parameter for partner/target lookups
+    - [x] Run tests to confirm they pass (Green phase)
 
 ---
 
