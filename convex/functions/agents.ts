@@ -1,35 +1,10 @@
-import { query, mutation, internalMutation } from "../_generated/server";
+import { query, mutation, internalQuery, internalMutation } from "../_generated/server";
 import { v } from "convex/values";
-import type { Doc, Id } from "../_generated/dataModel";
+import type { Doc } from "../_generated/dataModel";
 
-/**
- * Agent document type (from schema)
- */
 export type AgentDoc = Doc<"agents">;
 
-/**
- * Arguments for creating a new agent
- */
-export interface CreateAgentArgs {
-  name: string;
-  archetype: "builder" | "socialite" | "philosopher" | "explorer" | "nurturer";
-  gridX: number;
-  gridY: number;
-  spriteVariant?: number;
-}
-
-/**
- * Arguments for updating agent position
- */
-export interface UpdatePositionArgs {
-  agentId: Id<"agents">;
-  targetX: number;
-  targetY: number;
-}
-
-/**
- * Query: Get all active agents
- */
+/** Query: Get all active agents */
 export const getAll = query({
   args: {},
   handler: async (ctx) => {
@@ -41,9 +16,7 @@ export const getAll = query({
   },
 });
 
-/**
- * Query: Get a single agent by ID
- */
+/** Query: Get a single agent by ID */
 export const getById = query({
   args: { agentId: v.id("agents") },
   handler: async (ctx, { agentId }) => {
@@ -52,9 +25,7 @@ export const getById = query({
   },
 });
 
-/**
- * Query: Get an agent's relationships with names resolved
- */
+/** Query: Get agent relationships with names resolved */
 export const getRelationships = query({
   args: { agentId: v.id("agents") },
   handler: async (ctx, { agentId }) => {
@@ -85,9 +56,32 @@ export const getRelationships = query({
   },
 });
 
-/**
- * Mutation: Create a new agent
- */
+/** Internal Query: Get nearby agents via by_position index (O(k) vs O(n)) */
+export const getNearbyAgents = internalQuery({
+  args: {
+    agentId: v.id("agents"),
+    gridX: v.number(),
+    gridY: v.number(),
+    radius: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const { agentId, gridX, gridY, radius } = args;
+    const candidates = await ctx.db
+      .query("agents")
+      .withIndex("by_position", (q) =>
+        q.gte("gridX", gridX - radius).lte("gridX", gridX + radius)
+      )
+      .collect();
+    return candidates.filter((a) => {
+      if (a._id === agentId) return false;
+      const dx = a.gridX - gridX;
+      const dy = a.gridY - gridY;
+      return Math.sqrt(dx * dx + dy * dy) < radius;
+    });
+  },
+});
+
+/** Mutation: Create a new agent */
 export const create = mutation({
   args: {
     name: v.string(),
@@ -129,9 +123,7 @@ export const create = mutation({
   },
 });
 
-/**
- * Internal Mutation: Resolve movement toward target based on speed and weather
- */
+/** Internal Mutation: Resolve movement toward target */
 export const resolveMovement = internalMutation({
   args: {
     agentId: v.id("agents"),
@@ -167,9 +159,7 @@ export const resolveMovement = internalMutation({
   },
 });
 
-/**
- * Mutation: Update agent position
- */
+/** Mutation: Update agent position */
 export const updatePosition = mutation({
   args: {
     agentId: v.id("agents"),
@@ -192,9 +182,7 @@ export const updatePosition = mutation({
   },
 });
 
-/**
- * Internal Mutation: Update agent needs based on current action
- */
+/** Internal Mutation: Update agent needs based on current action */
 export const updateNeeds = internalMutation({
   args: {
     agentId: v.id("agents"),
@@ -260,9 +248,7 @@ export const updateNeeds = internalMutation({
   },
 });
 
-/**
- * Internal Mutation: Update agent action and target
- */
+/** Internal Mutation: Update agent action and target */
 export const updateAction = internalMutation({
   args: {
     agentId: v.id("agents"),
@@ -293,9 +279,7 @@ export const updateAction = internalMutation({
   },
 });
 
-/**
- * Internal Mutation: Record passive perception (sighting nearby agents)
- */
+/** Internal Mutation: Record passive perception (sight nearby agents) */
 export const recordPassivePerception = internalMutation({
   args: {
     agentId: v.id("agents"),
@@ -345,9 +329,7 @@ export const recordPassivePerception = internalMutation({
   },
 });
 
-/**
- * Internal Mutation: Update relationship affinity between two agents
- */
+/** Internal Mutation: Update relationship affinity */
 export const updateRelationship = internalMutation({
   args: {
     agentAId: v.id("agents"),
@@ -390,9 +372,7 @@ export const updateRelationship = internalMutation({
   },
 });
 
-/**
- * Internal Mutation: Update agent identity traits
- */
+/** Internal Mutation: Update agent identity traits */
 export const updateIdentity = internalMutation({
   args: {
     agentId: v.id("agents"),
@@ -417,9 +397,7 @@ export const updateIdentity = internalMutation({
   },
 });
 
-/**
- * Internal Mutation: Set conversation state for an agent
- */
+/** Internal Mutation: Set conversation state */
 export const setConversationState = internalMutation({
   args: {
     agentId: v.id("agents"),
@@ -441,9 +419,7 @@ export const setConversationState = internalMutation({
   },
 });
 
-/**
- * Internal Mutation: Clear conversation state for an agent
- */
+/** Internal Mutation: Clear conversation state */
 export const clearConversationState = internalMutation({
   args: {
     agentId: v.id("agents"),
