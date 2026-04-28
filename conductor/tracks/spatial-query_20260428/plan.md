@@ -1,0 +1,77 @@
+# Implementation Plan: Phase 8 Track B — Spatial Query Optimization
+
+## Overview
+
+Optimize brute-force agent proximity scans using Convex `by_position` index queries for both `recordPassivePerception` and `processAgent` nearby-agent checks. Reduce per-agent spatial query from O(n) (all agents) to O(k) (k agents within bounding box).
+
+---
+
+### Phase 1: Add `getNearbyAgents` Internal Query
+
+- [ ] **Task: Write failing tests for getNearbyAgents**
+    - [ ] Write test: query returns agents within radius using by_position index
+    - [ ] Write test: query excludes the querying agent from results
+    - [ ] Write test: query returns empty array when no agents are nearby
+    - [ ] Write test: agent far outside radius is not included in results
+    - [ ] Run tests to confirm they fail (Red phase)
+
+- [ ] **Task: Implement getNearbyAgents internal query**
+    - [ ] Add `getNearbyAgents` internal query in `convex/functions/agents.ts`
+    - [ ] Accept args: `agentId`, `gridX`, `gridY`, `radius`
+    - [ ] Use `withIndex("by_position", q => q.gte("gridX", gridX-radius).lte("gridX", gridX+radius))` for bounding box
+    - [ ] Filter results by Euclidean distance and exclude self
+    - [ ] Run tests to confirm they pass (Green phase)
+
+---
+
+### Phase 2: Optimize `recordPassivePerception`
+
+- [ ] **Task: Write failing test for optimized recordPassivePerception**
+    - [ ] Read existing `perception.test.ts` to understand current test patterns
+    - [ ] Write test: recordPassivePerception still detects nearby agents after optimization
+    - [ ] Run tests to confirm they fail (Red phase)
+
+- [ ] **Task: Refactor recordPassivePerception to use index query**
+    - [ ] Replace `ctx.db.query("agents").collect()` + filter with `ctx.runQuery(internal.functions.agents.getNearbyAgents, {...})`
+    - [ ] Keep events insertion and cleanup logic unchanged
+    - [ ] Run tests to confirm they pass (Green phase)
+
+---
+
+### Phase 3: Optimize `processAgent` Nearby Check
+
+- [ ] **Task: Write failing test for optimized processAgent nearby check**
+    - [ ] Write test: processAgent correctly identifies nearby agents using index-backed query
+    - [ ] Run tests to confirm they fail (Red phase)
+
+- [ ] **Task: Refactor processAgent to use getNearbyAgents query**
+    - [ ] Replace line 265 filter with `await ctx.runQuery(internal.functions.agents.getNearbyAgents, ...)`
+    - [ ] Keep full `agents` array parameter for partner/target lookups
+    - [ ] Run tests to confirm they pass (Green phase)
+
+---
+
+### Phase 4: Performance Benchmark
+
+- [ ] **Task: Write 50+ agent scaling benchmark test**
+    - [ ] Create benchmark test that seeds 50+ agents across the 64×64 grid
+    - [ ] Execute a full tick and measure duration
+    - [ ] Assert tick duration < 30,000ms
+    - [ ] Run the benchmark to verify
+
+---
+
+### Phase 5: Documentation & Cleanup
+
+- [ ] **Task: Add code comments for optimized query patterns**
+    - [ ] Document the bounded range query pattern in `getNearbyAgents`
+    - [ ] Explain the tradeoff: Convex index range on gridX + in-memory Euclidean filter
+
+- [ ] **Task: Update docs/ARCHITECTURE.md**
+    - [ ] Add spatial query optimization section to Performance Architecture
+    - [ ] Document the bounded-range query pattern and its O(k) vs O(n) benefit
+
+- [ ] **Task: Final verification**
+    - [ ] Run full test suite to confirm all tests pass
+    - [ ] Run coverage report to verify >80%
+    - [ ] Verify the final implementation matches the specification
