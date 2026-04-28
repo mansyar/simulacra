@@ -52,9 +52,8 @@ function buildContextPrompt(
 
   // Identity section
   prompt += `## Your Identity\n`;
-  prompt += `Name: ${agentState.name}\n`;
   if (context?.agentContext) {
-    // agentContext contains: Archetype, Biography, Traits, Inventory, Current Goal, Personality
+    // agentContext (from buildAgentContext) already contains Name, Archetype, Biography, etc.
     prompt += context.agentContext;
   }
   if (!prompt.endsWith("\n")) prompt += "\n";
