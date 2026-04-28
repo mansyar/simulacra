@@ -92,7 +92,7 @@ export async function chatCompletion(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-    });
+    }, 3, 1000, true);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -116,7 +116,7 @@ export async function chatCompletion(
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify(body),
-    });
+    }, 3, 1000, true);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -141,17 +141,27 @@ export async function getEmbeddingConfig(ctx: ActionCtx): Promise<AiConfig> {
   };
 }
 
+/**
+ * Fetch with retry logic. Chat calls (skip429Backoff=true) skip 429 retries since
+ * the chat model has no rate limits. Embedding calls (skip429Backoff=false, default)
+ * retain 429 backoff due to separate rate limit concerns.
+ * Network errors (5xx, timeouts) are always retried regardless.
+ */
 export async function fetchWithRetry(
   url: string,
   options: RequestInit,
   maxRetries: number = 3,
-  baseDelay: number = 1000
+  baseDelay: number = 1000,
+  skip429Backoff: boolean = false
 ): Promise<Response> {
   let lastError: Error | null = null;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       const response = await fetch(url, options);
+      // For chat calls: return 429 immediately instead of retrying
+      // For embedding calls: keep existing 429 backoff behavior
+      if (response.status === 429 && skip429Backoff) return response;
       if (response.status !== 429) return response;
       if (attempt === maxRetries) return response;
       const delay = baseDelay * Math.pow(2, attempt);

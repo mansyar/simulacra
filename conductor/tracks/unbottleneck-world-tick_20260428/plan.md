@@ -25,17 +25,17 @@
 
 ## Phase 2: Simplify Chat Retry Logic
 
-- [ ] Task 2.1: Write failing tests for retry simplification
+- [x] Task 2.1: Write failing tests for retry simplification
     - [ ] Write unit test: verify chat calls no longer apply 429-specific backoff
     - [ ] Write unit test: verify network error retries (5xx, timeout) still work for chat calls
     - [ ] Write unit test: verify embedding calls still use 429 backoff (unchanged)
     - [ ] RUN tests and confirm they fail (Red phase)
 
-- [ ] Task 2.2: Implement retry simplification in ai_helpers.ts
-    - [ ] Update `fetchWithRetry` (or equivalent retry function) to distinguish chat vs embedding calls
-    - [ ] Remove 429-specific backoff for chat calls — only retry on 5xx/timeouts
-    - [ ] Preserve 429 backoff for embedding calls unchanged
-    - [ ] RUN tests and confirm they pass (Green phase)
+- [x] Task 2.2: Implement retry simplification in ai_helpers.ts
+    - [x] Update `fetchWithRetry` to distinguish chat vs embedding calls via `skip429Backoff` param
+    - [x] Remove 429-specific backoff for chat calls — only retry on 5xx/timeouts
+    - [x] Preserve 429 backoff for embedding calls unchanged
+    - [x] RUN tests and confirm they pass (Green phase)
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
 
