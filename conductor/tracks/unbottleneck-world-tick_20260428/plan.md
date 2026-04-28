@@ -2,24 +2,24 @@
 
 ## Phase 1: Parallelize Agent Processing
 
-- [ ] Task 1.1: Write failing tests for partial batch failure recovery
-    - [ ] Create a Convex integration test setup that simulates the world tick with 10 agents
-    - [ ] Write test: inject a forced failure into 1 agent's `processAgent` → verify remaining 9 succeed
-    - [ ] Write test: verify failed agent gets 1 retry attempt
-    - [ ] RUN tests and confirm they fail (Red phase)
+- [x] Task 1.1: Write failing tests for partial batch failure recovery
+    - [x] Create a Convex integration test setup that simulates the world tick with 10 agents
+    - [x] Write test: inject a forced failure into 1 agent's `processAgent` → verify remaining 9 succeed
+    - [x] Write test: verify failed agent gets 1 retry attempt
+    - [x] RUN tests and confirm they fail (Red phase)
 
-- [ ] Task 1.2: Implement parallel agent execution
-    - [ ] Remove `BATCH_DELAY_MS = 1000` constant from world.ts
-    - [ ] Remove the `await new Promise(...)` inter-batch delay loop
-    - [ ] Replace the batched execution with `Promise.all(agents.map(processAgent))`
-    - [ ] RUN tests to confirm they pass (Green phase)
+- [x] Task 1.2: Implement parallel agent execution
+    - [x] Remove `BATCH_DELAY_MS = 1000` constant from world.ts
+    - [x] Remove the `await new Promise(...)` inter-batch delay loop
+    - [x] Replace the batched execution with `Promise.all(agents.map(processAgent))`
+    - [x] RUN tests to confirm they pass (Green phase)
 
-- [ ] Task 1.3: Implement error isolation with retry
-    - [ ] Wrap each individual `processAgent` call in a try-catch block (within the Promise.all)
-    - [ ] On first failure: log error via `addEvent` to agent's sensory buffer, wait 500ms, retry once
-    - [ ] On second failure: log double-failure, skip this agent for the current tick
-    - [ ] Ensure failed agent errors do NOT propagate and do NOT block Promise.all
-    - [ ] RUN tests and confirm they pass
+- [x] Task 1.3: Implement error isolation with retry
+    - [x] Wrap each individual `processAgent` call in a try-catch block (within the Promise.all)
+    - [x] On first failure: log error via `addEvent` to agent's sensory buffer, wait 500ms, retry once
+    - [x] On second failure: log double-failure, skip this agent for the current tick
+    - [x] Ensure failed agent errors do NOT propagate and do NOT block Promise.all
+    - [x] RUN tests and confirm they pass
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
 

@@ -356,14 +356,46 @@ export const tick = action({
     const weather = worldState?.weather || "sunny";
     const weatherMultipliers: Record<string, number> = { sunny: 1.0, cloudy: 1.0, rainy: 0.8, stormy: 0.5 };
     const speedMultiplier = weatherMultipliers[weather] || 1.0;
-    const BATCH_SIZE = 3, BATCH_DELAY_MS = 1000;
+    // Process all agents in parallel with error isolation — no inter-batch delays
+    // The chat model has no concurrency limits, so batching is unnecessary
+    console.log(`[WORLD] Processing all ${agents.length} agents in parallel with error isolation`);
+    await Promise.all(agents.map(async (agent: any) => {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          await processAgent(ctx, agent, agents, worldState, interactionRadius, speedMultiplier);
+          break; // Success, exit retry loop
+        } catch (error) {
+          const errorMsg = error instanceof Error ? error.message : String(error);
+          console.error(`[WORLD] Agent ${agent.name} failed (attempt ${attempt + 1}/2):`, errorMsg);
 
-    for (let i = 0; i < agents.length; i += BATCH_SIZE) {
-      const batch = agents.slice(i, i + BATCH_SIZE);
-      console.log(`[WORLD] Processing batch ${i / BATCH_SIZE + 1} of ${Math.ceil(agents.length / BATCH_SIZE)}`);
-      await Promise.all(batch.map(async (agent: any) => processAgent(ctx, agent, agents, worldState, interactionRadius, speedMultiplier)));
-      if (i + BATCH_SIZE < agents.length) await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
-    }
+          if (attempt === 0) {
+            // Log first failure and wait 500ms before retry
+            try {
+              await ctx.runMutation(api.functions.memory.addEvent, {
+                agentId: agent._id,
+                type: "movement",
+                description: `Error during processing, retrying...`,
+                gridX: agent.gridX,
+                gridY: agent.gridY,
+              });
+            } catch {/* ignore secondary errors during error handling */}
+            await new Promise(resolve => setTimeout(resolve, 500));
+          } else {
+            // Second failure — log and skip this agent for this tick
+            try {
+              await ctx.runMutation(api.functions.memory.addEvent, {
+                agentId: agent._id,
+                type: "movement",
+                description: `Error: Skipped this tick after 2 failed attempts`,
+                gridX: agent.gridX,
+                gridY: agent.gridY,
+              });
+            } catch {/* ignore secondary errors during error handling */}
+            console.error(`[WORLD] Agent ${agent.name} — skipped after 2 failed attempts`);
+          }
+        }
+      }
+    }));
 
     console.log("[WORLD] Advancing world state...");
     await ctx.runMutation(internal.functions.world.advanceWorldState);
