@@ -1,7 +1,7 @@
 import { action } from "../_generated/server";
 import type { ActionCtx } from "../_generated/server";
 import { v } from "convex/values";
-import { internal } from "../_generated/api";
+import { api, internal } from "../_generated/api";
 
 export const ARCHETYPE_PROMPTS = {
   builder: "You are a builder. You are organized, productive, and detail-oriented. You love creating and improving things. Your tone is practical and focused.",
@@ -343,6 +343,71 @@ export const embed = action({
     } catch (error) {
       console.error("[AI] Embed error:", error);
       return new Array(768).fill(0).map(() => Math.random());
+    }
+  },
+});
+
+export const batchEmbed = action({
+  args: { texts: v.array(v.string()) },
+  handler: async (ctx, args): Promise<number[][]> => {
+    if (args.texts.length === 0) return [];
+
+    const { apiKey, baseUrl, model } = await getEmbeddingConfig(ctx);
+    if (!apiKey) {
+      return args.texts.map(() => new Array(768).fill(0).map(() => Math.random()));
+    }
+
+    try {
+      const isGoogle = baseUrl.includes("googleapis.com") && !baseUrl.includes("/openai");
+
+      if (isGoogle) {
+        // Google Gemini doesn't support batch embedding natively — fall back to individual calls
+        const results = await Promise.all(
+          args.texts.map((text) =>
+            ctx.runAction(api.functions.ai_helpers.embed, { text }),
+          ),
+        );
+        return results;
+      }
+
+      // OpenAI-compatible batch embedding
+      const url = `${baseUrl.replace(/\/$/, "")}/embeddings`;
+      const body: Record<string, unknown> = { model, input: args.texts };
+      if (!baseUrl.includes("googleapis.com")) {
+        body.dimensions = 768;
+      }
+
+      const response = await fetchWithRetry(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[AI] BatchEmbed API Error: ${response.status} - ${errorText} | URL: ${url}`);
+        throw new Error(`AI API error (${response.status}): ${errorText}`);
+      }
+
+      const data = await response.json();
+
+      // OpenAI-compatible: data.data[].embedding
+      if (data.data && Array.isArray(data.data)) {
+        return data.data.map((item: { embedding: number[] }) => item.embedding);
+      }
+
+      // Alternative: data.embeddings[] (some providers)
+      if (data.embeddings && Array.isArray(data.embeddings)) {
+        return data.embeddings;
+      }
+
+      throw new Error("Unexpected embedding response format");
+    } catch (error) {
+      console.error("[AI] BatchEmbed error:", error);
+      return args.texts.map(() => new Array(768).fill(0).map(() => Math.random()));
     }
   },
 });

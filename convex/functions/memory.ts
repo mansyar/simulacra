@@ -182,12 +182,13 @@ export const retrieveMemoriesAction = action({
     agentId: v.id("agents"),
     query: v.string(),
     limit: v.optional(v.number()),
+    embedding: v.optional(v.array(v.float64())),
   },
   handler: async (ctx, args): Promise<Doc<"memories">[]> => {
     const limit = args.limit ?? 5;
 
-    // 1. Generate embedding for the search query
-    const embedding = await ctx.runAction(api.functions.ai_helpers.embed, {
+    // 1. Generate embedding for the search query (or use pre-computed one)
+    const embedding = args.embedding ?? await ctx.runAction(api.functions.ai_helpers.embed, {
       text: args.query,
     });
 
