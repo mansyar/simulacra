@@ -1,0 +1,8 @@
+{
+  "track_id": "embedding-pipeline-cleanup_20260428",
+  "type": "chore",
+  "status": "new",
+  "created_at": "2026-04-28T19:28:00Z",
+  "updated_at": "2026-04-28T19:28:00Z",
+  "description": "Phase 8 Track C: Embedding Pipeline & Configuration Cleanup — Batch embedding calls, per-tick embedding cache, Trait Cap at 10 items, named constants for magic thresholds, and associated tests"
+}
