@@ -31,7 +31,7 @@ describe("Multi-Turn Speech Persistence", () => {
       partnerId: agentBId,
       role: "initiator",
       turnCount: 1,
-      lastPartnerSpeech: "Hello!",
+      myLastSpeech: "Hello!",
     });
 
     // Update agent speech
@@ -76,7 +76,7 @@ describe("Multi-Turn Speech Persistence", () => {
       partnerId: agentBId,
       role: "initiator",
       turnCount: 1,
-      lastPartnerSpeech: "Hello!",
+      myLastSpeech: "Hello!",
     });
 
     await t.mutation(internal.functions.agents.updateAction, {
@@ -99,7 +99,7 @@ describe("Multi-Turn Speech Persistence", () => {
       partnerId: agentBId,
       role: "initiator",
       turnCount: 2,
-      lastPartnerSpeech: "How are you?",
+      myLastSpeech: "How are you?",
     });
 
     await t.mutation(internal.functions.agents.updateAction, {
@@ -142,7 +142,7 @@ describe("Multi-Turn Speech Persistence", () => {
       partnerId: agentBId,
       role: "initiator",
       turnCount: 1,
-      lastPartnerSpeech: "Hello!",
+      myLastSpeech: "Hello!",
     });
 
     await t.mutation(internal.functions.agents.updateAction, {
@@ -168,7 +168,7 @@ describe("Multi-Turn Speech Persistence", () => {
     expect(agent?.conversationState).toBeUndefined();
   });
 
-  test("lastPartnerSpeech is stored in conversation state", async () => {
+  test("myLastSpeech is stored in conversation state", async () => {
     const t = convexTest(schema, modules);
 
     // Create two agents
@@ -186,20 +186,20 @@ describe("Multi-Turn Speech Persistence", () => {
       gridY: 1,
     });
 
-    // Set conversation state with lastPartnerSpeech
+    // Set conversation state with myLastSpeech
     await t.mutation(internal.functions.agents.setConversationState, {
       agentId: agentAId,
       partnerId: agentBId,
       role: "initiator",
       turnCount: 1,
-      lastPartnerSpeech: "Hello there! How are you today?",
+      myLastSpeech: "Hello there! How are you today?",
     });
 
-    // Get agent and verify lastPartnerSpeech
+    // Get agent and verify myLastSpeech
     const agent = await t.query(api.functions.agents.getById, {
       agentId: agentAId,
     });
 
-    expect(agent?.conversationState?.lastPartnerSpeech).toBe("Hello there! How are you today?");
+    expect(agent?.conversationState?.myLastSpeech).toBe("Hello there! How are you today?");
   });
 });

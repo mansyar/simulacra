@@ -31,7 +31,7 @@ describe("Multi-Turn Conversation Flow", () => {
       partnerId: agentBId,
       role: "initiator",
       turnCount: 1,
-      lastPartnerSpeech: "Hello there!",
+      myLastSpeech: "Hello there!",
     });
 
     // Get the agent and verify conversation state
@@ -68,7 +68,7 @@ describe("Multi-Turn Conversation Flow", () => {
       partnerId: agentBId,
       role: "initiator",
       turnCount: 1,
-      lastPartnerSpeech: "Hello!",
+      myLastSpeech: "Hello!",
     });
 
     // Clear conversation state (simulating action change)
@@ -108,7 +108,7 @@ describe("Multi-Turn Conversation Flow", () => {
       partnerId: agentBId,
       role: "initiator",
       turnCount: 1,
-      lastPartnerSpeech: "Hello!",
+      myLastSpeech: "Hello!",
     });
 
     // Move partner away (simulate walking away)
@@ -150,7 +150,7 @@ describe("Multi-Turn Conversation Flow", () => {
       partnerId: agentBId,
       role: "initiator",
       turnCount: 1,
-      lastPartnerSpeech: "Hello!",
+      myLastSpeech: "Hello!",
     });
 
     // Get agent and verify turn count
@@ -185,7 +185,7 @@ describe("Multi-Turn Conversation Flow", () => {
       partnerId: agentBId,
       role: "initiator",
       turnCount: 5,
-      lastPartnerSpeech: "Goodbye!",
+      myLastSpeech: "Goodbye!",
     });
 
     // Get agent and verify turn count is at or over cap
@@ -220,7 +220,7 @@ describe("Multi-Turn Conversation Flow", () => {
       partnerId: agentBId,
       role: "initiator",
       turnCount: 1,
-      lastPartnerSpeech: "Hello there!",
+      myLastSpeech: "Hello there!",
     });
 
     // Update agent speech

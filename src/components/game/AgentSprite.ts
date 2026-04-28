@@ -18,7 +18,7 @@ export interface AgentData {
     partnerId: Id<'agents'>
     role: 'initiator' | 'responder'
     turnCount: number
-    lastPartnerSpeech?: string
+    myLastSpeech?: string
     startedAt: number
   }
 }

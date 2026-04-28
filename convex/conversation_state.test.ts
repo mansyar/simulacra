@@ -46,7 +46,7 @@ describe("Conversation State", () => {
       partnerId: agentBId,
       role: "initiator",
       turnCount: 1,
-      lastPartnerSpeech: "Hello there!",
+      myLastSpeech: "Hello there!",
     });
 
     // Get the agent and verify conversation state
@@ -58,7 +58,7 @@ describe("Conversation State", () => {
     expect(agent?.conversationState?.partnerId).toBe(agentBId);
     expect(agent?.conversationState?.role).toBe("initiator");
     expect(agent?.conversationState?.turnCount).toBe(1);
-    expect(agent?.conversationState?.lastPartnerSpeech).toBe("Hello there!");
+    expect(agent?.conversationState?.myLastSpeech).toBe("Hello there!");
   });
 
   test("conversationState can be cleared", async () => {
@@ -85,7 +85,7 @@ describe("Conversation State", () => {
       partnerId: agentBId,
       role: "initiator",
       turnCount: 1,
-      lastPartnerSpeech: "Hello!",
+      myLastSpeech: "Hello!",
     });
 
     // Clear conversation state
@@ -132,7 +132,7 @@ describe("Conversation State", () => {
       partnerId: agentBId,
       role: "initiator",
       turnCount: 1,
-      lastPartnerSpeech: "Hello!",
+      myLastSpeech: "Hello!",
     });
 
     await t.mutation(internal.functions.agents.setConversationState, {
@@ -140,7 +140,7 @@ describe("Conversation State", () => {
       partnerId: agentAId,
       role: "responder",
       turnCount: 1,
-      lastPartnerSpeech: "Hi!",
+      myLastSpeech: "Hi!",
     });
 
     // Get active conversations
@@ -152,6 +152,80 @@ describe("Conversation State", () => {
     const agentBInConv = activeConversations.find((a: any) => a._id === agentBId);
     expect(agentAInConv).toBeDefined();
     expect(agentBInConv).toBeDefined();
+  });
+
+  // === New schema tests for bidirectional conversation ===
+  test("myLastSpeech field persists in conversationState", async () => {
+    const t = convexTest(schema, modules);
+
+    // Create two agents
+    const agentAId = await t.mutation(api.functions.agents.create, {
+      name: "Agent A",
+      archetype: "socialite",
+      gridX: 0,
+      gridY: 0,
+    });
+
+    const agentBId = await t.mutation(api.functions.agents.create, {
+      name: "Agent B",
+      archetype: "builder",
+      gridX: 1,
+      gridY: 1,
+    });
+
+    // Set conversation state with myLastSpeech
+    await t.mutation(internal.functions.agents.setConversationState, {
+      agentId: agentAId,
+      partnerId: agentBId,
+      role: "initiator",
+      turnCount: 1,
+      myLastSpeech: "Hello there!",
+    });
+
+    // Get the agent and verify myLastSpeech was stored
+    const agent = await t.query(api.functions.agents.getById, {
+      agentId: agentAId,
+    });
+
+    expect(agent?.conversationState).toBeDefined();
+    expect(agent?.conversationState?.myLastSpeech).toBe("Hello there!");
+  });
+
+  test("myLastSpeech no longer exists in conversationState", async () => {
+    const t = convexTest(schema, modules);
+
+    // Create two agents
+    const agentAId = await t.mutation(api.functions.agents.create, {
+      name: "Agent A",
+      archetype: "socialite",
+      gridX: 0,
+      gridY: 0,
+    });
+
+    const agentBId = await t.mutation(api.functions.agents.create, {
+      name: "Agent B",
+      archetype: "builder",
+      gridX: 1,
+      gridY: 1,
+    });
+
+    // Set conversation state with myLastSpeech (not lastPartnerSpeech)
+    await t.mutation(internal.functions.agents.setConversationState, {
+      agentId: agentAId,
+      partnerId: agentBId,
+      role: "initiator",
+      turnCount: 1,
+      myLastSpeech: "Hello there!",
+    });
+
+    // Get the agent and verify lastPartnerSpeech is NOT present
+    const agent = await t.query(api.functions.agents.getById, {
+      agentId: agentAId,
+    });
+
+    expect(agent?.conversationState).toBeDefined();
+    // lastPartnerSpeech should not exist since we removed it from the schema
+    expect((agent?.conversationState as any)?.lastPartnerSpeech).toBeUndefined();
   });
 
   test("conversation termination conditions work correctly", async () => {
@@ -178,7 +252,7 @@ describe("Conversation State", () => {
       partnerId: agentBId,
       role: "initiator",
       turnCount: 5, // At cap
-      lastPartnerSpeech: "Goodbye!",
+      myLastSpeech: "Goodbye!",
     });
 
     // Get the agent and verify turn count

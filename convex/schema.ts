@@ -75,7 +75,7 @@ export default defineSchema({
       partnerId: v.id("agents"),
       role: v.union(v.literal("initiator"), v.literal("responder")),
       turnCount: v.number(),
-      lastPartnerSpeech: v.optional(v.string()),
+      myLastSpeech: v.optional(v.string()),
       startedAt: v.number(),
     })),
   })

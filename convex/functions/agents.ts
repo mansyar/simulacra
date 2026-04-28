@@ -406,16 +406,20 @@ export const setConversationState = internalMutation({
     partnerId: v.id("agents"),
     role: v.union(v.literal("initiator"), v.literal("responder")),
     turnCount: v.number(),
-    lastPartnerSpeech: v.optional(v.string()),
+    myLastSpeech: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Get existing agent to preserve startedAt if re-entering conversation
+    const agent = await ctx.db.get(args.agentId);
+    const existingStartedAt = agent?.conversationState?.startedAt;
+
     await ctx.db.patch(args.agentId, {
       conversationState: {
         partnerId: args.partnerId,
         role: args.role,
         turnCount: args.turnCount,
-        lastPartnerSpeech: args.lastPartnerSpeech,
-        startedAt: Date.now(),
+        myLastSpeech: args.myLastSpeech,
+        startedAt: existingStartedAt ?? Date.now(),
       },
     });
   },
