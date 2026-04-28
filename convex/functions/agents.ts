@@ -388,6 +388,7 @@ export const updateIdentity = internalMutation({
     // Merge traits and keep unique ones, limited to 10
     const combinedTraits = Array.from(new Set([...agent.coreTraits, ...args.newTraits])).slice(0, 10);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const patch: any = {
       coreTraits: combinedTraits,
     };
@@ -433,6 +434,21 @@ export const clearConversationState = internalMutation({
   handler: async (ctx, args) => {
     await ctx.db.patch(args.agentId, {
       conversationState: undefined,
+    });
+  },
+});
+
+/** Internal Mutation: Reset partner's state when conversation ends */
+export const resetConversationEnd = internalMutation({
+  args: {
+    agentId: v.id("agents"),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.agentId, {
+      currentAction: "idle",
+      interactionPartnerId: undefined,
+      conversationState: undefined,
+      speech: undefined,
     });
   },
 });

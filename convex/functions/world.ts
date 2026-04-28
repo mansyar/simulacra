@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { query, mutation, action, internalMutation } from "../_generated/server";
 import { v } from "convex/values";
 import { api, internal } from "../_generated/api";
@@ -217,13 +218,9 @@ async function handleConversationState(ctx: any, agent: any, normalizedAction: s
   } else if (wasInConversation) {
     // Clear current agent's conversation state
     await ctx.runMutation(internal.functions.agents.clearConversationState, { agentId: agent._id });
-    // Clear partner's conversation state AND reset partner's action
+    // Clear partner's conversation state AND reset partner's action via dedicated mutation
     if (agent.conversationState?.partnerId) {
-      const partnerId = agent.conversationState.partnerId;
-      await ctx.runMutation(internal.functions.agents.clearConversationState, { agentId: partnerId });
-      await ctx.runMutation(internal.functions.agents.updateAction, {
-        agentId: partnerId, action: "idle", interactionPartnerId: undefined, speech: undefined,
-      });
+      await ctx.runMutation(internal.functions.agents.resetConversationEnd, { agentId: agent.conversationState.partnerId });
     }
   }
 }

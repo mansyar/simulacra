@@ -322,14 +322,7 @@ describe("Multi-Turn Conversation Flow", () => {
     // Clear both agents' conversation states
     // Reset B's action to "idle" and clear B's interactionPartnerId
     await t.mutation(internal.functions.agents.clearConversationState, { agentId: agentAId });
-    await t.mutation(internal.functions.agents.clearConversationState, { agentId: agentBId });
-    await t.mutation(internal.functions.agents.updateAction, {
-      agentId: agentBId, action: "idle",
-    });
-    // Clear interactionPartnerId directly via DB patch
-    await t.run(async (ctx) => {
-      await ctx.db.patch(agentBId, { interactionPartnerId: undefined });
-    });
+    await t.mutation(internal.functions.agents.resetConversationEnd, { agentId: agentBId });
 
     // Verify partner B is properly reset
     const agentB = await t.query(api.functions.agents.getById, { agentId: agentBId });
