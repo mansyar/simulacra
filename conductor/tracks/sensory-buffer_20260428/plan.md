@@ -1,6 +1,6 @@
 # Implementation Plan: Sensory Buffer in LLM Context
 
-## Phase 1: Implement Sensory Event Retrieval in `buildFullContext()`
+## Phase 1: Implement Sensory Event Retrieval in `buildFullContext()` [checkpoint: 750f7ae]
 
 - [x] Task: Write failing test for sensory events in `buildFullContext()` context [7d0f8d1]
     - [x] Create test file `convex/sensory_context.test.ts` following existing patterns (`convexTest` with schema + modules)
@@ -15,7 +15,7 @@
     - [x] Prepend the `"## Recent Events"` section at the top of the full context string (before relationships and memories)
     - [x] Handle empty events case: emit `"## Recent Events\n(No recent events)"`
     - [x] Run tests and confirm they pass (Green phase)
-- [x] Task: Verify coverage and code quality
-    - [ ] Run `pnpm test:coverage` to verify >80% coverage target
-    - [ ] Run `npx tsc --noEmit` for type checking
-- [~] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
+- [x] Task: Verify coverage and code quality [750f7ae]
+    - [x] Run `pnpm test:coverage` to verify >80% coverage target
+    - [x] Run `npx tsc --noEmit` for type checking
+- [x] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md) [750f7ae]
