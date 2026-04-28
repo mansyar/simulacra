@@ -266,8 +266,31 @@ export const buildFullContext = action({
       query: args.query,
     });
 
-    let fullContext: string = agentContext;
-    
+    const events = await ctx.runQuery(api.functions.memory.getEvents, {
+      agentId: args.agentId,
+    });
+
+    // Build the "## Recent Events" section (sensory buffer) at the top
+    let sensorySection = "## Recent Events\n";
+    if (events && (events as any[]).length > 0) {
+      // Sort events oldest-first by _creationTime
+      const sortedEvents = (events as any[]).sort(
+        (a: any, b: any) => a._creationTime - b._creationTime,
+      );
+      const now = Date.now();
+      sortedEvents.forEach((event: any) => {
+        const minutesAgo = Math.floor((now - event._creationTime) / 60000);
+        const timeLabel = minutesAgo < 1 ? "<1 min ago" : `${minutesAgo} min ago`;
+        sensorySection += `- [${timeLabel}] ${event.type}: ${event.description}\n`;
+      });
+    } else {
+      sensorySection += "(No recent events)\n";
+    }
+
+    // Order: sensory events → identity → relationships → memories
+    let fullContext: string = sensorySection;
+    fullContext += agentContext;
+
     // Append relationship context
     fullContext += relationshipContext;
 
