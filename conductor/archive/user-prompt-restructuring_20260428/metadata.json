@@ -1,0 +1,8 @@
+{
+  "track_id": "user-prompt-restructuring_20260428",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-04-28T11:37:15Z",
+  "updated_at": "2026-04-28T11:37:15Z",
+  "description": "Phase 7 Track B: Restructure user prompt to move rich context from system prompt appendage into the user message, remove contextOverride mechanism, and strip DECISION_SYSTEM_PROMPT to output format only"
+}
