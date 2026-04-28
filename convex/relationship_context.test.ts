@@ -172,8 +172,8 @@ describe("Relationship Context", () => {
       query: "test query",
     });
 
-    // Verify relationship context is included
-    expect(fullContext).toContain("Test Agent");
-    expect(fullContext).toContain("Friend Agent");
+    // Verify relationship context is included in the relationshipContext field
+    expect(fullContext.relationshipContext).toContain("Friend Agent");
+    expect(fullContext.relationshipContext).toContain("affinity");
   });
 });

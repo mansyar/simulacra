@@ -8,9 +8,6 @@ import {
 } from "./ai_helpers";
 
 const DECISION_SYSTEM_PROMPT = `
-You are an AI brain for an agent in a simulated world. 
-Based on the agent's state, nearby agents, and personality archetype, you must decide on the next action.
-
 You MUST return your decision in the following JSON format:
 {
   "thought": "Internal monologue describing your reasoning (1-2 sentences)",
@@ -38,6 +35,71 @@ You MUST return your reflection in the following JSON format:
 }
 `;
 
+/**
+ * Build a structured user prompt from agent state and context data
+ */
+function buildContextPrompt(
+  agentState: { name: string; hunger: number; energy: number; social: number },
+  context?: {
+    agentContext?: string;
+    relationshipContext?: string;
+    events?: string;
+    memories?: string;
+    conversationContext?: string;
+  },
+): string {
+  let prompt = "";
+
+  // Identity section
+  prompt += `## Your Identity\n`;
+  prompt += `Name: ${agentState.name}\n`;
+  if (context?.agentContext) {
+    // agentContext contains: Archetype, Biography, Traits, Inventory, Current Goal, Personality
+    prompt += context.agentContext;
+  }
+  if (!prompt.endsWith("\n")) prompt += "\n";
+  prompt += "\n";
+
+  // State section
+  prompt += `## Your State\n`;
+  prompt += `Hunger: ${agentState.hunger}\n`;
+  prompt += `Energy: ${agentState.energy}\n`;
+  prompt += `Social: ${agentState.social}\n`;
+  prompt += "\n";
+
+  // Relationships section
+  if (context?.relationshipContext) {
+    prompt += `## Your Relationships\n`;
+    prompt += context.relationshipContext;
+    prompt += "\n";
+  }
+
+  // Recent Events section
+  if (context?.events) {
+    prompt += `## Recent Events\n`;
+    prompt += context.events;
+    prompt += "\n";
+  }
+
+  // Relevant Memories section
+  if (context?.memories) {
+    prompt += `## Relevant Memories\n`;
+    prompt += context.memories;
+    prompt += "\n";
+  }
+
+  // Active conversation (if any)
+  if (context?.conversationContext) {
+    prompt += context.conversationContext;
+    prompt += "\n";
+  }
+
+  // Concluding instruction
+  prompt += `Based on ALL of the above context, what is your next action? Consider your personality, relationships, recent experiences, and current state.`;
+
+  return prompt;
+}
+
 export const decision = action({
   args: {
     agentState: v.object({
@@ -49,7 +111,11 @@ export const decision = action({
     }),
     nearbyAgents: v.array(v.string()),
     archetype: v.union(v.literal("builder"), v.literal("socialite"), v.literal("philosopher"), v.literal("explorer"), v.literal("nurturer")),
-    contextOverride: v.optional(v.string()),
+    agentContext: v.optional(v.string()),
+    relationshipContext: v.optional(v.string()),
+    events: v.optional(v.string()),
+    memories: v.optional(v.string()),
+    conversationContext: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { apiKey, baseUrl, model } = await getAiConfig(ctx, args.agentState.model);
@@ -75,18 +141,15 @@ export const decision = action({
       };
     }
 
-    const systemPrompt = args.contextOverride 
-      ? `${DECISION_SYSTEM_PROMPT}\n\nCURRENT AGENT CONTEXT:\n${args.contextOverride}`
-      : `${DECISION_SYSTEM_PROMPT}\n${ARCHETYPE_PROMPTS[args.archetype]}`;
+    const systemPrompt = `${DECISION_SYSTEM_PROMPT}\n${ARCHETYPE_PROMPTS[args.archetype]}`;
 
-    const userPrompt = `
-    Agent Name: ${args.agentState.name}
-    Archetype: ${args.archetype}
-    State: Hunger ${args.agentState.hunger}, Energy ${args.agentState.energy}, Social ${args.agentState.social}
-    Nearby Agents: ${args.nearbyAgents.join(", ") || "None"}
-    
-    What is your next action?
-    `;
+    const userPrompt = buildContextPrompt(args.agentState, {
+      agentContext: args.agentContext,
+      relationshipContext: args.relationshipContext,
+      events: args.events,
+      memories: args.memories,
+      conversationContext: args.conversationContext,
+    });
 
     try {
       const content = await chatCompletion(
@@ -252,7 +315,12 @@ export const buildFullContext = action({
     agentId: v.id("agents"),
     query: v.string(),
   },
-  handler: async (ctx, args): Promise<string> => {
+  handler: async (ctx, args): Promise<{
+    agentContext: string;
+    relationshipContext: string;
+    events: string;
+    memories: string;
+  }> => {
     const agentContext = await ctx.runQuery(internal.functions.ai.buildAgentContext, {
       agentId: args.agentId,
     });
@@ -261,7 +329,7 @@ export const buildFullContext = action({
       agentId: args.agentId,
     });
 
-    const memories = await ctx.runAction(api.functions.memory.retrieveMemoriesAction, {
+    const memoriesResult = await ctx.runAction(api.functions.memory.retrieveMemoriesAction, {
       agentId: args.agentId,
       query: args.query,
     });
@@ -270,10 +338,9 @@ export const buildFullContext = action({
       agentId: args.agentId,
     });
 
-    // Provide LLM with recent sensory context so decisions account for immediate history
-    let sensorySection = "## Recent Events\n";
+    // Build events string (without the header — the user prompt builder adds it)
+    let eventsStr = "";
     if (events && events.length > 0) {
-      // Copy before sorting to avoid mutating the original array
       const sortedEvents = [...events].sort(
         (a, b) => a._creationTime - b._creationTime,
       );
@@ -281,27 +348,28 @@ export const buildFullContext = action({
       sortedEvents.forEach((event) => {
         const minutesAgo = Math.floor((now - event._creationTime) / 60000);
         const timeLabel = minutesAgo < 1 ? "<1 min ago" : `${minutesAgo} min ago`;
-        sensorySection += `- [${timeLabel}] ${event.type}: ${event.description}\n`;
+        eventsStr += `- [${timeLabel}] ${event.type}: ${event.description}\n`;
       });
     } else {
-      sensorySection += "(No recent events)\n";
+      eventsStr += "(No recent events)\n";
     }
 
-    // Order: sensory events → identity → relationships → memories
-    let fullContext: string = sensorySection;
-    fullContext += agentContext;
-
-    // Append relationship context
-    fullContext += relationshipContext;
-
-    if (memories && (memories as any[]).length > 0) {
-      fullContext += "\nRelevant Memories:\n";
-      (memories as any[]).forEach((m: any) => {
-        fullContext += `- ${m.content}\n`;
+    // Build memories string (without the header)
+    let memoriesStr = "";
+    if (memoriesResult && (memoriesResult as any[]).length > 0) {
+      (memoriesResult as any[]).forEach((m: any) => {
+        memoriesStr += `- ${m.content}\n`;
       });
+    } else {
+      memoriesStr += "(No relevant memories)\n";
     }
 
-    return fullContext;
+    return {
+      agentContext,
+      relationshipContext,
+      events: eventsStr,
+      memories: memoriesStr,
+    };
   },
 });
 

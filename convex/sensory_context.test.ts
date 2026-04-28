@@ -49,13 +49,10 @@ describe("Sensory Context in buildFullContext", () => {
       query: "test query",
     });
 
-    // Verify the "## Recent Events" header is present
-    expect(fullContext).toContain("## Recent Events");
-
-    // Verify all 3 event descriptions are present
-    expect(fullContext).toContain("Moved to the town square");
-    expect(fullContext).toContain("Greeted a fellow villager");
-    expect(fullContext).toContain("Hunger decreased after eating");
+    // Verify events are present in the events field (without header — header added by decision)
+    expect(fullContext.events).toContain("Moved to the town square");
+    expect(fullContext.events).toContain("Greeted a fellow villager");
+    expect(fullContext.events).toContain("Hunger decreased after eating");
   });
 
   test("shows placeholder when agent has no events", async () => {
@@ -75,8 +72,7 @@ describe("Sensory Context in buildFullContext", () => {
     });
 
     // Should include the empty state placeholder
-    expect(fullContext).toContain("## Recent Events");
-    expect(fullContext).toContain("(No recent events)");
+    expect(fullContext.events).toContain("(No recent events)");
   });
 
   test("formats events as chronological list with relative timestamps", async () => {
@@ -119,17 +115,16 @@ describe("Sensory Context in buildFullContext", () => {
       query: "test query",
     });
 
-    // Extract the "## Recent Events" section
-    const eventsSection = fullContext.split("## Recent Events")[1];
-    expect(eventsSection).toBeDefined();
+    // Events are in the events field
+    expect(fullContext.events).toBeDefined();
 
     // Events should contain timestamps in the format "[X min ago]" or "[<1 min ago]"
-    expect(eventsSection).toMatch(/\[(\d+|<1) min ago\]/);
+    expect(fullContext.events).toMatch(/\[(\d+|<1) min ago\]/);
 
     // Events should appear in oldest-first order
-    const firstIdx = eventsSection.indexOf("First event");
-    const secondIdx = eventsSection.indexOf("Second event");
-    const thirdIdx = eventsSection.indexOf("Third event");
+    const firstIdx = fullContext.events.indexOf("First event");
+    const secondIdx = fullContext.events.indexOf("Second event");
+    const thirdIdx = fullContext.events.indexOf("Third event");
     expect(firstIdx).toBeLessThan(secondIdx);
     expect(secondIdx).toBeLessThan(thirdIdx);
   });
@@ -172,20 +167,14 @@ describe("Sensory Context in buildFullContext", () => {
       query: "test query",
     });
 
-    // "## Recent Events" should come before "Your Relationships" and "Relevant Memories"
-    const recentEventsIdx = fullContext.indexOf("## Recent Events");
-    const relationshipsIdx = fullContext.indexOf("Your Relationships");
-    const memoriesIdx = fullContext.indexOf("Relevant Memories");
+    // Events, relationships, and memories are now separate fields
+    expect(fullContext.events).toBeDefined();
+    expect(fullContext.relationshipContext).toBeDefined();
+    expect(fullContext.memories).toBeDefined();
 
-    expect(recentEventsIdx).not.toBe(-1);
-    expect(relationshipsIdx).not.toBe(-1);
-
-    // Recent Events section should appear before relationships
-    expect(recentEventsIdx).toBeLessThan(relationshipsIdx);
-
-    // If memories exist, they should come after relationships
-    if (memoriesIdx !== -1) {
-      expect(relationshipsIdx).toBeLessThan(memoriesIdx);
-    }
+    // Events field contains event descriptions
+    expect(fullContext.events).toContain("Took a stroll");
+    // Relationship context contains relationship info
+    expect(fullContext.relationshipContext).toContain("Friend Agent");
   });
 });

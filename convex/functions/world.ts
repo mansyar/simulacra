@@ -278,13 +278,18 @@ async function processAgent(ctx: any, agent: any, agents: any[], worldState: any
   }
 
   const nearbyAgentNames = nearbyAgents.length > 0 ? nearbyAgents.join(", ") : "no one";
-  const fullContext = await ctx.runAction(api.functions.ai.buildFullContext, {
+  const context = await ctx.runAction(api.functions.ai.buildFullContext, {
     agentId: agent._id, query: `What should I do next given my goal ${agent.currentGoal}, current state, and interactions with ${nearbyAgentNames}?`,
   });
 
   const decision = await ctx.runAction(api.functions.ai.decision, {
     agentState: { name: agent.name, hunger: agent.hunger, energy: agent.energy, social: agent.social, model: agent.model },
-    nearbyAgents, archetype: aiArchetype, contextOverride: fullContext + conversationContext,
+    nearbyAgents, archetype: aiArchetype,
+    agentContext: context.agentContext,
+    relationshipContext: context.relationshipContext,
+    events: context.events,
+    memories: context.memories,
+    conversationContext: conversationContext || undefined,
   });
 
   const normalizedAction = normalizeAction(decision.action);
