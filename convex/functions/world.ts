@@ -380,7 +380,7 @@ export const tick = action({
                 gridX: agent.gridX,
                 gridY: agent.gridY,
               });
-            } catch {/* ignore secondary errors during error handling */}
+            } catch (innerErr) { console.warn(`[WORLD] Failed to log retry event for agent ${agent.name}:`, innerErr) }
             await new Promise(resolve => setTimeout(resolve, 500));
           } else {
             // Second failure — log and skip this agent for this tick
@@ -392,7 +392,7 @@ export const tick = action({
                 gridX: agent.gridX,
                 gridY: agent.gridY,
               });
-            } catch {/* ignore secondary errors during error handling */}
+            } catch (innerErr) { console.warn(`[WORLD] Failed to log skip event for agent ${agent.name}:`, innerErr) }
             console.error(`[WORLD] Agent ${agent.name} — skipped after 2 failed attempts`);
           }
         }

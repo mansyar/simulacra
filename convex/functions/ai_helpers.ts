@@ -92,7 +92,7 @@ export async function chatCompletion(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-    }, 3, 1000, true);
+    }, 3, 1000, true /* skip429Backoff */);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -116,7 +116,7 @@ export async function chatCompletion(
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify(body),
-    }, 3, 1000, true);
+    }, 3, 1000, true /* skip429Backoff */);
 
     if (!response.ok) {
       const errorText = await response.text();
