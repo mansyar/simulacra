@@ -39,3 +39,7 @@
 
 ### Phase Completion Verification
 - [ ] **Task:** Conductor - User Manual Verification 'Phase 1: Restructure User Prompt & Remove contextOverride' (Protocol in workflow.md)
+
+## Phase: Review Fixes
+- [x] **Task:** Apply review suggestions (0314edf)
+  - Remove duplicate agent `Name:` line from `buildContextPrompt` (already provided by `buildAgentContext`)
