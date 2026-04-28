@@ -486,13 +486,40 @@ A1 + A2 + A3 (quick fixes) ✅
 
 ## Phase 9: The Soul
 
-**Goal:** Dynamic relationship updates during conversations, lifecycle cleanup for stale conversation state, and runtime configurability.
+**Goal:** Fix the conversation system to be truly bidirectional, then layer on dynamic sentiment, lifecycle cleanup, and runtime configurability.
 
 **Status:** ⏳ NOT STARTED
 
-### Track A: Sentiment-Based Affinity During Conversations
+> **Design Context:** The current conversation system has two critical flaws discovered during Phase 8 testing:
+> 1. When agent A talks to agent B, B is force-set to `action: "listening"` and skipped on subsequent ticks — B never gets to respond
+> 2. When the conversation ends, B's `action` is never reset from `"listening"` — B is permanently frozen
+>
+> Track A fixes both by removing forced actions entirely and making the conversation state bidirectional.
+
+### Track A: Bidirectional Conversation System
+
+**Problem:** The conversation system uses a one-sided model where the initiator drives everything and the partner is forced into `action: "listening"`. The partner is skipped (`if listening → return`) across ticks, so they never generate a response. When the conversation ends, the partner's action is never reset, permanently freezing them.
+
+- [ ] **Remove forced `"listening"` action** — In `processAgent()`, stop calling `updateAction(partner, "listening")` when an agent initiates talking. The partner keeps their own action.
+- [ ] **Remove `listening` skip** — Delete the `if (agent.currentAction === "listening") return;` guard. Every agent gets an LLM call every tick.
+- [ ] **Implement bidirectional conversation state** — Add `partnerLastSpeech` to the `conversationState` schema so each agent stores:
+  - `myLastSpeech`: what THIS agent last said
+  - `partnerLastSpeech`: what the partner said to THIS agent (set by the partner's `handleConversationState`)
+- [ ] **Fix `handleConversationState`** — When Alice talks to Bob, write Bob's `partnerLastSpeech` on Bob's document (so Bob knows Alice spoke to him) AND write Alice's `myLastSpeech` on Alice's document. Each agent only writes to the OTHER's `partnerLastSpeech` field.
+- [ ] **Build conversation context from both agents' states** — When building the LLM prompt, read from the agent's own `conversationState` (what they said, what was said to them) and the partner's state for full context.
+- [ ] **Fix conversation end** — When either agent returns a non-`"talking"` action, clear both agents' `conversationState` AND reset both agents' actions to `"idle"` (fixes the permanently frozen partner).
+- [ ] **Write tests:**
+  - Test: agent B responds to agent A's initiation (bidirectional flow)
+  - Test: agent B can ignore agent A and choose a different action
+  - Test: agent B is not stuck after conversation ends (action reset to idle)
+  - Test: `partnerLastSpeech` is correctly attributed (Alice's words stored as Bob's `partnerLastSpeech`)
+  - Run test suite and confirm all existing tests still pass
+
+### Track B: Sentiment-Based Affinity During Conversations
 
 **Problem:** `updateRelationship` with +2 delta only fires when an agent initiates talking. Multi-turn conversations don't adjust affinity further, so even warm conversations leave relationships unchanged. The `valenceHistory` isn't updated per-turn either.
+
+> **Depends on:** Track A — sentiments need a working bidirectional conversation system
 
 - [ ] Add speech sentiment analysis helper in `convex/functions/ai.ts` (keyword-based: positive words → +1 to +3, negative words → -1 to -3, neutral → 0)
 - [ ] After each LLM decision with `action === "talking"`, analyze the `speech` field for sentiment
@@ -500,9 +527,11 @@ A1 + A2 + A3 (quick fixes) ✅
 - [ ] Update `valenceHistory` on every turn (maintaining last 5 entries)
 - [ ] Write test verifying affinity changes across a multi-turn conversation
 
-### Track B: Conversation TTL & Cleanup
+### Track C: Conversation TTL & Cleanup
 
 **Problem:** `conversationState` persists forever with no real-time timeout. If the tick interval is 180s and max 5 turns, conversations span ~15 minutes. If both agents are idle, the conversation state never cleans up.
+
+> **Depends on:** Track A — TTL logic operates on the new bidirectional state schema
 
 - [ ] Add `lastTurnAt` timestamp to `conversationState` schema (or use `startedAt` + last tick)
 - [ ] Add stale conversation cleanup routine at the start of `tick()` action
@@ -511,7 +540,7 @@ A1 + A2 + A3 (quick fixes) ✅
 - [ ] Log cleanup events to sensory buffer when conversations are force-ended
 - [ ] Write test for stale conversation auto-cleanup
 
-### Track C: Runtime Configuration & Integration Testing
+### Track D: Runtime Configuration & Integration Testing
 
 **Problem:** Several thresholds remain as magic numbers or disconnected values across files. No integration tests verify config-driven behavior end-to-end.
 
@@ -525,11 +554,51 @@ A1 + A2 + A3 (quick fixes) ✅
 - [ ] Add integration test: set config → run tick → verify behavior matches config values
 - [ ] Add integration test: disable sleep mode → run tick → verify agents process
 
+### Track E: POI-Aware Agent Behavior
+
+**Problem:** POIs (Library, Plaza, Cafe, Forest Grove) are rendered on the canvas and stored in the database, but the LLM has no awareness they exist. Agents eat, sleep, and work while standing in place — the world feels empty because locations have no meaning to the AI.
+
+- [ ] **Inject POI context into LLM decisions** — Add a `## Nearby Locations` section to the user prompt in `buildContextPrompt()`. Include all POIs with name, coordinates, description, and distance from the agent.
+  - Format: `"- Cozy Cafe (45, 15): Fresh coffee and good conversation. [1.2 tiles away]"`
+  - Add activity suggestions: `"eating → Cozy Cafe"`, `"working → The Great Library"`, etc.
+  - The LLM can then output a POI name as `target` instead of raw coordinates
+  - Include an explicit note listing valid POI names to reduce hallucination of fake locations:
+    `"Valid destinations: Cozy Cafe, The Great Library, Central Plaza, Forest Grove. Do not invent locations."`
+
+- [ ] **Add POI name → coordinate resolution** — In `processAgent()`, after the existing agent name lookup, add a POI name lookup that converts a POI name to coordinates.
+  - Use `includes()` matching (case-insensitive) instead of strict `===` — e.g., `"Cafe"` resolves to `"Cozy Cafe"`. If multiple POIs match, prefer the closest one by distance.
+  - If no POI matches AND no agent name matches AND coordinates can't be parsed → fall back to a random nearby coordinate within 5 tiles of the agent's current position. Prevents the agent from standing still when the LLM outputs a hallucinated target.
+
+- [ ] **Handle POI target + non-walking action** — When the LLM returns a POI name as target but the action is an activity (e.g., `action: "eating"`, `target: "Cozy Cafe"`), override the action to `"walking"` so the agent actually moves toward the POI. The LLM can decide on the activity after arrival.
+  - Exception: if the agent is already within 1 tile of the POI, keep the original action (they're already there).
+
+- [ ] **Add POI arrival events** — When an agent reaches coordinates that match a POI, log an event like `"Arrived at Cozy Cafe to eat."` instead of the generic `"Arrived at destination (45, 15)"`.
+  - Include the agent's current action in the event description for rich context.
+  - If the agent was already at the POI (didn't walk there), log `"Already at Cozy Cafe"` to avoid misleading "arrival" messages.
+
+- [ ] **Add POI context to `buildFullContext`** — Add `poiContext` field to the return type, query the `pois` table, compute distances from the agent's position.
+
+- [ ] **Write tests:**
+  - Test: LLM context string includes all POI names and coordinates
+  - Test: `processAgent()` resolves POI name to coordinates (exact match + partial match via `includes()`)
+  - Test: LLM hallucinates fake POI name → fallback to random nearby coordinate
+  - Test: LLM returns POI target with `action: "eating"` → overridden to `"walking"` (unless already at POI)
+  - Test: POI arrival events are logged with the POI name when agent reaches a POI
+  - Test: POI arrival events use different message when agent was already at the POI
+  - Run test suite and confirm all existing tests still pass
+
 ### Phase 9 Checkpoints
 
+- [ ] Both agents participate in conversations (bidirectional, not one-sided)
+- [ ] Agents are never frozen in "listening" state after conversation ends
+- [ ] Partners are free to ignore conversations and pursue their own actions
+- [ ] `partnerLastSpeech` correctly attributes speech to the right agent
 - [ ] Affinity scores change dynamically during multi-turn conversations
 - [ ] Stale conversations auto-cleanup after timeout
 - [ ] All thresholds configurable via config table
+- [ ] **Agents walk to POIs for contextual actions (eat at Cafe, work at Library, etc.)**
+- [ ] **Thought stream shows arrival events like "Arrived at Cozy Cafe to eat."**
+- [ ] **LLM decisions reference location names instead of raw coordinates**
 - [ ] Integration tests verify config-driven behavior
 - [ ] All tests pass with >80% coverage
 
@@ -640,9 +709,12 @@ Phase 8 (Backbone) ✅
             ▼
 Phase 9 (Soul)
     │
-    ├──► Sentiment-based affinity
-    ├──► Conversation TTL & cleanup
-    └──► Runtime configuration
+    ├──► Bidirectional conversation system (Track A)
+    │       │
+    │       ├──► Sentiment-based affinity (Track B)
+    │       ├──► Conversation TTL & cleanup (Track C)
+    │       ├──► Runtime configuration (Track D)
+    │       └──► POI-aware agent behavior (Track E)
             │
             ▼
 Phase X (Polish)
@@ -690,8 +762,12 @@ Phase X (Polish)
 10. ✅ **Done:** Unbottleneck the World Tick (Phase 8 — Track A)
 11. ✅ **Done:** Spatial Query Optimization (Phase 8 — Track B)
 12. ✅ **Done:** Embedding Pipeline & Configuration Cleanup (Phase 8 — Track C)
-    🎯 **Next:** Deeper social dynamics (Phase 9 — The Soul)
-13. ⏳ **Planned:** Master panel and deployment (Phase X — The Polish)
+    🎯 **Next:** Fix bidirectional conversation system (Phase 9 — Track A)
+13. ⏳ **Planned:** Sentiment-based affinity during conversations (Phase 9 — Track B)
+14. ⏳ **Planned:** Conversation TTL & cleanup (Phase 9 — Track C)
+15. ⏳ **Planned:** Runtime configuration & integration testing (Phase 9 — Track D)
+16. ⏳ **Planned:** POI-aware agent behavior (Phase 9 — Track E)
+17. ⏳ **Planned:** Master panel and deployment (Phase X — The Polish)
 
 ---
 
