@@ -21,7 +21,7 @@
     - [x] Ensure failed agent errors do NOT propagate and do NOT block Promise.all
     - [x] RUN tests and confirm they pass
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
+- [ ] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md) [c897a96]
 
 ## Phase 2: Simplify Chat Retry Logic
 
