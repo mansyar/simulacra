@@ -76,3 +76,7 @@
 - [x] Await user confirmation (approved)
 - [x] Create checkpoint commit
 - [x] Attach verification report via git note
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions [c8618bd]
+    - [x] Document hash collision trade-off in simpleHash JSDoc
