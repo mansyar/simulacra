@@ -463,7 +463,7 @@ A1 + A2 + A3 (quick fixes) ✅
 - [x] **Named Constants** (5316265) — Replace magic number `480` in `world.ts` with `const REFLECTION_INTERVAL_TICKS = 480` and inline comment: `// 480 ticks ≈ 10 simulated days (48 ticks/day, ~30 min per tick)`
 - [x] Write test for batch embedding correctness — 9 tests in `convex/embedding_batch.test.ts` (order, single-text, empty, error, plus 5 cache behavior tests)
 - [x] Write test for trait capping behavior — 2 tests in `convex/agents.test.ts` (over-limit at 10, under-limit at 7)
-- [ ] Config table extraction of named constants deferred to Phase 9 Track C (out of scope per spec)
+- [ ] Config table extraction of named constants deferred to Phase 9 Track D (Runtime Configuration)
 
 ### Phase 8 Checkpoints
 
@@ -537,18 +537,26 @@ A1 + A2 + A3 (quick fixes) ✅
 - [x] **Write tests** — 17 new tests: 10 unit tests for `analyzeSentiment()` (positive/negative/neutral/mixed/empty/partial matches) + 7 integration tests (multi-turn accumulation, mixed sentiment, valenceHistory cap at 5). (Commits 9f5af85, 49fc2f7, 01c8275)
 - [x] **Full test suite** — 247 tests across 61 files, all passing. Coverage: 82.12% (above 80% target). (Commit 01c8275)
 
-### Track C: Conversation TTL & Cleanup
+### Track C: Conversation TTL & Cleanup [IN PROGRESS — Track created: 2026-04-29]
 
-**Problem:** `conversationState` persists forever with no real-time timeout. If the tick interval is 180s and max 5 turns, conversations span ~15 minutes. If both agents are idle, the conversation state never cleans up.
+**Problem:** `conversationState` persists forever with no real-time timeout. If the tick interval is 180s and max 5 turns, conversations span ~15 minutes. If both agents are idle, the conversation state never cleans up. Additionally, when Agent A switches from talking to Agent B to talking to Agent C (via LLM decision), `handleConversationState` overwrites A's `conversationState.partnerId` to C, but B's `conversationState` still references A — **B is now orphaned** with stale state. The TTL mechanism serves as the safety net for this scenario.
 
 > **Depends on:** Track A — TTL logic operates on the new bidirectional state schema
 
-- [ ] Add `lastTurnAt` timestamp to `conversationState` schema (or use `startedAt` + last tick)
-- [ ] Add stale conversation cleanup routine at the start of `tick()` action
-- [ ] Clear any conversation where `Date.now() - conversationState.startedAt > CONVERSATION_MAX_TTL_MS`
-- [ ] Add `CONVERSATION_MAX_TTL_MS` (default 30 minutes) to config or environment variables
-- [ ] Log cleanup events to sensory buffer when conversations are force-ended
-- [ ] Write test for stale conversation auto-cleanup
+> **Design Changes (analysis-driven):**
+> - **Hard cleanup:** In-memory agent objects are mutated alongside DB writes, preventing conversation restart on the same tick
+> - **Dynamic TTL:** Default computed as `5 turns × tickInterval × 2× safety multiplier`, scales with env-driven tick timer changes
+> - **Partner dedup:** `Set<string>` prevents double-processing the same conversation pair
+> - **Dynamic event duration:** `Math.round((Date.now() - startedAt) / 60000)` used in event messages
+
+- [ ] Add `conversationMaxTtlMs` to config table schema (`v.optional(v.float64())`)
+- [ ] Compute dynamic TTL default: `5 × (config?.defaultTickInterval ?? 180) × 2 × 1000` with env var and hardcoded fallback
+- [ ] Implement `cleanStaleConversations` at start of `tick()` with:
+    - [ ] **Partner dedup** via `Set<string>` of processed IDs
+    - [ ] **Hard cleanup** — DB mutation + in-memory object mutation (set `conversationState = undefined`, `currentAction = "idle"`, `interactionPartnerId = undefined`)
+    - [ ] Both agent and partner get cleaned (in-memory + DB)
+- [ ] Log cleanup events to sensory buffer for BOTH agents with dynamic staleness duration
+- [ ] Write tests: TTL formula, hard cleanup prevents restart, partner dedup, event logging, env var override, non-stale conversations unaffected
 
 ### Track D: Runtime Configuration & Integration Testing
 
@@ -557,9 +565,9 @@ A1 + A2 + A3 (quick fixes) ✅
 - [ ] Extract to config table (with env var fallbacks):
   - `MAX_TRAITS` (default 10)
   - `REFLECTION_INTERVAL_TICKS` (default 480)
-  - `CONVERSATION_MAX_TTL_MS` (default 1800000 = 30 min)
   - `SENTIMENT_AFFINITY_BOOST` (default 2)
   - `MAX_CONVERSATION_TURNS` (default 5)
+  - ~~`CONVERSATION_MAX_TTL_MS`~~ → already added in Track C as `conversationMaxTtlMs` with dynamic default
 - [ ] Update all affected files to read from config or env var with fallback to defaults
 - [ ] Add integration test: set config → run tick → verify behavior matches config values
 - [ ] Add integration test: disable sleep mode → run tick → verify agents process
@@ -864,8 +872,7 @@ Phase 11 (Polish)
 12. ✅ **Done:** Embedding Pipeline & Configuration Cleanup (Phase 8 — Track C)
 13. ✅ **Done:** Fix bidirectional conversation system (Phase 9 — Track A)
 14. ✅ **Done:** Sentiment-based affinity during conversations (Phase 9 — Track B)
-    🎯 **Next:** Conversation TTL & cleanup (Phase 9 — Track C)
-15. ⏳ **Planned:** Conversation TTL & cleanup (Phase 9 — Track C)
+15. 🏗️ **In Progress:** Conversation TTL & cleanup (Phase 9 — Track C) — Track created, refined spec with hard cleanup + dynamic TTL
 16. ⏳ **Planned:** Runtime configuration & integration testing (Phase 9 — Track D)
 17. ⏳ **Planned:** POI-aware agent behavior (Phase 9 — Track E)
 18. 🆕 **Planned:** LLM sees its own trajectory (Phase 10 — Track A)
