@@ -4,7 +4,7 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [ ] **Track: Sentiment-Based Affinity During Conversations**
+- [x] **Track: Sentiment-Based Affinity During Conversations**
   *Link: [./tracks/sentiment-affinity_20260429/](./tracks/sentiment-affinity_20260429/)*
 
 
