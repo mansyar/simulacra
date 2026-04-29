@@ -9,8 +9,7 @@ vi.mock("convex/react", () => ({
 }));
 
 test("WorldHUD renders correctly for different weather", () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const mockUseQuery = useQuery as any;
+  const mockUseQuery = vi.mocked(useQuery);
   
   // Sunny (10:30 = 630 mins)
   mockUseQuery.mockReturnValue({
@@ -65,8 +64,7 @@ test("WorldHUD renders correctly for different weather", () => {
 });
 
 test("WorldHUD returns null when state is missing", () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (useQuery as any).mockReturnValue(null);
+  vi.mocked(useQuery).mockReturnValue(null);
   const { container } = render(<WorldHUD />);
   expect(container.firstChild).toBeNull();
 });

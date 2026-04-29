@@ -20,10 +20,8 @@ describe('usePresenceWithSessionStorage', () => {
   const userId = 'test-user'
   const interval = 10000
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let heartbeatMock: any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let disconnectMock: any
+  let heartbeatMock: ReturnType<typeof vi.fn>
+  let disconnectMock: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -33,12 +31,13 @@ describe('usePresenceWithSessionStorage', () => {
     disconnectMock = vi.fn().mockResolvedValue({})
 
     vi.mocked(useConvex).mockReturnValue({ url: 'http://localhost:3000' } as ReturnType<typeof useConvex>)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    vi.mocked(useMutation).mockImplementation((name: any) => {
+     
+    vi.mocked(useMutation).mockImplementation(((name: string) => {
       if (name === presenceApi.heartbeat) return heartbeatMock
       if (name === presenceApi.disconnect) return disconnectMock
       return vi.fn().mockResolvedValue({})
-    })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- ReactMutation<...> != MockInstance<...>; mock never calls withOptimisticUpdate
+    }) as any)
     vi.mocked(useQuery).mockReturnValue([])
   })
 

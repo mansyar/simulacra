@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import { AgentSprite } from '../components/game/AgentSprite'
 import type { AgentData } from '../components/game/AgentSprite'
+import type { Id } from '../../convex/_generated/dataModel'
 
 describe('AgentSprite Course Correction', () => {
   const mockAgent: AgentData = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    _id: 'agent1' as any,
+    _id: 'agent1' as Id<'agents'>,
     name: 'Test Agent',
     gridX: 0,
     gridY: 0,
@@ -15,17 +15,16 @@ describe('AgentSprite Course Correction', () => {
 
   it('should blend estimatedGridX toward backend truth over 500ms instead of snapping', () => {
     const sprite = new AgentSprite(mockAgent)
+    const s = sprite as unknown as { estimatedGridX: number; estimatedGridY: number }
     
     // Simulate frontend has drifted to 0.5
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ;(sprite as any).estimatedGridX = 0.5
+    s.estimatedGridX = 0.5
     
     // Backend update arrives with truth = 0
     sprite.updateAgentData({ gridX: 0, gridY: 0 })
     
     // Immediately after update, it shouldn't have snapped to 0
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect((sprite as any).estimatedGridX).toBe(0.5)
+    expect(s.estimatedGridX).toBe(0.5)
     
     // Simulate some time passing (250ms = 15 frames at 60fps)
     // deltaTime = 1 means 1/60th of a second (16.6ms)
@@ -35,8 +34,7 @@ describe('AgentSprite Course Correction', () => {
     }
     
     // Should be roughly halfway (0.25)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const estimatedX = (sprite as any).estimatedGridX
+    const estimatedX = s.estimatedGridX
     expect(estimatedX).toBeGreaterThan(0.2)
     expect(estimatedX).toBeLessThan(0.3)
     
@@ -46,7 +44,6 @@ describe('AgentSprite Course Correction', () => {
     }
     
     // Should be at 0 (or very close)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect((sprite as any).estimatedGridX).toBeCloseTo(0)
+    expect(s.estimatedGridX).toBeCloseTo(0)
   })
 })

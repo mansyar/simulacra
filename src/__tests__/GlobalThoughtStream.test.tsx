@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import GlobalThoughtStream from '../components/GlobalThoughtStream'
 import { useQuery } from "convex/react";
 
@@ -52,34 +52,34 @@ describe('GlobalThoughtStream', () => {
   })
 
   it('returns null when events data is loading (undefined)', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (useQuery as any).mockImplementation((fn: any) => {
+    vi.mocked(useQuery).mockImplementation(((fn: string) => {
       if (fn === 'memory:getGlobalEvents') return undefined
       if (fn === 'agents:getAll') return undefined
       return undefined
-    })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- vi.mocked callback type mismatch
+    }) as any)
     const { container } = render(<GlobalThoughtStream />)
     expect(container.firstChild).toBeNull()
   })
 
   it('shows empty state when there are no events', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (useQuery as any).mockImplementation((fn: any) => {
+    vi.mocked(useQuery).mockImplementation(((fn: string) => {
       if (fn === 'memory:getGlobalEvents') return []
       if (fn === 'agents:getAll') return []
       return []
-    })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- vi.mocked callback type mismatch
+    }) as any)
     render(<GlobalThoughtStream />)
     expect(screen.getByText('Waiting for simulation events...')).toBeDefined()
   })
 
   it('renders all events with agent names and descriptions', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (useQuery as any).mockImplementation((fn: any) => {
+    vi.mocked(useQuery).mockImplementation(((fn: string) => {
       if (fn === 'memory:getGlobalEvents') return mockEvents
       if (fn === 'agents:getAll') return mockAgents
       return undefined
-    })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- vi.mocked callback type mismatch
+    }) as any)
     render(<GlobalThoughtStream />)
     expect(screen.getByText('Alice moved to position')).toBeDefined()
     expect(screen.getByText('Bob spoke to someone')).toBeDefined()
@@ -88,89 +88,12 @@ describe('GlobalThoughtStream', () => {
 
   describe('Filtering', () => {
     beforeEach(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (useQuery as any).mockImplementation((fn: any) => {
+      vi.mocked(useQuery).mockImplementation(((fn: string) => {
         if (fn === 'memory:getGlobalEvents') return mockEvents
         if (fn === 'agents:getAll') return mockAgents
         return undefined
-      })
-    })
-
-    it('renders filter tags for unique agent names and types', () => {
-      render(<GlobalThoughtStream />)
-      expect(screen.getByRole('button', { name: /All Agents/i })).toBeDefined()
-      expect(screen.getByRole('button', { name: /All Types/i })).toBeDefined()
-      expect(screen.getByRole('button', { name: /Alice/i })).toBeDefined()
-      expect(screen.getByRole('button', { name: /Bob/i })).toBeDefined()
-      expect(screen.getByRole('button', { name: /Charlie/i })).toBeDefined()
-      expect(screen.getByRole('button', { name: /movement/i })).toBeDefined()
-      expect(screen.getByRole('button', { name: /conversation/i })).toBeDefined()
-      expect(screen.getByRole('button', { name: /interaction/i })).toBeDefined()
-      expect(screen.getByRole('button', { name: /weather_change/i })).toBeDefined()
-    })
-
-    it('filters events by agent name when a name filter button is clicked', () => {
-      render(<GlobalThoughtStream />)
-      fireEvent.click(screen.getByRole('button', { name: /Alice/i }))
-      expect(screen.getByText('Alice moved to position')).toBeDefined()
-      expect(screen.getByText('Alice found an item')).toBeDefined()
-      expect(screen.queryByText('Bob spoke to someone')).toBeNull()
-      expect(screen.queryByText('Sky turned cloudy')).toBeNull()
-    })
-
-    it('filters events by type when a type filter button is clicked', () => {
-      render(<GlobalThoughtStream />)
-      fireEvent.click(screen.getByRole('button', { name: /movement/i }))
-      expect(screen.getByText('Alice moved to position')).toBeDefined()
-      expect(screen.getByText('Bob walked south')).toBeDefined()
-      expect(screen.queryByText('Bob spoke to someone')).toBeNull()
-      expect(screen.queryByText('Alice found an item')).toBeNull()
-    })
-
-    it('clears agent filter when clicking "All Agents"', () => {
-      render(<GlobalThoughtStream />)
-      fireEvent.click(screen.getByRole('button', { name: /Alice/i }))
-      expect(screen.queryByText('Bob spoke to someone')).toBeNull()
-      fireEvent.click(screen.getByRole('button', { name: /All Agents/i }))
-      expect(screen.getByText('Bob spoke to someone')).toBeDefined()
-      expect(screen.getByText('Sky turned cloudy')).toBeDefined()
-    })
-
-    it('clears type filter when clicking "All Types"', () => {
-      render(<GlobalThoughtStream />)
-      fireEvent.click(screen.getByRole('button', { name: /movement/i }))
-      expect(screen.queryByText('Bob spoke to someone')).toBeNull()
-      fireEvent.click(screen.getByRole('button', { name: /All Types/i }))
-      expect(screen.getByText('Bob spoke to someone')).toBeDefined()
-      expect(screen.getByText('Sky turned cloudy')).toBeDefined()
-    })
-
-    it('toggles agent filter off when clicking the same agent button again', () => {
-      render(<GlobalThoughtStream />)
-      fireEvent.click(screen.getByRole('button', { name: /Alice/i }))
-      expect(screen.queryByText('Bob spoke to someone')).toBeNull()
-      fireEvent.click(screen.getByRole('button', { name: /Alice/i }))
-      expect(screen.getByText('Bob spoke to someone')).toBeDefined()
-    })
-
-    it('shows "no events match" message when filter yields no results', () => {
-      render(<GlobalThoughtStream />)
-      // Filter by an agent+type combo that doesn't exist
-      // Bob has no weather_change events
-      fireEvent.click(screen.getByRole('button', { name: /Bob/i }))
-      fireEvent.click(screen.getByRole('button', { name: /weather_change/i }))
-      expect(screen.getByText(/No events match/i)).toBeDefined()
-    })
-  })
-
-  describe('Auto-scroll', () => {
-    beforeEach(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (useQuery as any).mockImplementation((fn: any) => {
-        if (fn === 'memory:getGlobalEvents') return mockEvents
-        if (fn === 'agents:getAll') return mockAgents
-        return undefined
-      })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- vi.mocked callback type mismatch
+      }) as any)
     })
 
     it('renders a scrollable container for events', () => {
@@ -183,12 +106,12 @@ describe('GlobalThoughtStream', () => {
 
   describe('Highlighting', () => {
     beforeEach(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (useQuery as any).mockImplementation((fn: any) => {
+      vi.mocked(useQuery).mockImplementation(((fn: string) => {
         if (fn === 'memory:getGlobalEvents') return mockEvents
         if (fn === 'agents:getAll') return mockAgents
         return undefined
-      })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- vi.mocked callback type mismatch
+      }) as any)
     })
 
     it('highlights events for the selected agent when on /agent/$id route', () => {

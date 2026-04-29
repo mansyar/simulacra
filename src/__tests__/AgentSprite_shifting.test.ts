@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { AgentSprite } from '../components/game/AgentSprite'
 import type { AgentData } from '../components/game/AgentSprite'
+import type { Id } from '../../convex/_generated/dataModel'
 import { createNoise } from '../lib/noise'
 
 vi.mock('../lib/noise', () => ({
@@ -9,8 +10,7 @@ vi.mock('../lib/noise', () => ({
 
 describe('AgentSprite Shifting Logic', () => {
   const mockAgent: AgentData = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    _id: 'agent1' as any,
+    _id: 'agent1' as Id<'agents'>,
     name: 'Test Agent',
     gridX: 10,
     gridY: 10,
@@ -28,26 +28,24 @@ describe('AgentSprite Shifting Logic', () => {
     vi.mocked(createNoise).mockReturnValue(() => -0.8)
 
     const sprite = new AgentSprite(mockAgent)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const visual = (sprite as any).visualContainer
+    const visual = sprite as unknown as { visualContainer: { scale: { x: number }; y: number } }
     
     sprite.tick(1)
     sprite.tick(1)
     
     // Expect flipped
-    expect(visual.scale.x).toBe(-1)
+    expect(visual.visualContainer.scale.x).toBe(-1)
   })
 
   it('should apply vertical bounce (shifting) based on noise', () => {
     const sprite = new AgentSprite(mockAgent)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const visual = (sprite as any).visualContainer
-    const initialY = visual.y
+    const visual = sprite as unknown as { visualContainer: { scale: { x: number }; y: number } }
+    const initialY = visual.visualContainer.y
     
     sprite.tick(1)
     sprite.tick(1)
     
-    const newY = visual.y
+    const newY = visual.visualContainer.y
     expect(newY).not.toBe(initialY)
   })
 })

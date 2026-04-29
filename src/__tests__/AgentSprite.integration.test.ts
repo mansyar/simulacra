@@ -25,8 +25,7 @@ const mockText = {
 
 vi.mock('pixi.js', () => {
   class MockContainer {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    children: any[] = []
+    children: unknown[] = []
     position = { x: 0, y: 0, set: vi.fn() }
     visible = true
     label = ''

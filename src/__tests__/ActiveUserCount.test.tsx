@@ -70,7 +70,7 @@ describe('ActiveUserCount', () => {
   })
 
   it('handles null presence state', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- null is not in the return type but we test defensive null handling
     vi.mocked(usePresenceWithSessionStorage).mockReturnValue(null as any)
     render(<ActiveUserCount />)
     const text = screen.getByText(/0 observers/)

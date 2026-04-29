@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import { AgentSprite } from '../components/game/AgentSprite'
 import type { AgentData } from '../components/game/AgentSprite'
+import type { Id } from '../../convex/_generated/dataModel'
 
 describe('AgentSprite Multi-Agent Performance', () => {
   const createMockAgent = (id: string): AgentData => ({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    _id: id as any,
+    _id: id as Id<'agents'>,
     name: `Agent ${id}`,
     gridX: Math.random() * 64,
     gridY: Math.random() * 64,

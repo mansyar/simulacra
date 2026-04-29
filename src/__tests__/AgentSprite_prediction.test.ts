@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import { AgentSprite } from '../components/game/AgentSprite'
 import type { AgentData } from '../components/game/AgentSprite'
+import type { Id } from '../../convex/_generated/dataModel'
 
 describe('AgentSprite Prediction Logic', () => {
   const mockAgent: AgentData = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    _id: 'agent1' as any,
+    _id: 'agent1' as Id<'agents'>,
     name: 'Test Agent',
     gridX: 0,
     gridY: 0,
@@ -17,10 +17,10 @@ describe('AgentSprite Prediction Logic', () => {
 
   it('should move estimatedGridX toward targetX over time', () => {
     const sprite = new AgentSprite(mockAgent)
+    const s = sprite as unknown as { estimatedGridX: number }
     
     // Initial position
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect((sprite as any).estimatedGridX).toBe(0)
+    expect(s.estimatedGridX).toBe(0)
     
     // Simulate 60 seconds (1/3 of tick interval)
     // deltaTime = 1 means 1/60th of a second
@@ -32,8 +32,7 @@ describe('AgentSprite Prediction Logic', () => {
     // After 60s, it should be around 1/3 of the way (2 units)
     // speed = 6 / 180 = 0.0333 units/sec
     // dist = 0.0333 * 60 = 2 units
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const estimatedX = (sprite as any).estimatedGridX
+    const estimatedX = s.estimatedGridX
     expect(estimatedX).toBeGreaterThan(1.9)
     expect(estimatedX).toBeLessThan(2.1)
   })
