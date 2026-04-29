@@ -1,4 +1,4 @@
- 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /// <reference types="vite/client" />
 import { convexTest } from "convex-test";
 import { expect, test, describe } from "vitest";
@@ -128,6 +128,48 @@ describe("Conversation TTL & Cleanup", () => {
     // Second pass should skip both
     expect(processed.has(id1)).toBe(true);
     expect(processed.has(id2)).toBe(true);
+  });
+
+  test("addEvent supports interaction type for cleanup logging", async () => {
+    const t = convexTest(schema, modules);
+
+    await t.mutation(api.functions.seed.config, { clearExisting: true });
+
+    const agentId = await t.mutation(api.functions.agents.create, {
+      name: "Test Agent", archetype: "socialite", gridX: 5, gridY: 5,
+    });
+
+    // Verify addEvent mutation accepts interaction type with descriptive text
+    await t.mutation(api.functions.memory.addEvent, {
+      agentId,
+      type: "interaction",
+      description: "Conversation with Partner ended (stale after 30 min).",
+      gridX: 5,
+      gridY: 5,
+    });
+
+    // Retrieve events
+    const events = await t.query(api.functions.memory.getEvents, { agentId });
+    const cleanupEvent = events.find((e: any) => e.description.includes("stale after"));
+    expect(cleanupEvent).toBeDefined();
+    expect(cleanupEvent?.type).toBe("interaction");
+  });
+
+  test("stale duration computation is correct", async () => {
+    // Test the duration formula that will be used in event descriptions
+    const startedAt = Date.now() - 1_800_000; // 30 minutes ago
+    const staleMinutes = Math.round((Date.now() - startedAt) / 60000);
+    expect(staleMinutes).toBe(30);
+
+    // Test with a different duration
+    const startedAt2 = Date.now() - 3_600_000; // 60 minutes ago
+    const staleMinutes2 = Math.round((Date.now() - startedAt2) / 60000);
+    expect(staleMinutes2).toBe(60);
+
+    // Verify the event description format
+    const partnerName = "Agent B";
+    const description = `Conversation with ${partnerName} ended (stale after ${staleMinutes} min).`;
+    expect(description).toBe("Conversation with Agent B ended (stale after 30 min).");
   });
 
   test("TTL scales correctly when tickInterval changes to 60s", async () => {

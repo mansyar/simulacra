@@ -378,6 +378,16 @@ async function cleanStaleConversations(ctx: any, agents: any[], config: any): Pr
     if (now - agent.conversationState.startedAt <= ttlMs) continue;
 
     const partner = agents.find((a: any) => a._id === agent.conversationState.partnerId);
+    const partnerName = partner?.name ?? "Unknown";
+    const staleMinutes = Math.round((now - agent.conversationState.startedAt) / 60000);
+
+    try {
+      await ctx.runMutation(api.functions.memory.addEvent, {
+        agentId: agent._id, type: "interaction",
+        description: `Conversation with ${partnerName} ended (stale after ${staleMinutes} min).`,
+        gridX: agent.gridX, gridY: agent.gridY,
+      });
+    } catch { /* isolated error */ }
 
     try { await ctx.runMutation(internal.functions.agents.resetConversationEnd, { agentId: agent._id }); }
     catch { /* isolated error — continue with in-memory cleanup */ }
@@ -388,8 +398,16 @@ async function cleanStaleConversations(ctx: any, agents: any[], config: any): Pr
     processed.add(agent._id);
 
     if (partner) {
-      try { await ctx.runMutation(internal.functions.agents.resetConversationEnd, { agentId: partner._id }); }
-      catch { /* isolated error */ }
+      // Log cleanup event for partner
+      try {
+        await ctx.runMutation(api.functions.memory.addEvent, {
+          agentId: partner._id, type: "interaction",
+          description: `Conversation with ${agent.name} ended (stale after ${staleMinutes} min).`,
+          gridX: partner.gridX, gridY: partner.gridY,
+        });
+      } catch { /* isolated error */ }
+
+      try { await ctx.runMutation(internal.functions.agents.resetConversationEnd, { agentId: partner._id }); } catch { /* isolated error */ }
       partner.conversationState = undefined;
       partner.currentAction = "idle";
       partner.interactionPartnerId = undefined;
