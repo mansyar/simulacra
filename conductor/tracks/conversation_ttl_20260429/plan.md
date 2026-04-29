@@ -4,29 +4,37 @@
 
 ### Task 1.1: Add `conversationMaxTtlMs` to config table schema
 - [ ] Add `conversationMaxTtlMs` field to the config table definition in `convex/schema.ts`
-    - [ ] Type: `v.optional(v.float64())` with a comment `// ms; default 1800000 (30 min)`
-- [ ] Update seed config in `convex/functions/seed.ts` to include `conversationMaxTtlMs: 1800000`
-- [ ] Add migration logic for existing config rows (check if field is undefined, patch with default)
+    - [ ] Type: `v.optional(v.float64())` with a comment `// ms override; computed default: 5 × tickInterval × 2 × 1000`
+- [ ] Update seed config in `convex/functions/seed.ts` to include `conversationMaxTtlMs: undefined` (leave unset — use computed default)
+- [ ] Add migration logic for existing config rows (no action needed for optional field)
 
-### Task 1.2: Write failing test for config TTL value
+### Task 1.2: Write failing test for config and TTL formula
 - [ ] Create test file `convex/conversation_ttl.test.ts`
-- [ ] Write test: `config table contains conversationMaxTtlMs after seeding`
-- [ ] Write test: `conversationMaxTtlMs defaults to 1800000 when not set`
+- [ ] Write test: `computed TTL default = 5 × tickInterval × 2 × 1000`
+- [ ] Write test: `config table conversationMaxTtlMs overrides computed default`
+- [ ] Write test: `env var CONVERSATION_MAX_TTL_MS overrides everything`
 - [ ] Run tests and confirm they fail as expected (Red Phase)
 
-### Task 1.3: Implement cleanStaleConversations function
+### Task 1.3: Implement cleanStaleConversations function (Hard Cleanup + Partner Dedup)
 - [ ] Create `cleanStaleConversations` internal function in `convex/functions/world.ts`
-    - [ ] Input: agents array, config object (conversationMaxTtlMs), current timestamp
-    - [ ] Filter: agents with `conversationState` where `Date.now() - conversationState.startedAt > conversationMaxTtlMs`
-    - [ ] For each stale conversation: call `clearConversationState` for both agents and log via `addEvent`
+    - [ ] Calculate TTL: `config?.conversationMaxTtlMs ?? (MAX_TURNS(5) × (config?.defaultTickInterval ?? 180) × SAFETY_MULTIPLIER(2) × 1000)`
+    - [ ] Fallback: `parseInt(process.env.CONVERSATION_MAX_TTL_MS ?? "1800000")` when config table unavailable
+    - [ ] **Partner dedup:** `const processed = new Set<string>()` to skip already-processed agents
+    - [ ] Guard: `if (!agent.conversationState) continue;` and `if (processed.has(agent._id)) continue;`
+    - [ ] Filter: agents where `Date.now() - conversationState.startedAt > ttlMs`
+    - [ ] **Hard cleanup — DB + in-memory:**
+        - [ ] DB: `ctx.runMutation(internal.functions.agents.resetConversationEnd, { agentId: agent._id })`
+        - [ ] In-memory: `agent.conversationState = undefined; agent.currentAction = "idle"; agent.interactionPartnerId = undefined;`
+        - [ ] Same for partner agent (DB + in-memory)
+    - [ ] Add processed IDs: `processed.add(agent._id); if (partner) processed.add(partner._id);`
     - [ ] Return count of conversations cleaned
 - [ ] Integrate `cleanStaleConversations` into `tick()` action:
-    - [ ] Call it after fetching state/config, BEFORE processing agents (between line ~380 and ~384)
-    - [ ] Use `config?.conversationMaxTtlMs ?? parseInt(process.env.CONVERSATION_MAX_TTL_MS ?? "1800000")` for the TTL value
+    - [ ] Call after fetching state/config, BEFORE processing agents (between line ~380 and ~384)
+    - [ ] Log cleanup count: `console.log(\`[WORLD] Cleaned \${cleaned} stale conversations\`)`
 
 ### Task 1.4: Phase Completion Verification and Checkpointing Protocol (Protocol in workflow.md)
 - [ ] Run tests to confirm Phase 1 tasks pass
-- [ ] Verify cleanup routine correctly identifies stale conversations
+- [ ] Verify cleanup routine correctly identifies stale conversations and mutates in-memory objects
 - [ ] Commit Phase 1 changes
 
 ## Phase 2: Event Logging for Cleanup
@@ -34,14 +42,15 @@
 ### Task 2.1: Write failing test for cleanup event logging
 - [ ] Add test to `convex/conversation_ttl.test.ts`
     - [ ] Test: `cleanup event logged for both agents when conversation is stale`
-    - [ ] Test: `cleanup event description mentions partner name and stale duration`
+    - [ ] Test: `cleanup event description contains dynamically computed stale duration`
 - [ ] Run tests and confirm they fail (Red Phase)
 
 ### Task 2.2: Implement cleanup event logging
 - [ ] In `cleanStaleConversations`, after determining a conversation is stale:
-    - [ ] For the current agent: call `ctx.runMutation(api.functions.memory.addEvent, { ... })` with type `"interaction"` and description: `"Conversation with {partnerName} ended (stale after {duration} min)."`
-    - [ ] For the partner agent: same event, with the current agent's name as the partner
-    - [ ] Use `resetConversationEnd` mutation to clear state for both agents
+    - [ ] Compute stale duration: `const staleMinutes = Math.round((now - agent.conversationState.startedAt) / 60000);`
+    - [ ] Find partner name: `partner?.name ?? "Unknown"`
+    - [ ] For current agent: `ctx.runMutation(api.functions.memory.addEvent, { agentId: agent._id, type: "interaction", description: \`Conversation with \${partnerName} ended (stale after \${staleMinutes} min).\`, gridX: agent.gridX, gridY: agent.gridY })`
+    - [ ] For partner agent: same event with current agent's name as the partner
 - [ ] Run tests and confirm all pass (Green Phase)
 
 ### Task 2.3: Phase Completion Verification and Checkpointing Protocol (Protocol in workflow.md)
@@ -55,23 +64,26 @@
     - [ ] Test: `active conversation (recent startedAt) is NOT cleaned up`
     - [ ] Test: `agent without conversationState is not affected`
     - [ ] Test: `cleanup handles stale partner who was already cleaned up (idempotent)`
-    - [ ] Test: `env var CONVERSATION_MAX_TTL_MS overrides default`
+    - [ ] Test: `after hard cleanup, processAgent does not see old conversationState in-memory`
+    - [ ] Test: `partner dedup does not process the same conversation pair twice`
+    - [ ] Test: `TTL scales correctly when tickInterval changes to 60s`
 - [ ] Run tests and confirm they fail (Red Phase)
 
 ### Task 3.2: Implement edge case handling
 - [ ] Verify `cleanStaleConversations` handles all edge cases:
-    - [ ] Idempotent: partner might have been cleaned up already → handle gracefully
+    - [ ] Partner dedup Set prevents double-processing (already in Phase 1)
+    - [ ] Idempotent: partner might have been cleaned up by previous iteration
     - [ ] Non-stale conversations are skipped
-    - [ ] Agent without `conversationState` is not affected
-    - [ ] TTL config value is read correctly from config table with env var fallback
+    - [ ] In-memory mutations prevent same-tick restart
+    - [ ] TTL correctly reads from config table → computed default → env var → hardcoded fallback
 - [ ] Run tests and confirm all pass (Green Phase)
 
 ### Task 3.3: Full test suite run
 - [ ] Run `CI=true pnpm test` — all tests must pass
-- [ ] Run `CI=true pnpm test:coverage` — verify no coverage regression
+- [ ] Run `CI=true pnpm test:coverage` — verify no coverage regression (<80%)
 - [ ] Run `npx tsc --noEmit` — type checking passes
 
 ### Task 3.4: Phase Completion Verification and Checkpointing Protocol (Protocol in workflow.md)
-- [ ] Run full test suite to confirm all tests pass
+- [ ] Run full test suite to confirm all 250+ tests pass
 - [ ] Commit Phase 3 changes with proper message
 - [ ] Attach git notes with task summary
