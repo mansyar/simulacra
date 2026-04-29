@@ -5,6 +5,6 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [ ] **Track: Conversation TTL & Cleanup**
+- [x] **Track: Conversation TTL & Cleanup**
 *Link: [./tracks/conversation_ttl_20260429/](./tracks/conversation_ttl_20260429/)*
 

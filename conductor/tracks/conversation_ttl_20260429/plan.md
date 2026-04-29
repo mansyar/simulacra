@@ -37,53 +37,53 @@
 - [x] Verify cleanup routine correctly identifies stale conversations and mutates in-memory objects
 - [x] Commit Phase 1 changes
 
-## Phase 2: Event Logging for Cleanup
+## Phase 2: Event Logging for Cleanup [checkpoint: 145e8bf]
 
 ### Task 2.1: Write failing test for cleanup event logging
-- [ ] Add test to `convex/conversation_ttl.test.ts`
-    - [ ] Test: `cleanup event logged for both agents when conversation is stale`
-    - [ ] Test: `cleanup event description contains dynamically computed stale duration`
-- [ ] Run tests and confirm they fail (Red Phase)
+- [x] Add test to `convex/conversation_ttl.test.ts`
+    - [x] Test: `cleanup event logged for both agents when conversation is stale`
+    - [x] Test: `cleanup event description contains dynamically computed stale duration`
+- [x] Run tests and confirm they fail (Red Phase)
 
-### Task 2.2: Implement cleanup event logging
-- [ ] In `cleanStaleConversations`, after determining a conversation is stale:
-    - [ ] Compute stale duration: `const staleMinutes = Math.round((now - agent.conversationState.startedAt) / 60000);`
-    - [ ] Find partner name: `partner?.name ?? "Unknown"`
-    - [ ] For current agent: `ctx.runMutation(api.functions.memory.addEvent, { agentId: agent._id, type: "interaction", description: \`Conversation with \${partnerName} ended (stale after \${staleMinutes} min).\`, gridX: agent.gridX, gridY: agent.gridY })`
-    - [ ] For partner agent: same event with current agent's name as the partner
-- [ ] Run tests and confirm all pass (Green Phase)
+### Task 2.2: Implement cleanup event logging [145e8bf]
+- [x] In `cleanStaleConversations`, after determining a conversation is stale:
+    - [x] Compute stale duration: `const staleMinutes = Math.round((now - agent.conversationState.startedAt) / 60000);`
+    - [x] Find partner name: `partner?.name ?? "Unknown"`
+    - [x] For current agent: `ctx.runMutation(api.functions.memory.addEvent, ...)`
+    - [x] For partner agent: same event with current agent's name as the partner
+- [x] Run tests and confirm all pass (Green Phase)
 
 ### Task 2.3: Phase Completion Verification and Checkpointing Protocol (Protocol in workflow.md)
-- [ ] Run full test suite to ensure no regressions
-- [ ] Commit Phase 2 changes
+- [x] Run full test suite to ensure no regressions
+- [x] Commit Phase 2 changes
 
-## Phase 3: Edge Cases & Final Verification
+## Phase 3: Edge Cases & Final Verification [checkpoint: 48a914f]
 
-### Task 3.1: Write failing test for edge cases
-- [ ] Add tests to `convex/conversation_ttl.test.ts`:
-    - [ ] Test: `active conversation (recent startedAt) is NOT cleaned up`
-    - [ ] Test: `agent without conversationState is not affected`
-    - [ ] Test: `cleanup handles stale partner who was already cleaned up (idempotent)`
-    - [ ] Test: `after hard cleanup, processAgent does not see old conversationState in-memory`
-    - [ ] Test: `partner dedup does not process the same conversation pair twice`
-    - [ ] Test: `TTL scales correctly when tickInterval changes to 60s`
-- [ ] Run tests and confirm they fail (Red Phase)
+### Task 3.1: Write failing test for edge cases [48a914f]
+- [x] Add tests to `convex/conversation_ttl.test.ts`:
+    - [x] Test: `active conversation (recent startedAt) is NOT cleaned up`
+    - [x] Test: `agent without conversationState is not affected`
+    - [x] Test: `cleanup handles stale partner who was already cleaned up (idempotent)`
+    - [x] Test: `after hard cleanup, processAgent does not see old conversationState in-memory`
+    - [x] Test: `partner dedup does not process the same conversation pair twice`
+    - [x] Test: `TTL scales correctly when tickInterval changes to 60s`
+- [x] Run tests and confirm they fail (Red Phase)
 
-### Task 3.2: Implement edge case handling
-- [ ] Verify `cleanStaleConversations` handles all edge cases:
-    - [ ] Partner dedup Set prevents double-processing (already in Phase 1)
-    - [ ] Idempotent: partner might have been cleaned up by previous iteration
-    - [ ] Non-stale conversations are skipped
-    - [ ] In-memory mutations prevent same-tick restart
-    - [ ] TTL correctly reads from config table → computed default → env var → hardcoded fallback
-- [ ] Run tests and confirm all pass (Green Phase)
+### Task 3.2: Implement edge case handling [48a914f]
+- [x] Verify `cleanStaleConversations` handles all edge cases:
+    - [x] Partner dedup Set prevents double-processing
+    - [x] Idempotent: partner might have been cleaned up by previous iteration
+    - [x] Non-stale conversations are skipped
+    - [x] In-memory mutations prevent same-tick restart
+    - [x] TTL reads from config table → computed default → env var → hardcoded fallback
+- [x] Run tests and confirm all pass (Green Phase)
 
-### Task 3.3: Full test suite run
-- [ ] Run `CI=true pnpm test` — all tests must pass
-- [ ] Run `CI=true pnpm test:coverage` — verify no coverage regression (<80%)
-- [ ] Run `npx tsc --noEmit` — type checking passes
+### Task 3.3: Full test suite run [48a914f]
+- [x] Run `CI=true pnpm test` — all tests pass (258 tests, 62 files)
+- [x] Run coverage — no regression
+- [x] Run `npx tsc --noEmit` — type checking passes
 
-### Task 3.4: Phase Completion Verification and Checkpointing Protocol (Protocol in workflow.md)
-- [ ] Run full test suite to confirm all 250+ tests pass
-- [ ] Commit Phase 3 changes with proper message
-- [ ] Attach git notes with task summary
+### Task 3.4: Phase Completion Verification and Checkpointing [48a914f]
+- [x] Run full test suite to confirm all tests pass
+- [x] Commit Phase 3 changes with proper message
+- [x] Attach git notes with task summary
