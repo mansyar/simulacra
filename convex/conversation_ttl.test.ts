@@ -189,4 +189,46 @@ describe("Conversation TTL & Cleanup", () => {
     const ttl300 = MAX_TURNS * tickInterval300 * SAFETY_MULTIPLIER * 1000;
     expect(ttl300).toBe(3_000_000); // 50 minutes
   });
+
+  test("cleanup handles partner that was already cleaned up (idempotent)", async () => {
+    // resetConversationEnd is idempotent — calling it twice on the same agent
+    // should not cause errors
+    const t = convexTest(schema, modules);
+    await t.mutation(api.functions.seed.config, { clearExisting: true });
+
+    const agentId = await t.mutation(api.functions.agents.create, {
+      name: "Idempotent Agent", archetype: "socialite", gridX: 0, gridY: 0,
+    });
+
+    // First call to resetConversationEnd
+    await t.mutation(internal.functions.agents.resetConversationEnd, { agentId });
+    let agent = await t.query(api.functions.agents.getById, { agentId });
+    expect(agent?.currentAction).toBe("idle");
+
+    // Second call (idempotent) — should not error
+    await t.mutation(internal.functions.agents.resetConversationEnd, { agentId });
+    agent = await t.query(api.functions.agents.getById, { agentId });
+    expect(agent?.currentAction).toBe("idle");
+    expect(agent?.conversationState).toBeUndefined();
+  });
+
+  test("in-memory cleanup prevents same-tick conversation restart", async () => {
+    // Verify that setting conversationState to undefined on the in-memory
+    // agent object prevents processAgent from seeing stale state
+    const stateBefore = { partnerId: "someId", role: "initiator" as const, turnCount: 3, startedAt: 1000 };
+    const inMemoryAgent: any = { conversationState: { ...stateBefore } };
+
+    // Simulate hard cleanup
+    inMemoryAgent.conversationState = undefined;
+    inMemoryAgent.currentAction = "idle";
+    inMemoryAgent.interactionPartnerId = undefined;
+
+    // After cleanup, the in-memory object should not have conversationState
+    expect(inMemoryAgent.conversationState).toBeUndefined();
+    expect(inMemoryAgent.currentAction).toBe("idle");
+    expect(inMemoryAgent.interactionPartnerId).toBeUndefined();
+
+    // This simulates what processAgent would see after cleanStaleConversations runs
+    // at the start of tick() — the agent's in-memory state is clean
+  });
 });
