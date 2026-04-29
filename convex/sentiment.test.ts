@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { describe, it, expect } from "vitest";
-import { analyzeSentiment } from "./functions/ai";
+import { analyzeSentiment } from "./functions/sentiment";
 
 describe("Sentiment Analysis", () => {
   describe("analyzeSentiment", () => {

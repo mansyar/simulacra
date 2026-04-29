@@ -114,6 +114,7 @@ export const config = mutation({
         llmProvider: "openai",
         llmModel: "gpt-3.5-turbo",
         interactionRadius: 5,
+        conversationMaxTtlMs: undefined,
       });
     } else if (existing.interactionRadius === undefined) {
       await ctx.db.patch(existing._id, { interactionRadius: 5 });
@@ -213,6 +214,7 @@ export const world = mutation({
     ];
 
     for (const arch of archetypeData) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await ctx.db.insert("archetypes", arch as any);
     }
 

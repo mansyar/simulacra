@@ -153,6 +153,7 @@ export default defineSchema({
     llmBaseUrl: v.optional(v.string()),
     llmModel: v.string(),
     interactionRadius: v.number(),
+    conversationMaxTtlMs: v.optional(v.float64()), // ms override; computed default: 5 × tickInterval × 2 × 1000
   }),
 
   archetypes: defineTable({

@@ -8,7 +8,7 @@
     "paths": {
       "#/*": ["./src/*"],
       "@/*": ["./src/*"],
-      "@convex-dev/presence/*": ["./node_modules/@convex-dev/presence/dist/*"]
+      "@convex-dev/presence/_generated/component.js": ["./node_modules/@convex-dev/presence/dist/component/_generated/component.d.ts"]
     },
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["vite/client"],

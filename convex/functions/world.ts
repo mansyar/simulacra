@@ -3,7 +3,7 @@ import { query, mutation, action, internalMutation } from "../_generated/server"
 import { v } from "convex/values";
 import { api, internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
-import { analyzeSentiment } from "./ai";
+import { analyzeSentiment } from "./sentiment";
 
 // Reflection interval: 480 ticks ≈ 10 simulated days (48 ticks/day, ~30 min per tick)
 const REFLECTION_INTERVAL_TICKS = 480;
