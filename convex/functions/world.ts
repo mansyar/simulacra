@@ -352,6 +352,55 @@ async function processAgent(ctx: any, agent: any, agents: any[], worldState: any
   await ctx.runMutation(api.functions.memory.addEvent, { agentId: agent._id, type: decision.speech ? "conversation" : "movement", description, gridX: agent.gridX, gridY: agent.gridY });
 }
 
+/**
+ * Clean stale conversations that have exceeded the TTL.
+ * Performs hard cleanup (DB + in-memory) with partner deduplication.
+ */
+async function cleanStaleConversations(ctx: any, agents: any[], config: any): Promise<number> {
+  const MAX_TURNS = 5, SAFETY_MULTIPLIER = 2;
+  let ttlMs: number;
+
+  if (config?.conversationMaxTtlMs != null) {
+    ttlMs = config.conversationMaxTtlMs;
+  } else {
+    const envOverride = parseInt(process.env.CONVERSATION_MAX_TTL_MS ?? "", 10);
+    ttlMs = isNaN(envOverride)
+      ? MAX_TURNS * (config?.defaultTickInterval ?? 180) * SAFETY_MULTIPLIER * 1000
+      : envOverride;
+  }
+
+  const now = Date.now();
+  const processed = new Set<string>();
+  let cleanedCount = 0;
+
+  for (const agent of agents) {
+    if (!agent.conversationState || processed.has(agent._id)) continue;
+    if (now - agent.conversationState.startedAt <= ttlMs) continue;
+
+    const partner = agents.find((a: any) => a._id === agent.conversationState.partnerId);
+
+    try { await ctx.runMutation(internal.functions.agents.resetConversationEnd, { agentId: agent._id }); }
+    catch { /* isolated error — continue with in-memory cleanup */ }
+
+    agent.conversationState = undefined;
+    agent.currentAction = "idle";
+    agent.interactionPartnerId = undefined;
+    processed.add(agent._id);
+
+    if (partner) {
+      try { await ctx.runMutation(internal.functions.agents.resetConversationEnd, { agentId: partner._id }); }
+      catch { /* isolated error */ }
+      partner.conversationState = undefined;
+      partner.currentAction = "idle";
+      partner.interactionPartnerId = undefined;
+      processed.add(partner._id);
+    }
+
+    cleanedCount++;
+  }
+  return cleanedCount;
+}
+
 // Action: Process a world tick
 export const tick = action({
   args: { skipSleep: v.optional(v.boolean()) },
@@ -378,6 +427,11 @@ export const tick = action({
     const weather = worldState?.weather || "sunny";
     const weatherMultipliers: Record<string, number> = { sunny: 1.0, cloudy: 1.0, rainy: 0.8, stormy: 0.5 };
     const speedMultiplier = weatherMultipliers[weather] || 1.0;
+    // Clean stale conversations before processing agents
+    const cleanedConvs = await cleanStaleConversations(ctx, agents, config);
+    if (cleanedConvs > 0) {
+      console.log(`[WORLD] Cleaned ${cleanedConvs} stale conversations`);
+    }
     // Process all agents in parallel with error isolation — no inter-batch delays
     // The chat model has no concurrency limits, so batching is unnecessary
     console.log(`[WORLD] Processing all ${agents.length} agents in parallel with error isolation`);
