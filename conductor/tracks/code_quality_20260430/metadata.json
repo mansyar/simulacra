@@ -1,0 +1,8 @@
+{
+  "track_id": "code_quality_20260430",
+  "type": "chore",
+  "status": "new",
+  "created_at": "2026-04-30T03:07:00Z",
+  "updated_at": "2026-04-30T03:07:00Z",
+  "description": "Improve code quality across the codebase: proper TypeScript types/interfaces (no any), remove all eslint-disable and @ts-ignore comments, add integration tests for critical user-facing flows"
+}
