@@ -2,14 +2,14 @@
 
 ## Phase 1: Sentiment Analysis Helper (~2 hours)
 
-### Task 1.1: Create sentiment analysis function
-- [ ] Write tests for keyword-based sentiment classification (positive, negative, neutral, edge cases)
-- [ ] Implement `analyzeSentiment(speech: string): { classification: 'positive' | 'negative' | 'neutral'; delta: number }` in `convex/functions/ai.ts`
+### Task 1.1: Create sentiment analysis function [9f5af85]
+- [x] Write tests for keyword-based sentiment classification (positive, negative, neutral, edge cases)
+- [x] Implement `analyzeSentiment(speech: string): { classification: 'positive' | 'negative' | 'neutral'; delta: number }` in `convex/functions/ai.ts`
     - Define positive keywords list with intensity weights (+1, +2, +3)
     - Define negative keywords list with intensity weights (-1, -2, -3)
     - Handle punctuation stripping, case normalization
     - Default to neutral (delta: 0) for no-match speech
-- [ ] Run tests and confirm all pass (Green phase)
+- [x] Run tests and confirm all pass (Green phase)
 
 - [ ] Task: Conductor - Phase Completion Verification (Protocol in workflow.md)
 
