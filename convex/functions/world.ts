@@ -3,6 +3,7 @@ import { query, mutation, action, internalMutation } from "../_generated/server"
 import { v } from "convex/values";
 import { api, internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
+import { analyzeSentiment } from "./ai";
 
 // Reflection interval: 480 ticks ≈ 10 simulated days (48 ticks/day, ~30 min per tick)
 const REFLECTION_INTERVAL_TICKS = 480;
@@ -310,9 +311,15 @@ async function processAgent(ctx: any, agent: any, agents: any[], worldState: any
     const targetAgent = agents.find((a: any) => a.name === decision.target);
     if (targetAgent && targetAgent._id !== agent._id) {
       targetAgentId = targetAgent._id;
-      // REMOVED: forced listening on partner + relationship update
-      // Partner is no longer force-set to "listening" — they make their own AI decision.
-      // Relationship affinity will be handled in Track B (sentiment-based).
+      // Analyze speech sentiment and update relationship affinity per turn
+      if (decision.speech) {
+        const { delta } = analyzeSentiment(decision.speech);
+        await ctx.runMutation(internal.functions.agents.updateRelationship, {
+          agentAId: agent._id,
+          agentBId: targetAgentId,
+          delta,
+        });
+      }
     }
   }
 
