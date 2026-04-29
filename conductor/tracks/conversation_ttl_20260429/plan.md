@@ -1,6 +1,6 @@
 # Plan: Conversation TTL & Cleanup
 
-## Phase 1: Schema, Config, and Cleanup Infrastructure
+## Phase 1: Schema, Config, and Cleanup Infrastructure [checkpoint: 07f6989]
 
 ### Task 1.1: Add `conversationMaxTtlMs` to config table schema [a9b3343]
 - [x] Add `conversationMaxTtlMs` field to the config table definition in `convex/schema.ts`
@@ -32,10 +32,10 @@
     - [x] Call after fetching state/config, BEFORE processing agents
     - [x] Log cleanup count: `console.log(\`[WORLD] Cleaned \${cleaned} stale conversations\`)`
 
-### Task 1.4: Phase Completion Verification and Checkpointing Protocol (Protocol in workflow.md)
-- [ ] Run tests to confirm Phase 1 tasks pass
-- [ ] Verify cleanup routine correctly identifies stale conversations and mutates in-memory objects
-- [ ] Commit Phase 1 changes
+### Task 1.4: Phase Completion Verification and Checkpointing Protocol (Protocol in workflow.md) [07f6989]
+- [x] Run tests to confirm Phase 1 tasks pass
+- [x] Verify cleanup routine correctly identifies stale conversations and mutates in-memory objects
+- [x] Commit Phase 1 changes
 
 ## Phase 2: Event Logging for Cleanup
 
