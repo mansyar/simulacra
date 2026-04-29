@@ -49,7 +49,7 @@
 
 **Goal:** Remove file-level eslint-disable from all test files, replace with proper typed mocks.
 
-- [ ] Task 4.1: Create reusable test utilities and shared mock types
+- [x] Task 4.1: Create reusable test utilities and shared mock types `[pending]`
 - [x] Task 4.2: Fix `src/__tests__/AgentDetailRoute.test.tsx` — remove file-level eslint-disable `[0df7335]`
 - [x] Task 4.3: Fix `src/__tests__/GameCanvas_navigation.test.tsx` — remove file-level eslint-disable `[0df7335]`
 - [x] Task 4.4: Fix `src/__tests__/GlobalThoughtStream.test.tsx` — remove inline eslint-disable `[c650120]`
