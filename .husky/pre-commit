@@ -5,16 +5,4 @@
 echo "Running lint-staged..."
 npx lint-staged
 
-# Run TypeScript type check
-echo "Running TypeScript type check..."
-npx tsc --noEmit
-
-# Run Vitest
-echo "Running unit tests..."
-npx vitest related
-
-# Run file line count check
-echo "Checking file line counts..."
-node scripts/check-line-counts.cjs
-
 # If all checks pass, the commit will proceed

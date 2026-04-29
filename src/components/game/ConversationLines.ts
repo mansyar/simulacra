@@ -90,7 +90,7 @@ export class ConversationLines {
     const keysToDelete: string[] = [];
 
     // Process each conversation
-    for (const [key, conversation] of this.conversations) {
+    for (const [key, conversation] of Array.from(this.conversations)) {
       conversation.graphics.clear();
 
       if (conversation.isFadingOut) {
@@ -126,7 +126,7 @@ export class ConversationLines {
 
     // Draw dotted line
     graphics.clear();
-    graphics.lineStyle(2, color, fadeAlpha);
+    graphics.setStrokeStyle({ width: 2, color, alpha: fadeAlpha });
 
     const dx = screenB.x - screenA.x;
     const dy = screenB.y - screenA.y;
@@ -172,7 +172,7 @@ export class ConversationLines {
   }
 
   clear(): void {
-    for (const conversation of this.conversations.values()) {
+    for (const conversation of Array.from(this.conversations.values())) {
       this.graphicsContainer.removeChild(conversation.graphics);
     }
     this.conversations.clear();
