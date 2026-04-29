@@ -2,11 +2,11 @@
 
 ## Phase 1: Schema, Config, and Cleanup Infrastructure
 
-### Task 1.1: Add `conversationMaxTtlMs` to config table schema
-- [ ] Add `conversationMaxTtlMs` field to the config table definition in `convex/schema.ts`
-    - [ ] Type: `v.optional(v.float64())` with a comment `// ms override; computed default: 5 × tickInterval × 2 × 1000`
-- [ ] Update seed config in `convex/functions/seed.ts` to include `conversationMaxTtlMs: undefined` (leave unset — use computed default)
-- [ ] Add migration logic for existing config rows (no action needed for optional field)
+### Task 1.1: Add `conversationMaxTtlMs` to config table schema [a9b3343]
+- [x] Add `conversationMaxTtlMs` field to the config table definition in `convex/schema.ts`
+    - [x] Type: `v.optional(v.float64())` with a comment `// ms override; computed default: 5 × tickInterval × 2 × 1000`
+- [x] Update seed config in `convex/functions/seed.ts` to include `conversationMaxTtlMs: undefined` (leave unset — use computed default)
+- [x] Add migration logic for existing config rows (no action needed for optional field)
 
 ### Task 1.2: Write failing test for config and TTL formula
 - [ ] Create test file `convex/conversation_ttl.test.ts`
