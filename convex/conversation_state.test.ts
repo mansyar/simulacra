@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /// <reference types="vite/client" />
 import { convexTest } from "convex-test";
 import { expect, test, describe } from "vitest";
@@ -263,5 +264,56 @@ describe("Conversation State", () => {
     expect(agent?.conversationState?.turnCount).toBe(5);
     // Should be at or over the cap of 5
     expect(agent?.conversationState?.turnCount).toBeGreaterThanOrEqual(5);
+  });
+
+  test("resetConversationEnd clears action, partnerId, speech, and conversationState", async () => {
+    const t = convexTest(schema, modules);
+
+    // Create two agents
+    const agentAId = await t.mutation(api.functions.agents.create, {
+      name: "Agent A",
+      archetype: "socialite",
+      gridX: 0,
+      gridY: 0,
+    });
+
+    const agentBId = await t.mutation(api.functions.agents.create, {
+      name: "Agent B",
+      archetype: "builder",
+      gridX: 1,
+      gridY: 1,
+    });
+
+    // Set B as actively talking in a conversation
+    await t.mutation(internal.functions.agents.setConversationState, {
+      agentId: agentBId,
+      partnerId: agentAId,
+      role: "responder",
+      turnCount: 2,
+      myLastSpeech: "That's interesting!",
+    });
+
+    await t.mutation(internal.functions.agents.updateAction, {
+      agentId: agentBId,
+      action: "talking",
+      speech: "That's interesting!",
+      interactionPartnerId: agentAId,
+      lastSpeechAt: Date.now(),
+    });
+
+    // Call resetConversationEnd
+    await t.mutation(internal.functions.agents.resetConversationEnd, {
+      agentId: agentBId,
+    });
+
+    // Verify all fields are reset
+    const agentB = await t.query(api.functions.agents.getById, {
+      agentId: agentBId,
+    });
+
+    expect(agentB?.currentAction).toBe("idle");
+    expect(agentB?.conversationState).toBeUndefined();
+    expect(agentB?.interactionPartnerId).toBeUndefined();
+    expect(agentB?.speech).toBeUndefined();
   });
 });
