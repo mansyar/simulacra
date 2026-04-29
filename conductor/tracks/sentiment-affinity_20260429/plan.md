@@ -15,22 +15,22 @@
 
 ## Phase 2: Per-Turn Sentiment Integration (~2 hours)
 
-### Task 2.1: Wire sentiment into conversation tick
-- [ ] Write tests for per-turn affinity updates during multi-turn conversations (initiation + all subsequent turns use sentiment)
-- [ ] In `world.ts` `processAgent()`: after LLM returns `action === "talking"` with a `speech` field, call `analyzeSentiment(speech)` to get the delta
-- [ ] Call `updateRelationship(ctx, speakerId, partnerId, delta)` — type is auto-derived from delta sign
-- [ ] Run tests and confirm all pass
+### Task 2.1: Wire sentiment into conversation tick [49fc2f7]
+- [x] Write tests for per-turn affinity updates during multi-turn conversations (initiation + all subsequent turns use sentiment)
+- [x] In `world.ts` `processAgent()`: after LLM returns `action === "talking"` with a `speech` field, call `analyzeSentiment(speech)` to get the delta
+- [x] Call `updateRelationship(ctx, speakerId, partnerId, delta)` — type is auto-derived from delta sign
+- [x] Run tests and confirm all pass
 
-### Task 2.2: Enhanced valenceHistory (auto-derived from delta)
-- [ ] Write tests: verify `updateRelationship` correctly auto-derives "positive"/"negative"/"neutral" entries from delta
-- [ ] Verify `valenceHistory` maintains last 5 entries with correct valence types
-- [ ] Run tests and confirm all pass
+### Task 2.2: Enhanced valenceHistory (auto-derived from delta) [49fc2f7]
+- [x] Write tests: verify `updateRelationship` correctly auto-derives "positive"/"negative"/"neutral" entries from delta
+- [x] Verify `valenceHistory` maintains last 5 entries with correct valence types
+- [x] Run tests and confirm all pass
 
 ### Task 2.3: Integration verification
-- [ ] Write integration test simulating a full multi-turn conversation with sentiment analysis
-- [ ] Verify: every turn (including initiation) applies dynamic sentiment-based affinity delta
-- [ ] Verify: valenceHistory shows mixed positive/negative/neutral entries across conversation turns
-- [ ] Run full test suite and confirm no regressions
-- [ ] Run coverage check (target >80%)
+- [x] Write integration test simulating a full multi-turn conversation with sentiment analysis
+- [x] Verify: every turn (including initiation) applies dynamic sentiment-based affinity delta
+- [x] Verify: valenceHistory shows mixed positive/negative/neutral entries across conversation turns
+- [x] Run full test suite and confirm no regressions (247 tests, 61 files, all pass)
+- [x] Run coverage check (target >80%) — 82.12% overall coverage
 
-- [ ] Task: Conductor - Phase Completion Verification (Protocol in workflow.md)
+- [~] Task: Conductor - Phase Completion Verification (Protocol in workflow.md)
