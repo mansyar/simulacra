@@ -9,28 +9,28 @@
 - [x] Add migration logic for existing config rows (no action needed for optional field)
 
 ### Task 1.2: Write failing test for config and TTL formula
-- [ ] Create test file `convex/conversation_ttl.test.ts`
-- [ ] Write test: `computed TTL default = 5 × tickInterval × 2 × 1000`
-- [ ] Write test: `config table conversationMaxTtlMs overrides computed default`
-- [ ] Write test: `env var CONVERSATION_MAX_TTL_MS overrides everything`
-- [ ] Run tests and confirm they fail as expected (Red Phase)
+- [x] Create test file `convex/conversation_ttl.test.ts`
+- [x] Write test: `computed TTL default = 5 × tickInterval × 2 × 1000`
+- [x] Write test: `config table conversationMaxTtlMs overrides computed default`
+- [x] Write test: `env var CONVERSATION_MAX_TTL_MS overrides everything`
+- [x] Run tests and confirm they fail as expected (Red Phase)
 
-### Task 1.3: Implement cleanStaleConversations function (Hard Cleanup + Partner Dedup)
-- [ ] Create `cleanStaleConversations` internal function in `convex/functions/world.ts`
-    - [ ] Calculate TTL: `config?.conversationMaxTtlMs ?? (MAX_TURNS(5) × (config?.defaultTickInterval ?? 180) × SAFETY_MULTIPLIER(2) × 1000)`
-    - [ ] Fallback: `parseInt(process.env.CONVERSATION_MAX_TTL_MS ?? "1800000")` when config table unavailable
-    - [ ] **Partner dedup:** `const processed = new Set<string>()` to skip already-processed agents
-    - [ ] Guard: `if (!agent.conversationState) continue;` and `if (processed.has(agent._id)) continue;`
-    - [ ] Filter: agents where `Date.now() - conversationState.startedAt > ttlMs`
-    - [ ] **Hard cleanup — DB + in-memory:**
-        - [ ] DB: `ctx.runMutation(internal.functions.agents.resetConversationEnd, { agentId: agent._id })`
-        - [ ] In-memory: `agent.conversationState = undefined; agent.currentAction = "idle"; agent.interactionPartnerId = undefined;`
-        - [ ] Same for partner agent (DB + in-memory)
-    - [ ] Add processed IDs: `processed.add(agent._id); if (partner) processed.add(partner._id);`
-    - [ ] Return count of conversations cleaned
-- [ ] Integrate `cleanStaleConversations` into `tick()` action:
-    - [ ] Call after fetching state/config, BEFORE processing agents (between line ~380 and ~384)
-    - [ ] Log cleanup count: `console.log(\`[WORLD] Cleaned \${cleaned} stale conversations\`)`
+### Task 1.3: Implement cleanStaleConversations function (Hard Cleanup + Partner Dedup) [f657f96]
+- [x] Create `cleanStaleConversations` internal function in `convex/functions/world.ts`
+    - [x] Calculate TTL: `config?.conversationMaxTtlMs ?? (MAX_TURNS(5) × (config?.defaultTickInterval ?? 180) × SAFETY_MULTIPLIER(2) × 1000)`
+    - [x] Fallback: `parseInt(process.env.CONVERSATION_MAX_TTL_MS ?? "1800000")` when config table unavailable
+    - [x] **Partner dedup:** `const processed = new Set<string>()` to skip already-processed agents
+    - [x] Guard: `if (!agent.conversationState) continue;` and `if (processed.has(agent._id)) continue;`
+    - [x] Filter: agents where `Date.now() - conversationState.startedAt > ttlMs`
+    - [x] **Hard cleanup — DB + in-memory:**
+        - [x] DB: `ctx.runMutation(internal.functions.agents.resetConversationEnd, { agentId: agent._id })`
+        - [x] In-memory: `agent.conversationState = undefined; agent.currentAction = "idle"; agent.interactionPartnerId = undefined;`
+        - [x] Same for partner agent (DB + in-memory)
+    - [x] Add processed IDs: `processed.add(agent._id); if (partner) processed.add(partner._id);`
+    - [x] Return count of conversations cleaned
+- [x] Integrate `cleanStaleConversations` into `tick()` action:
+    - [x] Call after fetching state/config, BEFORE processing agents
+    - [x] Log cleanup count: `console.log(\`[WORLD] Cleaned \${cleaned} stale conversations\`)`
 
 ### Task 1.4: Phase Completion Verification and Checkpointing Protocol (Protocol in workflow.md)
 - [ ] Run tests to confirm Phase 1 tasks pass
