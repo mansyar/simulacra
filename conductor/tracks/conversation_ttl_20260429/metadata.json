@@ -1,0 +1,8 @@
+{
+  "track_id": "conversation_ttl_20260429",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-04-29T19:04:00Z",
+  "updated_at": "2026-04-29T19:04:00Z",
+  "description": "Phase 9 Track C: Add TTL-based stale conversation cleanup to prevent conversationState persisting forever"
+}
