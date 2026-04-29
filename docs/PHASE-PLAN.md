@@ -12,7 +12,7 @@
 | 6 | Fluid Movement | Organic idle + Predictive pathing | ✅ Complete | 3-4 days |
 | 7 | The Mind | AI Context Fidelity | ✅ Complete (Tracks A & B ✅, C covered by B) | 1 week |
 | 8 | The Backbone | Robustness & Scaling | ✅ Complete (All Tracks) | 1 week |
-| 9 | The Soul | Deeper Social Dynamics | ⏳ Tracks A-B ✅, C-E ⏳ | 1 week |
+| 9 | The Soul | Deeper Social Dynamics | ⏳ Tracks A-C ✅, D-E ⏳ | 1 week |
 | 10 | Movement Coherence | Fix agent trajectory, weather sync, and logical gaps | 🆕 Planned | 2-3 days |
 | 11 | The Polish | Master Panel + Deploy | ⏳ Not Started | 1 week |
 
@@ -489,11 +489,12 @@ A1 + A2 + A3 (quick fixes) ✅
 
 **Goal:** Fix the conversation system to be truly bidirectional, then layer on dynamic sentiment, lifecycle cleanup, and runtime configurability.
 
-**Status:** ⏳ Tracks A-B ✅, Tracks C-E ⏳
+**Status:** ⏳ Tracks A-C ✅, Tracks D-E ⏳
 
 > **Completed:** 2026-04-29 — Track A: Bidirectional Conversation System
 > **Completed:** 2026-04-29 — Track B: Sentiment-Based Affinity During Conversations
->   - 17 tests (10 unit + 7 integration), 247 total, 82.12% coverage
+> **Completed:** 2026-04-30 — Track C: Conversation TTL & Cleanup
+>   - 11 new tests, 258 total, 62 test files
 >
 > **Design Context:** The current conversation system has two critical flaws discovered during Phase 8 testing:
 > 1. When agent A talks to agent B, B is force-set to `action: "listening"` and skipped on subsequent ticks — B never gets to respond
@@ -537,7 +538,7 @@ A1 + A2 + A3 (quick fixes) ✅
 - [x] **Write tests** — 17 new tests: 10 unit tests for `analyzeSentiment()` (positive/negative/neutral/mixed/empty/partial matches) + 7 integration tests (multi-turn accumulation, mixed sentiment, valenceHistory cap at 5). (Commits 9f5af85, 49fc2f7, 01c8275)
 - [x] **Full test suite** — 247 tests across 61 files, all passing. Coverage: 82.12% (above 80% target). (Commit 01c8275)
 
-### Track C: Conversation TTL & Cleanup [IN PROGRESS — Track created: 2026-04-29]
+### Track C: Conversation TTL & Cleanup [COMPLETE: 2026-04-30]
 
 **Problem:** `conversationState` persists forever with no real-time timeout. If the tick interval is 180s and max 5 turns, conversations span ~15 minutes. If both agents are idle, the conversation state never cleans up. Additionally, when Agent A switches from talking to Agent B to talking to Agent C (via LLM decision), `handleConversationState` overwrites A's `conversationState.partnerId` to C, but B's `conversationState` still references A — **B is now orphaned** with stale state. The TTL mechanism serves as the safety net for this scenario.
 
@@ -549,14 +550,15 @@ A1 + A2 + A3 (quick fixes) ✅
 > - **Partner dedup:** `Set<string>` prevents double-processing the same conversation pair
 > - **Dynamic event duration:** `Math.round((Date.now() - startedAt) / 60000)` used in event messages
 
-- [ ] Add `conversationMaxTtlMs` to config table schema (`v.optional(v.float64())`)
-- [ ] Compute dynamic TTL default: `5 × (config?.defaultTickInterval ?? 180) × 2 × 1000` with env var and hardcoded fallback
-- [ ] Implement `cleanStaleConversations` at start of `tick()` with:
-    - [ ] **Partner dedup** via `Set<string>` of processed IDs
-    - [ ] **Hard cleanup** — DB mutation + in-memory object mutation (set `conversationState = undefined`, `currentAction = "idle"`, `interactionPartnerId = undefined`)
-    - [ ] Both agent and partner get cleaned (in-memory + DB)
-- [ ] Log cleanup events to sensory buffer for BOTH agents with dynamic staleness duration
-- [ ] Write tests: TTL formula, hard cleanup prevents restart, partner dedup, event logging, env var override, non-stale conversations unaffected
+- [x] Add `conversationMaxTtlMs` to config table schema (`v.optional(v.float64())`)
+- [x] Compute dynamic TTL default: `5 × (config?.defaultTickInterval ?? 180) × 2 × 1000` with env var and hardcoded fallback
+- [x] Implement `cleanStaleConversations` at start of `tick()` with:
+    - [x] **Partner dedup** via `Set<string>` of processed IDs
+    - [x] **Hard cleanup** — DB mutation + in-memory object mutation (set `conversationState = undefined`, `currentAction = "idle"`, `interactionPartnerId = undefined`)
+    - [x] Both agent and partner get cleaned (in-memory + DB)
+- [x] Log cleanup events to sensory buffer for BOTH agents with dynamic staleness duration
+- [x] Write tests: TTL formula, hard cleanup prevents restart, partner dedup, event logging, env var override, non-stale conversations unaffected (11 tests in `convex/conversation_ttl.test.ts`)
+- [x] All 258 tests pass across 62 test files
 
 ### Track D: Runtime Configuration & Integration Testing
 
@@ -612,7 +614,7 @@ A1 + A2 + A3 (quick fixes) ✅
 - [x] Partners are free to ignore conversations and pursue their own actions — Track A
 - [x] `myLastSpeech` correctly stores each agent's own speech — Track A
 - [x] Affinity scores change dynamically during multi-turn conversations — Track B
-- [ ] Stale conversations auto-cleanup after timeout — Track C
+- [x] Stale conversations auto-cleanup after timeout — Track C
 - [ ] All thresholds configurable via config table — Track D
 - [ ] **Agents walk to POIs for contextual actions (eat at Cafe, work at Library, etc.)** — Track E
 - [ ] **Thought stream shows arrival events like "Arrived at Cozy Cafe to eat."** — Track E
@@ -812,7 +814,7 @@ Phase 9 (Soul)
     ├──► Bidirectional conversation system (Track A) ✅
     │       │
     │       ├──► Sentiment-based affinity (Track B) ✅
-    │       ├──► Conversation TTL & cleanup (Track C)
+    │       ├──► Conversation TTL & cleanup (Track C) ✅
     │       ├──► Runtime configuration (Track D)
     │       └──► POI-aware agent behavior (Track E)
             │
@@ -856,7 +858,7 @@ Phase 11 (Polish)
 
 ## Recommended Development Order
 
-### Current Status: Phase 9 Up Next 🎯
+### Current Status: Phase 9 (Tracks D-E) Up Next 🎯
 
 1. ✅ **Done:** Grid rendering (Phase 1)
 2. ✅ **Done:** Convex + real-time sync (Phase 2)
@@ -872,7 +874,7 @@ Phase 11 (Polish)
 12. ✅ **Done:** Embedding Pipeline & Configuration Cleanup (Phase 8 — Track C)
 13. ✅ **Done:** Fix bidirectional conversation system (Phase 9 — Track A)
 14. ✅ **Done:** Sentiment-based affinity during conversations (Phase 9 — Track B)
-15. 🏗️ **In Progress:** Conversation TTL & cleanup (Phase 9 — Track C) — Track created, refined spec with hard cleanup + dynamic TTL
+15. ✅ **Done:** Conversation TTL & cleanup (Phase 9 — Track C) — Auto-cleanup stale conversations with configurable TTL, hard cleanup (DB + in-memory), partner dedup, and event logging
 16. ⏳ **Planned:** Runtime configuration & integration testing (Phase 9 — Track D)
 17. ⏳ **Planned:** POI-aware agent behavior (Phase 9 — Track E)
 18. 🆕 **Planned:** LLM sees its own trajectory (Phase 10 — Track A)
