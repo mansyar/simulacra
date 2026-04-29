@@ -22,39 +22,20 @@
 
 **Goal:** Replace all `any` types in Convex backend functions with proper typed interfaces, remove file-level eslint-disable.
 
-- [ ] Task 2.1: Fix `convex/functions/world.ts` — remove file-level eslint-disable and replace all `any`
-    - [ ] Write failing test: Create test that validates types compile without `any`
-    - [ ] Replace `ctx: any` with `ActionCtx` in `handleConversationState`, `processAgent`, `cleanStaleConversations`
-    - [ ] Replace `agent: any` with `AgentState` in all internal helpers
-    - [ ] Replace `agents: any[]` with `AgentState[]`
-    - [ ] Replace `worldState: any` and `config: any` with typed interfaces
-    - [ ] Remove `/* eslint-disable @typescript-eslint/no-explicit-any */` from file header
-    - [ ] Run `npx tsc --noEmit` and existing tests to confirm no regressions
-    - [ ] Commit with message: `fix(types): Replace any with proper types in world.ts`
-- [ ] Task 2.2: Fix `convex/functions/ai.ts` — remove file-level eslint-disable and replace `any`
-    - [ ] Write failing test: Create test validating no `any` in type-heavy ai.ts paths
-    - [ ] Replace `(m: any)` in memory/event iteration with typed alternatives
-    - [ ] Remove `/* eslint-disable @typescript-eslint/no-explicit-any */` from file header
-    - [ ] Run `npx tsc --noEmit` and existing tests
-    - [ ] Commit with message: `fix(types): Replace any with proper types in ai.ts`
-- [ ] Task 2.3: Fix `convex/functions/agents.ts` — replace `const patch: any` with proper partial type
-    - [ ] Replace `const patch: any` with typed partial update using `Partial<Doc<"agents">>`
-    - [ ] Remove inline eslint-disable on line 391
-    - [ ] Run `npx tsc --noEmit` and tests
-    - [ ] Commit with message: `fix(types): Replace any with proper types in agents.ts`
-- [ ] Task 2.4: Fix `convex/functions/ai_helpers.ts` — replace `any` in body/request types
-    - [ ] Define request/response interfaces for OpenAI-compatible API calls
-    - [ ] Replace `body: any` with typed request bodies
-    - [ ] Replace `options?: { responseFormat?: any }` with typed format options
-    - [ ] Replace `.map((m: any) => ...)` with typed iterators
-    - [ ] Run `npx tsc --noEmit` and existing tests
-    - [ ] Commit with message: `fix(types): Replace any with proper types in ai_helpers.ts`
-- [ ] Task 2.5: Fix `convex/functions/memory.ts` — replace `as any` cast
-    - [ ] Write failing test: Verify memory filtering returns correct type
-    - [ ] Replace `as any` type assertion with proper type guard or assertion function
-    - [ ] Run `npx tsc --noEmit` and existing tests
-    - [ ] Commit with message: `fix(types): Replace any cast in memory.ts`
-- [ ] Task 2.6: Conductor - User Manual Verification 'Fix Production Backend Code' (Protocol in workflow.md)
+- [x] Task 2.1: Fix `convex/functions/world.ts` — remove file-level eslint-disable and replace all `any` `[66682a3]`
+    - [x] Write failing test: Create test that validates types compile without `any`
+    - [x] Replace `ctx: any` with `ActionCtx` in `handleConversationState`, `processAgent`, `cleanStaleConversations`
+    - [x] Replace `agent: any` with `AgentState` in all internal helpers
+    - [x] Replace `agents: any[]` with `AgentState[]`
+    - [x] Replace `worldState: any` and `config: any` with typed interfaces
+    - [x] Remove `/* eslint-disable @typescript-eslint/no-explicit-any */` from file header
+    - [x] Run `npx tsc --noEmit` and existing tests to confirm no regressions
+    - [x] Commit with message: `fix(types): Replace any with proper types in world.ts`
+- [x] Task 2.2: Fix `convex/functions/ai.ts` — remove file-level eslint-disable and replace `any` `[65162eb]`
+- [x] Task 2.3: Fix `convex/functions/agents.ts` — replace `const patch: any` with proper partial type `[65162eb]`
+- [x] Task 2.4: Fix `convex/functions/ai_helpers.ts` — replace `any` in body/request types `[65162eb]`
+- [x] Task 2.5: Fix `convex/functions/memory.ts` — replace `as any` cast `[65162eb]`
+- [x] Task 2.6: Conductor - User Manual Verification 'Fix Production Backend Code' (Protocol in workflow.md)
 
 ## Phase 3: Fix Frontend Code
 
