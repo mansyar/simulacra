@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /// <reference types="vite/client" />
 import { convexTest } from "convex-test";
 import { expect, test, describe } from "vitest";
@@ -149,7 +148,9 @@ describe("Conversation State", () => {
 
     // Verify both agents are in active conversations
     expect(activeConversations.length).toBeGreaterThanOrEqual(2);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- query result type from convex-test
     const agentAInConv = activeConversations.find((a: any) => a._id === agentAId);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- query result type from convex-test
     const agentBInConv = activeConversations.find((a: any) => a._id === agentBId);
     expect(agentAInConv).toBeDefined();
     expect(agentBInConv).toBeDefined();
@@ -226,7 +227,8 @@ describe("Conversation State", () => {
 
     expect(agent?.conversationState).toBeDefined();
     // lastPartnerSpeech should not exist since we removed it from the schema
-    expect((agent?.conversationState as any)?.lastPartnerSpeech).toBeUndefined();
+     
+    expect((agent?.conversationState as Record<string, unknown>)?.lastPartnerSpeech).toBeUndefined();
   });
 
   test("conversation termination conditions work correctly", async () => {

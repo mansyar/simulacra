@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /// <reference types="vite/client" />
 import { convexTest } from "convex-test";
 import { expect, test, describe } from "vitest";
@@ -150,6 +149,7 @@ describe("Conversation TTL & Cleanup", () => {
 
     // Retrieve events
     const events = await t.query(api.functions.memory.getEvents, { agentId });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- event type from convex-test
     const cleanupEvent = events.find((e: any) => e.description.includes("stale after"));
     expect(cleanupEvent).toBeDefined();
     expect(cleanupEvent?.type).toBe("interaction");
@@ -216,7 +216,8 @@ describe("Conversation TTL & Cleanup", () => {
     // Verify that setting conversationState to undefined on the in-memory
     // agent object prevents processAgent from seeing stale state
     const stateBefore = { partnerId: "someId", role: "initiator" as const, turnCount: 3, startedAt: 1000 };
-    const inMemoryAgent: any = { conversationState: { ...stateBefore } };
+     
+    const inMemoryAgent: Record<string, unknown> = { conversationState: { ...stateBefore } };
 
     // Simulate hard cleanup
     inMemoryAgent.conversationState = undefined;

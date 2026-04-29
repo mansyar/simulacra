@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { Route } from '../routes/agent.$id'
@@ -7,19 +6,23 @@ import { useQuery } from 'convex/react'
 
 // Mock TanStack Router
 vi.mock('@tanstack/react-router', () => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- router mock accepts any config
   createFileRoute: vi.fn(() => (config: any) => ({
     ...config,
     useParams: vi.fn().mockReturnValue({ id: 'agent1' }),
   })),
   useNavigate: vi.fn(),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- React props mock
   Link: ({ children, to, className }: any) => <a href={to} className={className}>{children}</a>,
 }))
 
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- React props mock
     div: ({ children, className, onClick }: any) => <div className={className} onClick={onClick}>{children}</div>,
   },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- React props mock
   AnimatePresence: ({ children }: any) => <>{children}</>,
 }))
 
@@ -47,6 +50,7 @@ describe('AgentDetail Route Component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- vi.mock return type
     ;(useNavigate as any).mockReturnValue(mockNavigate)
   })
 
@@ -70,8 +74,8 @@ describe('AgentDetail Route Component', () => {
       { _id: 'ev1', type: 'movement', description: 'Arrived at the construction site.', _creationTime: Date.now() },
     ]
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    vi.mocked(useQuery).mockImplementation((name: any, ..._args) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex query name is dynamic
+    vi.mocked(useQuery).mockImplementation((name: any, ..._args) => { void _args
       if (typeof name === 'string') {
         if (name === 'agents:getById') return mockAgent
         if (name === 'agents:getRelationships') return mockRelationships
