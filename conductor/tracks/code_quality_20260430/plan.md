@@ -75,7 +75,7 @@
     - [ ] Test: Conversation termination and cooldown
     - [ ] Run tests to confirm they pass
     - [ ] Commit with message: `test(integration): Add agent interaction flow integration test`
-- [~] Task 5.3: Write Admin/Master Flows integration test
+- [x] Task 5.3: Write Admin/Master Flows integration test `[1164aca]`
     - [ ] Test: Weather change updates world state and affects agent speed
     - [ ] Test: Manual tick trigger processes agents on demand
     - [ ] Run tests to confirm they pass
