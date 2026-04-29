@@ -41,68 +41,28 @@
 
 **Goal:** Replace `any` types in frontend code, remove file-level eslint-disable.
 
-- [ ] Task 3.1: Fix `src/lib/usePresenceWithSessionStorage.ts`
-    - [ ] Write failing test: Verify hook compiles with proper types
-    - [ ] Replace `presence: any` with proper `PresenceState` generic type
-    - [ ] Replace `(convex as any).url` with typed convex instance access
-    - [ ] Replace `(heartbeat as any)(...)` and `(disconnect as any)(...)` with typed mutation wrappers
-    - [ ] Remove `/* eslint-disable @typescript-eslint/no-explicit-any */` from file header
-    - [ ] Run `npx tsc --noEmit` and existing tests
-    - [ ] Commit with message: `fix(types): Replace any with proper types in usePresenceWithSessionStorage.ts`
-- [ ] Task 3.2: Audit and fix PixiJS game components types
-    - [ ] Review `src/components/game/AgentSprite.ts`, `Camera.ts`, `IsometricGrid.ts`, `ConversationLines.ts`, `POISprite.ts` for implicit any
-    - [ ] Add proper interface types for class properties and method parameters
-    - [ ] Run `npx tsc --noEmit` and tests
-    - [ ] Commit with message: `fix(types): Add proper types to PixiJS game components`
-- [ ] Task 3.3: Conductor - User Manual Verification 'Fix Frontend Code' (Protocol in workflow.md)
+- [x] Task 3.1: Fix `src/lib/usePresenceWithSessionStorage.ts` `[77e020d]`
+- [x] Task 3.2: Audit and fix PixiJS game components types `[—]` (already clean — zero `any`, zero eslint-disable)
+- [x] Task 3.3: Conductor - User Manual Verification 'Fix Frontend Code' (Protocol in workflow.md)
 
 ## Phase 4: Fix Test Files
 
 **Goal:** Remove file-level eslint-disable from all test files, replace with proper typed mocks.
 
 - [ ] Task 4.1: Create reusable test utilities and shared mock types
-    - [ ] Create `src/__tests__/test-utils.ts` with reusable mock factories for Convex hooks (useQuery, useMutation, useNavigate)
-    - [ ] Create `convex/test-utils.ts` with reusable mock factories for Convex ctx, db, auth
-    - [ ] Commit with message: `test(utils): Create reusable typed mock utilities`
-- [ ] Task 4.2: Fix `src/__tests__/AgentDetailRoute.test.tsx` — remove file-level eslint-disable
-    - [ ] Replace all `any` with proper mock types using new test utils
-    - [ ] Remove `/* eslint-disable @typescript-eslint/no-explicit-any */` from file header
-    - [ ] Replace `@ts-expect-error` with proper typed alternatives
-    - [ ] Run tests and tsc
-    - [ ] Commit with message: `fix(types): Remove eslint-disable from AgentDetailRoute.test.tsx`
-- [ ] Task 4.3: Fix `src/__tests__/GameCanvas_navigation.test.tsx` — remove file-level eslint-disable
-    - [ ] Replace all `any` with proper mock types
-    - [ ] Remove `/* eslint-disable @typescript-eslint/no-explicit-any */` from file header
-    - [ ] Run tests and tsc
-    - [ ] Commit with message: `fix(types): Remove eslint-disable from GameCanvas_navigation.test.tsx`
-- [ ] Task 4.4: Fix `src/__tests__/GlobalThoughtStream.test.tsx` — remove inline eslint-disable
-    - [ ] Replace all `as any` casts with proper typed mocks
-    - [ ] Run tests and tsc
-    - [ ] Commit with message: `fix(types): Remove eslint-disable from GlobalThoughtStream.test.tsx`
-- [ ] Task 4.5: Fix AgentSprite test files — remove inline eslint-disable
-    - [ ] Fix `AgentSprite.integration.test.ts`, `AgentSprite_performance.test.ts`, `AgentSprite_shifting.test.ts`, `AgentSprite_pacing.test.ts`, `AgentSprite_correction.test.ts`, `AgentSprite_prediction.test.ts`, `AgentSprite_state.test.ts`, `AgentSprite_selection.test.ts`, `AgentSprite_interaction.test.ts`
-    - [ ] Replace all `as any` casts with proper typed mocks
-    - [ ] Run tests and tsc
-    - [ ] Commit with message: `fix(types): Remove eslint-disable from AgentSprite test files`
-- [ ] Task 4.6: Fix remaining src test files — remove inline eslint-disable
-    - [ ] Fix `WorldHUD.test.tsx`, `ActiveUserCount.test.tsx`, `setup.ts`, `usePresenceWithSessionStorage.test.ts`
-    - [ ] Replace all `as any` casts with proper typed mocks
-    - [ ] Run tests and tsc
-    - [ ] Commit with message: `fix(types): Remove eslint-disable from remaining src tests`
-- [ ] Task 4.7: Fix convex test files — remove file-level eslint-disable
-    - [ ] Fix `convex/conversation_ttl.test.ts` — remove file-level disable, replace `any`
-    - [ ] Fix `convex/conversation_state.test.ts` — remove file-level disable, replace `any`
-    - [ ] Fix `convex/ai_coverage.test.ts`, `world_tick_parallel.test.ts`, `user_prompt_context.test.ts` — replace inline `any`
-    - [ ] Fix `spatial_query.test.ts`, `world.test.ts`, `world_coverage.test.ts`, `perception.test.ts` — replace inline `any`
-    - [ ] Run tests and tsc
-    - [ ] Commit with message: `fix(types): Remove eslint-disable from convex test files`
+- [x] Task 4.2: Fix `src/__tests__/AgentDetailRoute.test.tsx` — remove file-level eslint-disable `[0df7335]`
+- [x] Task 4.3: Fix `src/__tests__/GameCanvas_navigation.test.tsx` — remove file-level eslint-disable `[0df7335]`
+- [x] Task 4.4: Fix `src/__tests__/GlobalThoughtStream.test.tsx` — remove inline eslint-disable `[c650120]`
+- [x] Task 4.5: Fix AgentSprite test files — remove inline eslint-disable `[c650120]`
+- [x] Task 4.6: Fix remaining src test files — remove inline eslint-disable `[c650120]`
+- [x] Task 4.7: Fix convex test files — remove file-level eslint-disable `[0df7335]`
 - [ ] Task 4.8: Conductor - User Manual Verification 'Fix Test Files' (Protocol in workflow.md)
 
 ## Phase 5: Add Integration Tests
 
 **Goal:** Add comprehensive integration tests covering critical user-facing flows.
 
-- [ ] Task 5.1: Write World Tick Lifecycle integration test
+- [~] Task 5.1: Write World Tick Lifecycle integration test
     - [ ] Test: Full world tick — cron fires → agents make decisions → state updates → verify events created
     - [ ] Test: Multiple ticks progress hunger/sleep needs
     - [ ] Test: Agent moves toward target after decision
