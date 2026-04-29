@@ -68,14 +68,14 @@
     - [ ] Test: Agent moves toward target after decision
     - [ ] Run tests to confirm they pass
     - [ ] Commit with message: `test(integration): Add world tick lifecycle integration test`
-- [~] Task 5.2: Write Agent Interaction Flow integration test
+- [x] Task 5.2: Write Agent Interaction Flow integration test `[d7bbd81]`
     - [ ] Test: Two agents within proximity trigger conversation
     - [ ] Test: Conversation updates relationship valence (likes/dislikes)
     - [ ] Test: Thought stream captures agent thoughts during interaction
     - [ ] Test: Conversation termination and cooldown
     - [ ] Run tests to confirm they pass
     - [ ] Commit with message: `test(integration): Add agent interaction flow integration test`
-- [ ] Task 5.3: Write Admin/Master Flows integration test
+- [~] Task 5.3: Write Admin/Master Flows integration test
     - [ ] Test: Weather change updates world state and affects agent speed
     - [ ] Test: Manual tick trigger processes agents on demand
     - [ ] Run tests to confirm they pass
