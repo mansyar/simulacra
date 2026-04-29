@@ -1,6 +1,6 @@
 # Implementation Plan: Code Quality Improvement
 
-## Phase 1: Define Core Type Interfaces
+## Phase 1: Define Core Type Interfaces [checkpoint: dfb5a90]
 
 **Goal:** Create a shared types module with proper interfaces for the entire Convex backend.
 
