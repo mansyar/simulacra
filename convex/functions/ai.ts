@@ -38,7 +38,6 @@ const POSITIVE_KEYWORDS: [string, number][] = [
   ["great", 2],
   ["happy", 2],
   ["beautiful", 2],
-  ["wonderful", 3],
   ["joy", 2],
   ["pleased", 2],
   ["glad", 2],
