@@ -63,23 +63,8 @@
 **Goal:** Add comprehensive integration tests covering critical user-facing flows.
 
 - [x] Task 5.1: Write World Tick Lifecycle integration test `[3e09da0]`
-    - [ ] Test: Full world tick — cron fires → agents make decisions → state updates → verify events created
-    - [ ] Test: Multiple ticks progress hunger/sleep needs
-    - [ ] Test: Agent moves toward target after decision
-    - [ ] Run tests to confirm they pass
-    - [ ] Commit with message: `test(integration): Add world tick lifecycle integration test`
 - [x] Task 5.2: Write Agent Interaction Flow integration test `[d7bbd81]`
-    - [ ] Test: Two agents within proximity trigger conversation
-    - [ ] Test: Conversation updates relationship valence (likes/dislikes)
-    - [ ] Test: Thought stream captures agent thoughts during interaction
-    - [ ] Test: Conversation termination and cooldown
-    - [ ] Run tests to confirm they pass
-    - [ ] Commit with message: `test(integration): Add agent interaction flow integration test`
 - [x] Task 5.3: Write Admin/Master Flows integration test `[1164aca]`
-    - [ ] Test: Weather change updates world state and affects agent speed
-    - [ ] Test: Manual tick trigger processes agents on demand
-    - [ ] Run tests to confirm they pass
-    - [ ] Commit with message: `test(integration): Add admin/master flows integration test`
 - [ ] Task 5.4: Write UI Integration flow test
     - [ ] Test: App loads → game canvas renders with agents → click agent → detail panel opens with agent info
     - [ ] Test: Thought stream shows agent thoughts in real-time
