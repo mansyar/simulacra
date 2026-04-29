@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useQuery, useMutation, useConvex } from "convex/react";
 import type { PresenceState } from "@convex-dev/presence/react";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- required for generic callback wrapper (single-flight pattern from presence lib)
 type AnyFn = (...args: any[]) => Promise<any>;
 
 /**
@@ -12,7 +12,7 @@ type AnyFn = (...args: any[]) => Promise<any>;
  * (Copied from @convex-dev/presence internal utility)
  */
 function useSingleFlight<F extends AnyFn>(fn: F): (...args: Parameters<F>) => ReturnType<F> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Promise generic requires value: any for generic resolve
   type FlightState = { fn: F; resolve: (value: any) => void; reject: (reason?: unknown) => void; args: Parameters<F> };
   const flightStatus = useRef({
     inFlight: false,
@@ -51,7 +51,7 @@ function useSingleFlight<F extends AnyFn>(fn: F): (...args: Parameters<F>) => Re
  * Custom hook that duplicates @convex-dev/presence/usePresence but with sessionStorage persistence
  * for session IDs. This ensures the same session ID persists across page reloads.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- presence component API shape is dynamic; specific types not exported
 type PresenceModule = Record<string, any>;
 
 export default function usePresenceWithSessionStorage(
@@ -63,7 +63,7 @@ export default function usePresenceWithSessionStorage(
 ): PresenceState[] | undefined {
   const hasMounted = useRef(false);
   const convex = useConvex();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- .url is an internal property of ConvexReactClient, not part of public types
   const baseUrl = convexUrl ?? (convex ? (convex as Record<string, any>).url : "");
 
   // Generate or retrieve session ID from sessionStorage
@@ -96,9 +96,9 @@ export default function usePresenceWithSessionStorage(
   const roomTokenRef = useRef<string | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- presence component mutations have complex return types not matching useSingleFlight wrapper
   const heartbeat: any = useSingleFlight(useMutation(presence.heartbeat));
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- presence component mutations have complex return types not matching useSingleFlight wrapper
   const disconnect: any = useSingleFlight(useMutation(presence.disconnect));
 
   const isFirstMount = useRef(true);
