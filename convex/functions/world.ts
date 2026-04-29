@@ -1,10 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { query, mutation, action, internalMutation } from "../_generated/server";
+import { query, mutation, action, internalMutation, type ActionCtx } from "../_generated/server";
 import { v } from "convex/values";
 import { api, internal } from "../_generated/api";
-import type { Id } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
 import { analyzeSentiment } from "./sentiment";
-
 // Reflection interval: 480 ticks ≈ 10 simulated days (48 ticks/day, ~30 min per tick)
 const REFLECTION_INTERVAL_TICKS = 480;
 
@@ -147,7 +145,7 @@ export const checkSleepMode = action({
 function normalizeAction(action: string): "idle" | "walking" | "eating" | "sleeping" | "talking" | "working" | "exploring" {
   const validActions = ["idle", "walking", "eating", "sleeping", "talking", "working", "exploring"];
   if (validActions.includes(action)) {
-    return action as any;
+    return action as "idle" | "walking" | "eating" | "sleeping" | "talking" | "working" | "exploring";
   }
 
   // Map common hallucinations
@@ -203,7 +201,7 @@ export const advanceWorldState = internalMutation({
   },
 });
 // Internal function to handle conversation state updates
-async function handleConversationState(ctx: any, agent: any, normalizedAction: string, targetAgentId: string | undefined, speech: string | undefined): Promise<void> {
+async function handleConversationState(ctx: ActionCtx, agent: Doc<"agents">, normalizedAction: string, targetAgentId: Id<"agents"> | undefined, speech: string | undefined): Promise<void> {
   const wasInConversation = agent.conversationState !== undefined;
   const isTalking = normalizedAction === "talking";
   
@@ -220,14 +218,15 @@ async function handleConversationState(ctx: any, agent: any, normalizedAction: s
     // Clear current agent's conversation state
     await ctx.runMutation(internal.functions.agents.clearConversationState, { agentId: agent._id });
     // Clear partner's conversation state AND reset partner's action via dedicated mutation
-    if (agent.conversationState?.partnerId) {
-      await ctx.runMutation(internal.functions.agents.resetConversationEnd, { agentId: agent.conversationState.partnerId });
+    const partnerId = agent.conversationState?.partnerId;
+    if (partnerId) {
+      await ctx.runMutation(internal.functions.agents.resetConversationEnd, { agentId: partnerId as Id<"agents"> });
     }
   }
 }
 
 // Helper function to process a single agent
-async function processAgent(ctx: any, agent: any, agents: any[], worldState: any, interactionRadius: number, speedMultiplier: number): Promise<void> {
+async function processAgent(ctx: ActionCtx, agent: Doc<"agents">, agents: Doc<"agents">[], worldState: Doc<"world_state"> | null, interactionRadius: number, speedMultiplier: number): Promise<void> {
   // Safety Layer: Check for critical needs
   if (agent.hunger > 90 || agent.energy < 10) {
     const survivalAction = agent.hunger > 90 ? "eating" : "sleeping";
@@ -271,7 +270,7 @@ async function processAgent(ctx: any, agent: any, agents: any[], worldState: any
   const nearbyDocs = await ctx.runQuery(internal.functions.agents.getNearbyAgents, {
     agentId: agent._id, gridX: agent.gridX, gridY: agent.gridY, radius: interactionRadius,
   });
-  const nearbyAgents = nearbyDocs.map((a: any) => a.name);
+  const nearbyAgents = nearbyDocs.map((a: Doc<"agents">) => a.name);
   const validArchetypes = ["builder", "socialite", "philosopher", "explorer", "nurturer"];
   const aiArchetype = validArchetypes.includes(agent.archetype) ? agent.archetype : "builder";
 
@@ -279,7 +278,7 @@ async function processAgent(ctx: any, agent: any, agents: any[], worldState: any
   let conversationContext = "";
   if (agent.conversationState) {
     const convState = agent.conversationState;
-    const partner = agents.find((a: any) => a._id === convState.partnerId);
+    const partner = agents.find((a: Doc<"agents">) => a._id === convState.partnerId);
     const partnerName = partner?.name || "Unknown";
     const myLastSpeech = agent.conversationState?.myLastSpeech;
     const partnerLastSpeech = partner?.conversationState?.myLastSpeech;
@@ -308,7 +307,7 @@ async function processAgent(ctx: any, agent: any, agents: any[], worldState: any
   const normalizedAction = normalizeAction(decision.action);
   let targetAgentId: Id<"agents"> | undefined;
   if (normalizedAction === "talking") {
-    const targetAgent = agents.find((a: any) => a.name === decision.target);
+    const targetAgent = agents.find((a: Doc<"agents">) => a.name === decision.target);
     if (targetAgent && targetAgent._id !== agent._id) {
       targetAgentId = targetAgent._id;
       // Analyze speech sentiment and update relationship affinity per turn
@@ -331,7 +330,7 @@ async function processAgent(ctx: any, agent: any, agents: any[], worldState: any
       if (!isNaN(x) && !isNaN(y)) { targetX = x; targetY = y; }
     }
     if (targetX === undefined) {
-      const targetAgent = agents.find((a: any) => a.name === decision.target);
+      const targetAgent = agents.find((a: Doc<"agents">) => a.name === decision.target);
       if (targetAgent) { targetX = targetAgent.gridX; targetY = targetAgent.gridY; }
     }
   }
@@ -356,7 +355,7 @@ async function processAgent(ctx: any, agent: any, agents: any[], worldState: any
  * Clean stale conversations that have exceeded the TTL.
  * Performs hard cleanup (DB + in-memory) with partner deduplication.
  */
-async function cleanStaleConversations(ctx: any, agents: any[], config: any): Promise<number> {
+async function cleanStaleConversations(ctx: ActionCtx, agents: Doc<"agents">[], config: Doc<"config"> | null): Promise<number> {
   const MAX_TURNS = 5, SAFETY_MULTIPLIER = 2;
   let ttlMs: number;
 
@@ -374,12 +373,13 @@ async function cleanStaleConversations(ctx: any, agents: any[], config: any): Pr
   let cleanedCount = 0;
 
   for (const agent of agents) {
-    if (!agent.conversationState || processed.has(agent._id)) continue;
-    if (now - agent.conversationState.startedAt <= ttlMs) continue;
+    const convState = agent.conversationState;
+    if (!convState || processed.has(agent._id)) continue;
+    if (now - convState.startedAt <= ttlMs) continue;
 
-    const partner = agents.find((a: any) => a._id === agent.conversationState.partnerId);
+    const partner = agents.find((a: Doc<"agents">) => a._id === convState.partnerId);
     const partnerName = partner?.name ?? "Unknown";
-    const staleMinutes = Math.round((now - agent.conversationState.startedAt) / 60000);
+    const staleMinutes = Math.round((now - convState.startedAt) / 60000);
 
     try {
       await ctx.runMutation(api.functions.memory.addEvent, {
@@ -453,7 +453,7 @@ export const tick = action({
     // Process all agents in parallel with error isolation — no inter-batch delays
     // The chat model has no concurrency limits, so batching is unnecessary
     console.log(`[WORLD] Processing all ${agents.length} agents in parallel with error isolation`);
-    await Promise.all(agents.map(async (agent: any) => {
+    await Promise.all(agents.map(async (agent: Doc<"agents">) => {
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
           await processAgent(ctx, agent, agents, worldState, interactionRadius, speedMultiplier);
