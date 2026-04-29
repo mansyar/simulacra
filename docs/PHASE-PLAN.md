@@ -13,7 +13,8 @@
 | 7 | The Mind | AI Context Fidelity | ✅ Complete (Tracks A & B ✅, C covered by B) | 1 week |
 | 8 | The Backbone | Robustness & Scaling | ✅ Complete (All Tracks) | 1 week |
 | 9 | The Soul | Deeper Social Dynamics | ⏳ Tracks A-B ✅, C-E ⏳ | 1 week |
-| X | The Polish | Master Panel + Deploy | ⏳ Not Started | 1 week |
+| 10 | Movement Coherence | Fix agent trajectory, weather sync, and logical gaps | 🆕 Planned | 2-3 days |
+| 11 | The Polish | Master Panel + Deploy | ⏳ Not Started | 1 week |
 
 ---
 
@@ -613,7 +614,89 @@ A1 + A2 + A3 (quick fixes) ✅
 
 ---
 
-## Phase X: The Polish (Upcoming)
+## Phase 10: Movement Coherence
+
+**Goal:** Fix the logical flow gaps in the agent movement mechanism discovered during Phase 9 analysis — the LLM doesn't know it's already walking, the frontend ignores weather in its speed calculations, and no cleanup happens on arrival.
+
+**Status:** 🆕 PLANNED
+
+> **Discovery Context:** Analysis of the movement pipeline revealed four logical issues:
+> 1. **LLM blindness** — `buildAgentContext` omits `currentAction`, `gridX/Y`, and `targetX/Y`, so the LLM re-decides a fresh direction every tick (agents zigzag, never completing journeys)
+> 2. **Weather decoupling** — `AgentSprite.tick()` hardcodes `6 / 180` for speed; the backend applies weather multipliers (0.5x stormy, 0.8x rainy), causing the frontend to overshoot and snap back
+> 3. **No arrival cleanup** — `resolveMovement` returns `arrived: true` but nobody clears `targetX/targetY` from the agent; frontend keeps "walking" to an already-reached destination
+> 4. **No bounds clamping** — `resolveMovement` doesn't clamp to [0, 63], so agents can walk off the map
+
+### Track A: LLM Sees Its Own Trajectory
+
+**Problem:** The LLM receives no information about its current action, position, or target in `buildAgentContext`. Every 180-second tick is a blank slate — the LLM picks a new random destination, and agents zigzag instead of completing journeys.
+
+- [ ] **Add `currentAction` to `agentState`** — Pass `currentAction` alongside `hunger/energy/social` in the `decision` action args in `world.ts`
+- [ ] **Add current position and target to `buildAgentContext`** — Append `Current Position: (gridX, gridY)` and `Destination: (targetX, targetY)` (with `"None"` fallback when undefined) to the identity context string in `convex/functions/ai.ts`
+- [ ] **Add distance-remaining hint** — If a target exists, include `Distance Remaining: ~N tiles` so the LLM understands journey progress
+- [ ] **Write tests:**
+  - Test: `buildAgentContext` output contains `Current Action`, `Current Position`, and `Destination` fields
+  - Test: `buildAgentContext` shows `"None"` when no target is set
+  - Test: LLM decision context includes the agent's ongoing trajectory
+
+### Track B: Weather-Aware Frontend Speed
+
+**Problem:** `AgentSprite.tick()` hardcodes `const speed = 6 / 180`. During stormy weather, the backend advances only 3 units per tick (6 × 0.5), but the frontend races ahead at 6/180 units/sec, causing a jarring 500ms snap-back course correction every tick.
+
+- [ ] **Propagate weather multiplier to AgentSprite** — Have `GameCanvas` pass the world state's weather multiplier down to each `AgentSprite` instance
+- [ ] **Apply multiplier in tick calculation** — Change line ~237 from `const speed = 6 / 180` to `const speed = (6 * this.speedMultiplier) / 180` in `AgentSprite.ts`
+- [ ] **Default multiplier** — Default to `1.0` when no weather data is available (ensures graceful degradation)
+- [ ] **Write tests:**
+  - Test: AgentSprite moves at reduced speed during simulated stormy/rainy weather
+  - Test: Default multiplier of 1.0 when weather data is absent
+  - Integration test: Backend position delta matches frontend predicted delta over one tick interval
+
+### Track C: Arrival Cleanup
+
+**Problem:** When `resolveMovement` returns `arrived: true`, `targetX/targetY` remain set on the agent. The frontend continues predicting movement toward an already-reached destination, and subsequent ticks wastefully call `resolveMovement` on an arrived agent.
+
+- [ ] **Clear targets on arrival in `processAgent`** — After logging the arrival event in `world.ts` (~line 260), call an internal mutation to set `targetX: undefined, targetY: undefined`
+- [ ] **Skip `resolveMovement` when distance is zero** — Add an early return guard in `resolveMovement`: if distance < 0.1, skip the DB patch entirely
+- [ ] **Write tests:**
+  - Test: Agent's `targetX/targetY` are cleared after `resolveMovement` returns `arrived: true`
+  - Test: `resolveMovement` skips DB patch when distance is already zero (no wasted writes)
+  - Test: Frontend stops predicting movement toward target after arrival
+
+### Track D: Bounds Clamping
+
+**Problem:** The backend's `resolveMovement` doesn't clamp `gridX/gridY` to the [0, 63] world boundary, so agents can move outside the visible map.
+
+- [ ] **Add clamping in `resolveMovement`** — Change line ~148-149 in `agents.ts` to clamp:
+  ```typescript
+  const newX = Math.max(0, Math.min(63, agent.gridX + dx * ratio));
+  const newY = Math.max(0, Math.min(63, agent.gridY + dy * ratio));
+  ```
+- [ ] **Write test:**
+  - Test: Agent with target outside bounds is clamped to [0, 63]
+  - Test: Agent already at boundary doesn't overshoot (e.g., gridX=62, targetX=70 → newX=63)
+
+### Implementation Order
+
+```
+Track A (LLM sees trajectory)     ← Highest impact: stops zigzagging
+  → Track B (weather sync)        ← High impact: smooths bad-weather movement
+  → Track C (arrival cleanup)     ← Medium impact: stops zombie walking
+  → Track D (bounds clamping)     ← Low impact: safety net
+```
+
+**Estimated effort:** ~2-3 days total (each track is 2-4 hour changes)
+
+### Phase 10 Checkpoints
+
+- [ ] LLM decisions reference ongoing journeys ("I'm already walking to the library, halfway there")
+- [ ] Agents complete long-distance journeys instead of zigzagging every tick
+- [ ] Frontend movement speed matches backend speed in all weather conditions (no snap-back)
+- [ ] Arrived agents' targets are cleared; frontend shows "idle" behavior on arrival
+- [ ] Agent positions never exceed world boundaries [0, 63]
+- [ ] All 250+ existing tests still pass; new tests cover all 4 tracks
+
+---
+
+## Phase 11: The Polish (Upcoming)
 
 **Goal:** Master panel and deployment
 
@@ -646,7 +729,7 @@ A1 + A2 + A3 (quick fixes) ✅
 - [ ] Deploy frontend to Vercel
 - [ ] Test production build
 
-### Phase X Checkpoints
+### Phase 11 Checkpoints
 
 - [ ] Master password protects admin actions
 - [ ] Weather changes reflect in world
@@ -726,7 +809,15 @@ Phase 9 (Soul)
     │       └──► POI-aware agent behavior (Track E)
             │
             ▼
-Phase X (Polish)
+Phase 10 (Movement Coherence)
+    │
+    ├──► LLM sees its own trajectory (Track A)
+    ├──► Weather-aware frontend speed (Track B)
+    ├──► Arrival cleanup (Track C)
+    └──► Bounds clamping (Track D)
+            │
+            ▼
+Phase 11 (Polish)
     │
     ├──► Master panel
     └──► Deployment
@@ -777,7 +868,11 @@ Phase X (Polish)
 15. ⏳ **Planned:** Conversation TTL & cleanup (Phase 9 — Track C)
 16. ⏳ **Planned:** Runtime configuration & integration testing (Phase 9 — Track D)
 17. ⏳ **Planned:** POI-aware agent behavior (Phase 9 — Track E)
-18. ⏳ **Planned:** Master panel and deployment (Phase X — The Polish)
+18. 🆕 **Planned:** LLM sees its own trajectory (Phase 10 — Track A)
+19. 🆕 **Planned:** Weather-aware frontend speed (Phase 10 — Track B)
+20. 🆕 **Planned:** Arrival cleanup (Phase 10 — Track C)
+21. 🆕 **Planned:** Bounds clamping (Phase 10 — Track D)
+22. ⏳ **Planned:** Master panel and deployment (Phase 11 — The Polish)
 
 ---
 
