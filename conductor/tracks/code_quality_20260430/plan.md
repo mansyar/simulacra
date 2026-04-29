@@ -4,18 +4,18 @@
 
 **Goal:** Create a shared types module with proper interfaces for the entire Convex backend.
 
-- [ ] Task 1.1: Create `convex/functions/types.ts` with core type interfaces
-    - [ ] Define `ActionCtx` interface (replacing `ctx: any` in top-level action signatures)
-    - [ ] Define `AgentState` interface with typed fields for hunger, sleep, social, position, etc.
-    - [ ] Define `WorldStateConfig` interface for world configuration (weather, tick count, etc.)
-    - [ ] Define `ProcessedAgentDecision` interface for decision objects (thought, action, target, speech, confidence)
-    - [ ] Define `AiConfig` interface for provider/model configuration
-    - [ ] Define `ConversationState` interface for active conversation tracking
-    - [ ] Define `ProcessedAgent` type that extends `Doc<"agents">` with computed fields
-    - [ ] Define utility types: `DeepPartial`, `Mutable` if needed
-    - [ ] Write a compile-time type validation test to verify interfaces satisfy Convex constraints
-    - [ ] Run `npx tsc --noEmit` to confirm types compile without errors
-    - [ ] Commit with message: `feat(types): Define core type interfaces for Convex backend`
+- [x] Task 1.1: Create `convex/functions/types.ts` with core type interfaces `[a921076]`
+    - [x] Define `ActionCtx` interface (replacing `ctx: any` in top-level action signatures)
+    - [x] Define `AgentState` interface with typed fields for hunger, sleep, social, position, etc.
+    - [x] Define `WorldStateConfig` interface for world configuration (weather, tick count, etc.)
+    - [x] Define `ProcessedAgentDecision` interface for decision objects (thought, action, target, speech, confidence)
+    - [x] Define `AiConfig` interface for provider/model configuration
+    - [x] Define `ConversationState` interface for active conversation tracking
+    - [x] Define `ProcessedAgent` type that extends `Doc<"agents">` with computed fields
+    - [x] Define utility types: `DeepPartial`, `Mutable` if needed
+    - [x] Write a compile-time type validation test to verify interfaces satisfy Convex constraints
+    - [x] Run `npx tsc --noEmit` to confirm types compile without errors
+    - [x] Commit with message: `feat(types): Define core type interfaces for Convex backend`
 - [ ] Task 1.2: Conductor - User Manual Verification 'Define Core Type Interfaces' (Protocol in workflow.md)
 
 ## Phase 2: Fix Production Backend Code
