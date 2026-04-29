@@ -12,7 +12,7 @@
 | 6 | Fluid Movement | Organic idle + Predictive pathing | ✅ Complete | 3-4 days |
 | 7 | The Mind | AI Context Fidelity | ✅ Complete (Tracks A & B ✅, C covered by B) | 1 week |
 | 8 | The Backbone | Robustness & Scaling | ✅ Complete (All Tracks) | 1 week |
-| 9 | The Soul | Deeper Social Dynamics | ⏳ Track A ✅, B-E ⏳ | 1 week |
+| 9 | The Soul | Deeper Social Dynamics | ⏳ Tracks A-B ✅, C-E ⏳ | 1 week |
 | X | The Polish | Master Panel + Deploy | ⏳ Not Started | 1 week |
 
 ---
@@ -488,9 +488,11 @@ A1 + A2 + A3 (quick fixes) ✅
 
 **Goal:** Fix the conversation system to be truly bidirectional, then layer on dynamic sentiment, lifecycle cleanup, and runtime configurability.
 
-**Status:** ⏳ Track A ✅, Tracks B-E ⏳
+**Status:** ⏳ Tracks A-B ✅, Tracks C-E ⏳
 
 > **Completed:** 2026-04-29 — Track A: Bidirectional Conversation System
+> **Completed:** 2026-04-29 — Track B: Sentiment-Based Affinity During Conversations
+>   - 17 tests (10 unit + 7 integration), 247 total, 82.12% coverage
 >
 > **Design Context:** The current conversation system has two critical flaws discovered during Phase 8 testing:
 > 1. When agent A talks to agent B, B is force-set to `action: "listening"` and skipped on subsequent ticks — B never gets to respond
@@ -521,17 +523,18 @@ A1 + A2 + A3 (quick fixes) ✅
   - Test: `lastPartnerSpeech` no longer exists in conversationState
   - Run test suite and confirm all existing tests still pass (106/106 passing)
 
-### Track B: Sentiment-Based Affinity During Conversations
+### Track B: Sentiment-Based Affinity During Conversations [COMPLETE: 2026-04-29]
 
 **Problem:** `updateRelationship` with +2 delta only fires when an agent initiates talking. Multi-turn conversations don't adjust affinity further, so even warm conversations leave relationships unchanged. The `valenceHistory` isn't updated per-turn either.
 
 > **Depends on:** Track A — sentiments need a working bidirectional conversation system
 
-- [ ] Add speech sentiment analysis helper in `convex/functions/ai.ts` (keyword-based: positive words → +1 to +3, negative words → -1 to -3, neutral → 0)
-- [ ] After each LLM decision with `action === "talking"`, analyze the `speech` field for sentiment
-- [ ] Apply dynamic affinity delta on each conversation turn (not just initiation)
-- [ ] Update `valenceHistory` on every turn (maintaining last 5 entries)
-- [ ] Write test verifying affinity changes across a multi-turn conversation
+- [x] **Add speech sentiment analysis helper** — `analyzeSentiment()` in `convex/functions/ai.ts` with ~60 keyword-based entries graded +1 to +3 (positive) and -1 to -3 (negative). Handles punctuation, capitalization, and partial word matching. Clamped to [-3, +3] range. (Commit 9f5af85)
+- [x] **Wire sentiment into conversation tick** — In `processAgent()` in `world.ts`, after LLM returns `action === "talking"` with speech, call `analyzeSentiment(speech)` and pass the delta to `updateRelationship()`. (Commit 49fc2f7)
+- [x] **Apply dynamic affinity delta on every turn** — Sentiment-based affinity fires on initiation AND every subsequent turn (no flat +2 baseline). Shared affinity: both agents' deltas in the same tick average out (by design). (Commit 49fc2f7)
+- [x] **Update `valenceHistory` on every turn** — Auto-derived from delta sign by existing `updateRelationship()` mutation. Maintains last 5 entries. (Commit 49fc2f7)
+- [x] **Write tests** — 17 new tests: 10 unit tests for `analyzeSentiment()` (positive/negative/neutral/mixed/empty/partial matches) + 7 integration tests (multi-turn accumulation, mixed sentiment, valenceHistory cap at 5). (Commits 9f5af85, 49fc2f7, 01c8275)
+- [x] **Full test suite** — 247 tests across 61 files, all passing. Coverage: 82.12% (above 80% target). (Commit 01c8275)
 
 ### Track C: Conversation TTL & Cleanup
 
@@ -599,7 +602,7 @@ A1 + A2 + A3 (quick fixes) ✅
 - [x] Agents are never frozen in "listening" state after conversation ends — Track A
 - [x] Partners are free to ignore conversations and pursue their own actions — Track A
 - [x] `myLastSpeech` correctly stores each agent's own speech — Track A
-- [ ] Affinity scores change dynamically during multi-turn conversations — Track B
+- [x] Affinity scores change dynamically during multi-turn conversations — Track B
 - [ ] Stale conversations auto-cleanup after timeout — Track C
 - [ ] All thresholds configurable via config table — Track D
 - [ ] **Agents walk to POIs for contextual actions (eat at Cafe, work at Library, etc.)** — Track E
@@ -717,7 +720,7 @@ Phase 9 (Soul)
     │
     ├──► Bidirectional conversation system (Track A) ✅
     │       │
-    │       ├──► Sentiment-based affinity (Track B)
+    │       ├──► Sentiment-based affinity (Track B) ✅
     │       ├──► Conversation TTL & cleanup (Track C)
     │       ├──► Runtime configuration (Track D)
     │       └──► POI-aware agent behavior (Track E)
@@ -769,8 +772,8 @@ Phase X (Polish)
 11. ✅ **Done:** Spatial Query Optimization (Phase 8 — Track B)
 12. ✅ **Done:** Embedding Pipeline & Configuration Cleanup (Phase 8 — Track C)
 13. ✅ **Done:** Fix bidirectional conversation system (Phase 9 — Track A)
-    🎯 **Next:** Sentiment-based affinity during conversations (Phase 9 — Track B)
-14. ⏳ **Planned:** Sentiment-based affinity during conversations (Phase 9 — Track B)
+14. ✅ **Done:** Sentiment-based affinity during conversations (Phase 9 — Track B)
+    🎯 **Next:** Conversation TTL & cleanup (Phase 9 — Track C)
 15. ⏳ **Planned:** Conversation TTL & cleanup (Phase 9 — Track C)
 16. ⏳ **Planned:** Runtime configuration & integration testing (Phase 9 — Track D)
 17. ⏳ **Planned:** POI-aware agent behavior (Phase 9 — Track E)
