@@ -62,13 +62,13 @@
 
 **Goal:** Add comprehensive integration tests covering critical user-facing flows.
 
-- [~] Task 5.1: Write World Tick Lifecycle integration test
+- [x] Task 5.1: Write World Tick Lifecycle integration test `[3e09da0]`
     - [ ] Test: Full world tick — cron fires → agents make decisions → state updates → verify events created
     - [ ] Test: Multiple ticks progress hunger/sleep needs
     - [ ] Test: Agent moves toward target after decision
     - [ ] Run tests to confirm they pass
     - [ ] Commit with message: `test(integration): Add world tick lifecycle integration test`
-- [ ] Task 5.2: Write Agent Interaction Flow integration test
+- [~] Task 5.2: Write Agent Interaction Flow integration test
     - [ ] Test: Two agents within proximity trigger conversation
     - [ ] Test: Conversation updates relationship valence (likes/dislikes)
     - [ ] Test: Thought stream captures agent thoughts during interaction
