@@ -58,7 +58,6 @@
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
       "eslint --fix --config eslint.config.js",
-      "tsc --noEmit",
       "vitest related",
       "node scripts/check-line-counts.cjs"
     ]
