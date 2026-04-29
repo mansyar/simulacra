@@ -6,7 +6,7 @@ Add dynamic sentiment analysis to multi-turn conversations so affinity scores ch
 
 ## Problem Statement
 
-Currently, `updateRelationship` fires with a flat +2 delta **only** when an agent initiates a conversation. Multi-turn conversations don't adjust affinity further, leaving relationships static even after warm or hostile exchanges. The `valenceHistory` isn't updated per-turn either.
+After Track A (Bidirectional Conversation System) removed the flat +2 initiation delta, there is no affinity adjustment **at all** during conversations — not on initiation, not on responses, not on any turn. Multi-turn conversations leave relationships entirely static, even after warm or hostile exchanges. The `valenceHistory` isn't updated per-turn either.
 
 ## Functional Requirements
 
@@ -24,13 +24,26 @@ Currently, `updateRelationship` fires with a flat +2 delta **only** when an agen
 
 ### FR3: Enhanced Valence History
 - Update `valenceHistory` on every conversation turn (maintaining last 5 entries)
-- Each entry should include a sentiment subtype: `"conversation_positive"`, `"conversation_negative"`, or `"conversation_neutral"`
-- This enriches the historical data available for AI context building
+- The `updateRelationship` function auto-derives entries as `"positive"`, `"negative"`, or `"neutral"` from the delta sign — no custom interaction types needed
+- The conversation context is already captured by the event system (`type: "conversation"` events)
 
 ### FR4: Integration with Existing Systems
 - Depends on Track A (bidirectional conversation system) — sentiments need a working bidirectional conversation flow
 - Sentiment analysis runs **after** the LLM decision returns a `speech` field, not as a separate API call
 - The helper function should be importable by both `world.ts` (for tick-time processing) and test files
+
+## Design Decisions
+
+### Shared Affinity (Not Directional)
+- The relationship system maintains a **single shared affinity score per agent pair**, not separate A→B and B→A scores
+- When both agents converse in the same tick (possible under parallel execution), both sentiment deltas apply to the same document — the net effect averages both directions
+- This is intentionally realistic: a relationship where one agent is warm (+3) and the other cold (-3) nets to ~0, reflecting mutual ambivalence
+- Race conditions from parallel `Promise.all` execution are pre-existing and acceptable for a simulation
+
+### Sentiment on All Turns (Including Initiation)
+- Every conversation turn uses sentiment analysis — there is no special "+2 initiation" baseline
+- The first turn (initiation) is analyzed identically to subsequent turns
+- This aligns with Track A's removal of the flat +2 delta
 
 ## Non-Functional Requirements
 
@@ -40,11 +53,11 @@ Currently, `updateRelationship` fires with a flat +2 delta **only** when an agen
 
 ## Acceptance Criteria
 
-1. [ ] Sentiment analysis function correctly classifies positive, negative, and neutral speech
-2. [ ] Positive speech increases affinity by +1 to +3 on each conversation turn
-3. [ ] Negative speech decreases affinity by -1 to -3 on each conversation turn
+1. [ ] Sentiment analysis function correctly classifies positive, negative, and neutral speech and returns `{ classification, delta }`
+2. [ ] Positive speech increases affinity by +1 to +3 on **every** conversation turn (including initiation)
+3. [ ] Negative speech decreases affinity by -1 to -3 on **every** conversation turn (including initiation)
 4. [ ] Neutral speech results in 0 affinity change
-5. [ ] `valenceHistory` is updated on every turn with sentiment-subtyped entries
+5. [ ] `valenceHistory` is updated on every turn with `"positive"` / `"negative"` / `"neutral"` entries (auto-derived from delta)
 6. [ ] Existing conversation system continues to work (no regressions)
 7. [ ] No additional API calls are introduced by sentiment analysis
 
