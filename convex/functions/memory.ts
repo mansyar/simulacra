@@ -156,7 +156,7 @@ export const searchSemanticMemory = action({
     for (const result of results) {
       const memory = await ctx.runQuery(internal.functions.memory.getMemoryById, { id: result._id });
       if (memory && memory.type === "semantic") {
-        memories.push(memory as Doc<"memories">);
+        memories.push(memory);
       }
     }
     return memories;
@@ -172,7 +172,8 @@ export const retrieveMemories = query({
     query: v.string(),
     limit: v.optional(v.number()),
   },
-  handler: async (_ctx, _args) => {
+  handler: async (ctx, args) => {
+    void ctx; void args; // stub — placeholder for future implementation
     return []; 
   },
 });
@@ -211,7 +212,7 @@ export const retrieveMemoriesAction = action({
 
     // 3. Fetch the full memory documents
     const memories = await Promise.all(
-      results.map(async (res: { _id: string }) => {
+      results.map(async (res) => {
         const memory = await ctx.runQuery(internal.functions.memory.getMemoryById, {
           id: res._id as Id<"memories">,
         });
@@ -219,7 +220,7 @@ export const retrieveMemoriesAction = action({
       })
     );
 
-    return memories.filter((m: any): m is Doc<"memories"> => m !== null);
+    return memories.filter((m: Doc<"memories"> | null): m is Doc<"memories"> => m !== null);
   },
 });
 

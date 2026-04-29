@@ -88,7 +88,7 @@ export async function getAiConfig(ctx: ActionCtx, modelOverride?: string): Promi
 export async function chatCompletion(
   config: AiConfig,
   messages: { role: string; content: string }[],
-  options?: { responseFormat?: any }
+  options?: { responseFormat?: Record<string, unknown> }
 ): Promise<string> {
   const { apiKey, baseUrl, model } = config;
   if (!apiKey) throw new Error("No API key configured");
@@ -111,19 +111,23 @@ export async function chatCompletion(
         parts: [{ text: m.content }],
       }));
 
-    const body: any = { contents };
+    const body: Record<string, unknown> = { contents };
     if (systemParts.length > 0) {
       body.systemInstruction = { parts: systemParts };
     }
     if (options?.responseFormat) {
-      const fmt = options.responseFormat;
-      if (fmt.type === "json_schema" && fmt.json_schema?.schema) {
-        // Map OpenAI json_schema to Gemini's responseSchema
-        body.generationConfig = {
-          responseMimeType: "application/json",
-          responseSchema: fmt.json_schema.schema,
-        };
-      } else if (fmt.type === "json_object") {
+      const fmt = options.responseFormat as Record<string, unknown>;
+      const fmtType = fmt.type;
+      if (fmtType === "json_schema") {
+        const jsonSchema = fmt.json_schema as { schema?: Record<string, unknown> } | undefined;
+        if (jsonSchema?.schema) {
+          // Map OpenAI json_schema to Gemini's responseSchema
+          body.generationConfig = {
+            responseMimeType: "application/json",
+            responseSchema: jsonSchema.schema,
+          };
+        }
+      } else if (fmtType === "json_object") {
         body.generationConfig = { responseMimeType: "application/json" };
       }
     }
@@ -144,7 +148,7 @@ export async function chatCompletion(
   } else {
     // --- OpenAI-compatible API ---
     const url = `${baseUrl.replace(/\/$/, "")}/chat/completions`;
-    const body: any = { model, messages };
+    const body: Record<string, unknown> = { model, messages };
     if (options?.responseFormat) {
       body.response_format = options.responseFormat;
     }
@@ -250,14 +254,19 @@ export const listModels = action({
         }
 
         const data = await response.json();
-        const models = (data.models || [])
-          .map((m: any) => ({
-            id: m.name?.replace("models/", "") || m.name,
-            name: m.displayName || m.name,
+        type GoogleModelRaw = {
+          name?: string;
+          displayName?: string;
+          supportedGenerationMethods?: string[];
+        };
+        const rawModels: GoogleModelRaw[] = data.models || [];
+        const models = rawModels
+          .map((m: GoogleModelRaw) => ({
+            id: (m.name?.replace("models/", "") || m.name) ?? "",
+            name: (m.displayName || m.name) ?? "",
             methods: m.supportedGenerationMethods || [],
           }))
-          .filter((m: any) => {
-            // If filter provided, match against id or name
+          .filter((m: { id: string; name: string; methods: string[] }) => {
             if (args.filter) {
               const f = args.filter.toLowerCase();
               return m.id.toLowerCase().includes(f) || m.name.toLowerCase().includes(f);
@@ -268,8 +277,8 @@ export const listModels = action({
         return {
           provider: "google-native",
           models,
-          chatModels: models.filter((m: any) => m.methods.includes("generateContent")),
-          embedModels: models.filter((m: any) => m.methods.includes("embedContent")),
+          chatModels: models.filter((m: { id: string; name: string; methods: string[] }) => m.methods.includes("generateContent")),
+          embedModels: models.filter((m: { id: string; name: string; methods: string[] }) => m.methods.includes("embedContent")),
         };
       } else {
         // --- OpenAI-compatible /models endpoint ---
@@ -289,13 +298,15 @@ export const listModels = action({
         }
 
         const data = await response.json();
-        const models = (data.data || data.models || [])
-          .map((m: any) => ({
-            id: m.id || m.name,
-            name: m.id || m.name,
+        type OpenAIModelRaw = { id?: string; name?: string; owned_by?: string };
+        const rawData: OpenAIModelRaw[] = data.data || data.models || [];
+        const models = rawData
+          .map((m: OpenAIModelRaw) => ({
+            id: m.id || m.name || "",
+            name: m.id || m.name || "",
             owned_by: m.owned_by || "unknown",
           }))
-          .filter((m: any) => {
+          .filter((m: { id: string; name: string; owned_by: string }) => {
             if (args.filter) {
               const f = args.filter.toLowerCase();
               return m.id.toLowerCase().includes(f) || m.name.toLowerCase().includes(f);
@@ -347,8 +358,8 @@ export const embed = action({
     try {
       const isGoogle = baseUrl.includes("googleapis.com") && !baseUrl.includes("/openai");
       let url: string;
-      let body: any;
-      let headers: Record<string, string> = {
+      let body: Record<string, unknown>;
+      const headers: Record<string, string> = {
         "Content-Type": "application/json",
       };
 
@@ -358,10 +369,7 @@ export const embed = action({
         body = { content: { parts: [{ text: args.text }] }, outputDimensionality: 768 };
       } else {
         url = `${baseUrl.replace(/\/$/, "")}/embeddings`;
-        body = { model, input: args.text };
-        if (!baseUrl.includes("googleapis.com")) {
-          body.dimensions = 768;
-        }
+        body = { model, input: args.text, dimensions: 768 };
         headers["Authorization"] = `Bearer ${apiKey}`;
       }
 

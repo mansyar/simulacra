@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { action, internalQuery } from "../_generated/server";
 import { v } from "convex/values";
 import { api, internal } from "../_generated/api";
+import type { Doc } from "../_generated/dataModel";
 import { 
   getAiConfig, 
   chatCompletion,
@@ -360,10 +360,10 @@ export const buildFullContext = action({
 
     // Build memories string (without the header)
     let memoriesStr = "";
-    if (memoriesResult && (memoriesResult as any[]).length > 0) {
-      (memoriesResult as any[]).forEach((m: any) => {
+    if (memoriesResult && memoriesResult.length > 0) {
+      for (const m of memoriesResult) {
         memoriesStr += `- ${m.content}\n`;
-      });
+      }
     } else {
       memoriesStr += "(No relevant memories)\n";
     }
@@ -412,7 +412,7 @@ export const reflect = action({
       return { success: true };
     }
 
-    const eventLog = events.map((e: any) => `- ${e.description}`).join("\n");
+    const eventLog = events.map((e: Doc<"events">) => `- ${e.description}`).join("\n");
     const userPrompt = `
     Agent Context:
     ${context}
@@ -471,8 +471,8 @@ export const reflect = action({
 
       // 2. Save high-importance memories in parallel
       if (reflection.memories) {
-        const importantMemories = reflection.memories.filter((m: any) => m.importance >= 5);
-        await Promise.all(importantMemories.map(async (memory: any) => {
+        const importantMemories = reflection.memories.filter((m: { content: string; importance: number }) => m.importance >= 5);
+        await Promise.all(importantMemories.map(async (memory: { content: string; importance: number }) => {
           await ctx.runAction(api.functions.memory.addSemanticMemory, {
             agentId: args.agentId,
             content: memory.content,
