@@ -38,9 +38,6 @@ You MUST return your reflection in the following JSON format:
 }
 `;
 
-/**
- * Build a structured user prompt from agent state and context data
- */
 function buildContextPrompt(
   agentState: { name: string; hunger: number; energy: number; social: number },
   context?: {
@@ -49,54 +46,52 @@ function buildContextPrompt(
     events?: string;
     memories?: string;
     conversationContext?: string;
+    poiContext?: string;
   },
 ): string {
   let prompt = "";
-
-  // Identity section
   prompt += `## Your Identity\n`;
   if (context?.agentContext) {
-    // agentContext (from buildAgentContext) already contains Name, Archetype, Biography, etc.
     prompt += context.agentContext;
   }
   if (!prompt.endsWith("\n")) prompt += "\n";
   prompt += "\n";
-
-  // State section
   prompt += `## Your State\n`;
   prompt += `Hunger: ${agentState.hunger}\n`;
   prompt += `Energy: ${agentState.energy}\n`;
   prompt += `Social: ${agentState.social}\n`;
   prompt += "\n";
-
-  // Relationships section
   if (context?.relationshipContext) {
     prompt += `## Your Relationships\n`;
     prompt += context.relationshipContext;
     prompt += "\n";
   }
-
-  // Recent Events section
   if (context?.events) {
     prompt += `## Recent Events\n`;
     prompt += context.events;
     prompt += "\n";
   }
-
-  // Relevant Memories section
   if (context?.memories) {
     prompt += `## Relevant Memories\n`;
     prompt += context.memories;
     prompt += "\n";
   }
-
-  // Active conversation (if any)
+  if (context?.poiContext) {
+    prompt += `## Nearby Locations\n`;
+    prompt += context.poiContext;
+    prompt += "\n";
+    prompt += `Activity suggestions:\n`;
+    prompt += `- eating → Cozy Cafe\n`;
+    prompt += `- working → The Great Library\n`;
+    prompt += `- talking → Central Plaza\n`;
+    prompt += `- exploring → Forest Grove\n`;
+    prompt += `\nValid destinations: Cozy Cafe, The Great Library, Central Plaza, Forest Grove.\n`;
+    prompt += `Do not invent locations.\n\n`;
+  }
   if (context?.conversationContext) {
     prompt += context.conversationContext;
     prompt += "\n";
   }
-
-  // Concluding instruction
   prompt += `Based on ALL of the above context, what is your next action? Consider your personality, relationships, recent experiences, and current state.`;
 
   return prompt;
@@ -118,6 +113,7 @@ export const decision = action({
     events: v.optional(v.string()),
     memories: v.optional(v.string()),
     conversationContext: v.optional(v.string()),
+    poiContext: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { apiKey, baseUrl, model } = await getAiConfig(ctx, args.agentState.model);
@@ -151,6 +147,7 @@ export const decision = action({
       events: args.events,
       memories: args.memories,
       conversationContext: args.conversationContext,
+      poiContext: args.poiContext,
     });
 
     try {
@@ -323,6 +320,7 @@ export const buildFullContext = action({
     relationshipContext: string;
     events: string;
     memories: string;
+    poiContext: string;
   }> => {
     const agentContext = await ctx.runQuery(internal.functions.ai.buildAgentContext, {
       agentId: args.agentId,
@@ -368,18 +366,30 @@ export const buildFullContext = action({
       memoriesStr += "(No relevant memories)\n";
     }
 
+    // Build POI context sorted by distance
+    const pois = await ctx.runQuery(api.functions.world.getPois);
+    let poiContext = "";
+    if (pois && pois.length > 0) {
+      const agentDoc = await ctx.runQuery(api.functions.agents.getById, { agentId: args.agentId });
+      const agentGridX = agentDoc?.gridX ?? 0;
+      const agentGridY = agentDoc?.gridY ?? 0;
+      const sortedPois = [...pois].map((poi) => {
+        const dx = poi.gridX - agentGridX;
+        const dy = poi.gridY - agentGridY;
+        return { ...poi, distance: Math.sqrt(dx * dx + dy * dy) };
+      }).sort((a, b) => a.distance - b.distance);
+      for (const poi of sortedPois) {
+        poiContext += `- ${poi.name} (${poi.gridX}, ${poi.gridY}): ${poi.description} [${poi.distance.toFixed(1)} tiles away]\n`;
+      }
+    }
     return {
-      agentContext,
-      relationshipContext,
-      events: eventsStr,
-      memories: memoriesStr,
+      agentContext, relationshipContext,
+      events: eventsStr, memories: memoriesStr,
+      poiContext,
     };
   },
 });
 
-/**
- * Action: Reflect on recent experiences and update identity
- */
 export const reflect = action({
   args: {
     agentId: v.id("agents"),

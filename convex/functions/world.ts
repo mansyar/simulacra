@@ -301,6 +301,7 @@ async function processAgent(
     events: context.events,
     memories: context.memories,
     conversationContext: conversationContext || undefined,
+    poiContext: context.poiContext || undefined,
   });
 
   const normalizedAction = normalizeAction(decision.action);
@@ -449,9 +450,7 @@ export const tick = action({
     const weatherMultipliers: Record<string, number> = { sunny: 1.0, cloudy: 1.0, rainy: 0.8, stormy: 0.5 };
     const speedMultiplier = weatherMultipliers[weather] || 1.0;
     const cleanedConvs = await cleanStaleConversations(ctx, agents, config);
-    if (cleanedConvs > 0) {
-      console.log(`[WORLD] Cleaned ${cleanedConvs} stale conversations`);
-    }
+    if (cleanedConvs > 0) console.log(`[WORLD] Cleaned ${cleanedConvs} stale conversations`);
     console.log(`[WORLD] Processing all ${agents.length} agents in parallel`);
     await Promise.all(agents.map(async (agent: Doc<"agents">) => {
       for (let attempt = 0; attempt < 2; attempt++) {
