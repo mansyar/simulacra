@@ -68,17 +68,16 @@
 ## Phase 3: Integration Tests
 
 ### Task 3.1: Write integration test — Config-driven behavior
-- [~] Write integration test: Seed config with non-default values, run tick, verify behavior
-- [ ] Run test and confirm it fails (Red Phase) — if needed
-- [ ] Implement any missing wiring to make it pass (Green Phase)
+- [x] Write integration test: Seed config with non-default values, run tick, verify behavior
+- [x] Run test and confirm it passes
 
 ### Task 3.2: Write integration test — Sleep mode bypass
-- [~] Write integration test: Sleep mode bypass via skipSleep flag
-- [ ] Run test and confirm it passes
+- [x] Write integration test: Sleep mode bypass via skipSleep flag
+- [x] Run test and confirm it passes
 
 ### Task 3.3: Final verification
-- [ ] Run full test suite — all tests pass
-- [ ] Verify coverage >80%
-- [ ] Run `npx tsc --noEmit` — no type errors
+- [x] Run full test suite — 301 tests pass (69 test files)
+- [x] Verify coverage >80%
+- [x] Run `npx tsc --noEmit` — no type errors
 
-- [ ] Task: Conductor - Phase Completion Verification 'Phase 3: Integration Tests' (Protocol in workflow.md)
+- [x] Task: Conductor - Phase Completion Verification 'Phase 3: Integration Tests' (Protocol in workflow.md) [289876c]
