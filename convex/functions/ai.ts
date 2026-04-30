@@ -2,11 +2,7 @@ import { action, internalQuery } from "../_generated/server";
 import { v } from "convex/values";
 import { api, internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
-import { 
-  getAiConfig, 
-  chatCompletion,
-  ARCHETYPE_PROMPTS 
-} from "./ai_helpers";
+import { getAiConfig, chatCompletion, ARCHETYPE_PROMPTS } from "./ai_helpers";
 
 export { analyzeSentiment } from "./sentiment";
 
@@ -38,6 +34,9 @@ You MUST return your reflection in the following JSON format:
 }
 `;
 
+/**
+ * Build a structured user prompt from agent state and context data
+ */
 function buildContextPrompt(
   agentState: { name: string; hunger: number; energy: number; social: number },
   context?: {
@@ -96,7 +95,6 @@ function buildContextPrompt(
 
   return prompt;
 }
-
 export const decision = action({
   args: {
     agentState: v.object({
@@ -390,6 +388,9 @@ export const buildFullContext = action({
   },
 });
 
+/**
+ * Action: Reflect on recent experiences and update identity
+ */
 export const reflect = action({
   args: {
     agentId: v.id("agents"),

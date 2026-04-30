@@ -204,10 +204,11 @@ async function resolveAgentTarget(
   decision: { target?: string },
   normalizedAction: string,
   targetAgentId: Id<"agents"> | undefined,
-): Promise<{ targetX: number | undefined; targetY: number | undefined; overriddenAction: string | undefined }> {
-  const pois = await ctx.runQuery(api.functions.world.getPois);
+  pois?: Doc<"pois">[],
+): Promise<{ targetX: number | undefined; targetY: number | undefined; overriddenAction: "walking" | undefined }> {
+  if (!pois) pois = await ctx.runQuery(api.functions.world.getPois);
   let targetX: number | undefined, targetY: number | undefined;
-  let overriddenAction: string | undefined;
+  let overriddenAction: "walking" | undefined;
 
   // 1. Try coordinate format
   if (decision.target && decision.target !== "none" && normalizedAction !== "talking") {
@@ -285,10 +286,11 @@ async function processAgent(
   }
 
   // Movement Resolution - with POI-aware arrival events (FR4)
+  // Query POIs once to avoid redundant queries across target resolution, arrival events
+  const pois = await ctx.runQuery(api.functions.world.getPois);
   if (agent.targetX !== undefined && agent.targetY !== undefined) {
     const result = await ctx.runMutation(internal.functions.agents.resolveMovement, { agentId: agent._id, speedMultiplier });
     if (result?.arrived) {
-      const pois = await ctx.runQuery(api.functions.world.getPois);
       const poi = pois?.find((p) => Math.round(result.newX) === p.gridX && Math.round(result.newY) === p.gridY);
       const prevPoi = !poi ? pois?.find((p) => Math.round(agent.gridX) === p.gridX && Math.round(agent.gridY) === p.gridY) : undefined;
       const desc = poi ? `Arrived at ${poi.name} to ${agent.currentAction}.` : prevPoi ? `Already at ${prevPoi.name}` : `Arrived at destination (${Math.round(result.newX)}, ${Math.round(result.newY)})`;
@@ -353,10 +355,10 @@ async function processAgent(
   }
 
   // Resolve target coordinates and handle POI-aware action overrides (FR2 + FR3)
-  const resolveResult = await resolveAgentTarget(ctx, agent, agents, decision, normalizedAction, targetAgentId);
+  const resolveResult = await resolveAgentTarget(ctx, agent, agents, decision, normalizedAction, targetAgentId, pois);
   const targetX = resolveResult.targetX;
   const targetY = resolveResult.targetY;
-  if (resolveResult.overriddenAction) finalAction = resolveResult.overriddenAction as typeof finalAction;
+  if (resolveResult.overriddenAction) finalAction = resolveResult.overriddenAction;
 
   await handleConversationState(ctx, agent, finalAction, targetAgentId, decision.speech);
   await ctx.runMutation(internal.functions.agents.updateAction, {
@@ -435,7 +437,6 @@ async function cleanStaleConversations(ctx: ActionCtx, agents: Doc<"agents">[], 
   }
   return cleanedCount;
 }
-
 // Action: Process a world tick
 export const tick = action({
   args: { skipSleep: v.optional(v.boolean()) },
@@ -490,7 +491,6 @@ export const tick = action({
         }
       }
     }));
-
     await ctx.runMutation(internal.functions.world.advanceWorldState);
     const tickDuration = Date.now() - tickStart;
     console.log(`[WORLD] Tick processing complete in ${tickDuration}ms (${agents.length} agents, ${(tickDuration / agents.length).toFixed(1)}ms/agent avg)`);
