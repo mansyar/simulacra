@@ -10,10 +10,10 @@
 - [x] Commit changes (`test(lib): Add unit tests for convex client initialization`) [e8e5d33]
 
 ### Task 1.2: Write tests for `src/lib/server-functions.ts`
-- [ ] Write failing unit tests: Mock ConvexHttpClient and verify each server function triggers the correct API call
-- [ ] Implement to make tests pass
-- [ ] Verify coverage >80% for `src/lib/server-functions.ts`
-- [ ] Commit changes (`test(lib): Add unit tests for server function wrappers`)
+- [x] Write failing unit tests: Mock ConvexHttpClient and verify each server function triggers the correct API call
+- [x] Implement to make tests pass
+- [x] Verify coverage >80% for `src/lib/server-functions.ts`
+- [x] Commit changes (`test(lib): Add unit tests for server function wrappers`) [a948b8f]
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Utility Modules' (Protocol in workflow.md)
 
