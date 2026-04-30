@@ -20,13 +20,13 @@
 - [x] Run tests and confirm they fail as expected (Red Phase)
 
 ### Task 1.3: Create config helper functions (Green Phase)
-- [~] Create `getConfigValue` helper in `convex/functions/config.ts` that accepts optional field name
-- [~] Add env var fallback logic: `process.env.MAX_TRAITS ?? config?.maxTraits ?? 10`
-- [~] Add env var fallback logic: `process.env.REFLECTION_INTERVAL_TICKS ?? config?.reflectionIntervalTicks ?? 480`
-- [~] Add env var fallback logic: `process.env.MAX_CONVERSATION_TURNS ?? config?.maxConversationTurns ?? 5`
-- [~] Add env var fallback logic: `process.env.SAFETY_MULTIPLIER ?? config?.safetyMultiplier ?? 2`
-- [~] Add env var fallback logic: `process.env.AGENT_SPEED ?? config?.agentSpeed ?? 6`
-- [ ] Run tests and confirm all pass (Green Phase)
+- [x] Create `getConfigValue` helper in `convex/functions/config.ts` that accepts optional field name
+- [x] Add env var fallback logic: `process.env.MAX_TRAITS ?? config?.maxTraits ?? 10`
+- [x] Add env var fallback logic: `process.env.REFLECTION_INTERVAL_TICKS ?? config?.reflectionIntervalTicks ?? 480`
+- [x] Add env var fallback logic: `process.env.MAX_CONVERSATION_TURNS ?? config?.maxConversationTurns ?? 5`
+- [x] Add env var fallback logic: `process.env.SAFETY_MULTIPLIER ?? config?.safetyMultiplier ?? 2`
+- [x] Add env var fallback logic: `process.env.AGENT_SPEED ?? config?.agentSpeed ?? 6`
+- [x] Run tests and confirm all pass (Green Phase) [e90a65f]
 
 ### Task 1.4: Update seed config data
 - [ ] Update `convex/functions/seed.ts` to include all new config fields with defaults
