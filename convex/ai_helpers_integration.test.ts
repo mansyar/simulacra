@@ -1,10 +1,15 @@
 /// <reference types="vite/client" />
 import { convexTest } from "convex-test";
-import { expect, test } from "vitest";
+import { expect, test, vi, afterEach } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 
 const modules = import.meta.glob("./**/*.ts");
+
+afterEach(() => {
+  delete process.env.OPENAI_API_KEY;
+  vi.unstubAllGlobals();
+});
 
 /**
  * Integration tests for ai_helpers Convex actions.
@@ -66,4 +71,78 @@ test("listModels returns error when no API key", async () => {
   expect(result).toHaveProperty("error");
   expect(result.models).toEqual([]);
   expect(result.error).toBe("No API key configured");
+});
+
+test("listModels returns models when API key is set (OpenAI-compatible)", async () => {
+  const t = convexTest(schema, modules);
+
+  const mockModels = {
+    data: [
+      { id: "gpt-4", owned_by: "openai" },
+      { id: "gpt-3.5-turbo", owned_by: "openai" },
+    ],
+  };
+  const mockFetch = vi.fn().mockResolvedValue({
+    ok: true,
+    json: async () => mockModels,
+  });
+  vi.stubGlobal("fetch", mockFetch);
+
+  process.env.OPENAI_API_KEY = "sk-test-key";
+
+  const result = await t.action(api.functions.ai_helpers.listModels, {});
+
+  expect(result.error).toBeUndefined();
+  expect(result.provider).toBe("openai-compatible");
+  expect(result.models).toHaveLength(2);
+  expect(result.models[0].id).toBe("gpt-4");
+  expect(result.models[1].id).toBe("gpt-3.5-turbo");
+});
+
+test("listModels supports filtering models by name", async () => {
+  const t = convexTest(schema, modules);
+
+  const mockModels = {
+    data: [
+      { id: "gpt-4", owned_by: "openai" },
+      { id: "gpt-3.5-turbo", owned_by: "openai" },
+      { id: "text-embedding-3-small", owned_by: "openai" },
+    ],
+  };
+  const mockFetch = vi.fn().mockResolvedValue({
+    ok: true,
+    json: async () => mockModels,
+  });
+  vi.stubGlobal("fetch", mockFetch);
+
+  process.env.OPENAI_API_KEY = "sk-test-key";
+
+  const result = await t.action(api.functions.ai_helpers.listModels, {
+    filter: "gpt-4",
+  });
+
+  expect(result.models).toHaveLength(1);
+  expect(result.models[0].id).toBe("gpt-4");
+});
+
+test("chat with model override picks correct model from config", async () => {
+  const t = convexTest(schema, modules);
+
+  process.env.OPENAI_API_KEY = "sk-test-key";
+
+  const mockFetch = vi.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({
+      choices: [{ message: { content: "Hello from custom model!" } }],
+    }),
+  });
+  vi.stubGlobal("fetch", mockFetch);
+
+  const response = await t.action(api.functions.ai_helpers.chat, {
+    message: "Hello",
+    archetype: "builder",
+    model: "custom-model-v2",
+  });
+
+  expect(response.content).toBe("Hello from custom model!");
 });

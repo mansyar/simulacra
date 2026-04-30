@@ -1,8 +1,0 @@
-{
-  "track_id": "test_coverage_20260430",
-  "type": "chore",
-  "status": "new",
-  "created_at": "2026-04-30T19:45:00Z",
-  "updated_at": "2026-04-30T19:45:00Z",
-  "description": "Increase test coverage using unit tests or integration tests"
-}
