@@ -37,26 +37,26 @@
 ## Phase 2: Code Updates — Replace Hardcoded Constants
 
 ### Task 2.1: Write failing tests for code-level extraction (Red Phase)
-- [ ] Update `convex/config_runtime.test.ts` or create additional tests
-- [ ] Write test: `updateIdentity uses config maxTraits`
-- [ ] Write test: `updateRelationship uses config maxConversationTurns for valenceHistory`
-- [ ] Write test: `processAgent reflection interval reads from config`
-- [ ] Write test: `cleanStaleConversations reads maxConversationTurns and safetyMultiplier from config`
-- [ ] Write test: `resolveMovement uses config agentSpeed`
-- [ ] Write test: `conversation context string shows correct turn cap from config`
-- [ ] Run tests and confirm they fail as expected (Red Phase)
+- [~] Update `convex/config_runtime.test.ts` or create additional tests
+- [~] Write test: `updateIdentity uses config maxTraits`
+- [~] Write test: `updateRelationship uses config maxConversationTurns for valenceHistory`
+- [~] Write test: `processAgent reflection interval reads from config`
+- [~] Write test: `cleanStaleConversations reads maxConversationTurns and safetyMultiplier from config`
+- [~] Write test: `resolveMovement uses config agentSpeed`
+- [~] Write test: `conversation context string shows correct turn cap from config`
+- [x] Run tests and confirm they fail as expected (Red Phase) — 3/17 tests fail
 
 ### Task 2.2: Update agents.ts (Green Phase)
-- [ ] In `updateIdentity`: Replace `.slice(0, 10)` with config-driven value from `maxTraits`
-- [ ] In `updateRelationship`: Replace `.slice(0, 5)` with config-driven value from `maxConversationTurns`
-- [ ] In `resolveMovement`: Replace `const AGENT_SPEED = 6` with config-driven value from `agentSpeed`
+- [x] In `updateIdentity`: Replace `.slice(0, 10)` with config-driven value from `maxTraits`
+- [x] In `updateRelationship`: Replace `.slice(0, 5)` with config-driven value from `maxConversationTurns`
+- [x] In `resolveMovement`: Replace `const AGENT_SPEED = 6` with config-driven value from `agentSpeed`
 
 ### Task 2.3: Update world.ts (Green Phase)
-- [ ] Remove `const REFLECTION_INTERVAL_TICKS = 480` — replace with config/env var read
-- [ ] Replace `/5` in conversation context string (line ~285) with config value
-- [ ] In `cleanStaleConversations`: Replace `const MAX_TURNS = 5, SAFETY_MULTIPLIER = 2` with config/env var reads
-- [ ] Pass config values through `processAgent` parameters or use internal query
-- [ ] Handle config read performance: read config once at start of tick, pass down to helpers
+- [~] Remove `const REFLECTION_INTERVAL_TICKS = 480` — replace with config/env var read
+- [~] Replace `/5` in conversation context string (line ~285) with config value
+- [~] In `cleanStaleConversations`: Replace `const MAX_TURNS = 5, SAFETY_MULTIPLIER = 2` with config/env var reads
+- [~] Pass config values through `processAgent` parameters or use internal query
+- [~] Handle config read performance: read config once at start of tick, pass down to helpers
 
 ### Task 2.4: Verify all tests pass
 - [ ] Run full test suite

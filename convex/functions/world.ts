@@ -3,8 +3,6 @@ import { v } from "convex/values";
 import { api, internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import { analyzeSentiment } from "./sentiment";
-// Reflection interval: 480 ticks ≈ 10 simulated days (48 ticks/day, ~30 min per tick)
-const REFLECTION_INTERVAL_TICKS = 480;
 
 /**
  * Query: Get the current world state
@@ -166,7 +164,7 @@ export const advanceWorldState = internalMutation({
     const state = await ctx.db.query("world_state").first();
     if (!state) return;
 
-    // 1. Advance Time (Assume 1 tick = 30 simulated minutes, 30 mins * 48 ticks = 1440 mins (24 hours))
+    // 1. Advance Time (1 tick = 30 min, 48 ticks = 24h)
     let newTime = (state.timeOfDay || 0) + 30;
     let newDayCount = state.dayCount || 1;
     if (newTime >= 1440) {
@@ -200,7 +198,7 @@ export const advanceWorldState = internalMutation({
     });
   },
 });
-// Internal function to handle conversation state updates
+/** Handle conversation state updates */
 async function handleConversationState(ctx: ActionCtx, agent: Doc<"agents">, normalizedAction: string, targetAgentId: Id<"agents"> | undefined, speech: string | undefined): Promise<void> {
   const wasInConversation = agent.conversationState !== undefined;
   const isTalking = normalizedAction === "talking";
@@ -212,12 +210,10 @@ async function handleConversationState(ctx: ActionCtx, agent: Doc<"agents">, nor
       role: wasInConversation ? agent.conversationState!.role : "initiator",
       turnCount: newTurnCount, myLastSpeech: speech,
     });
-    // Note: No writes to partner's document — partner reads current agent's myLastSpeech
-    // from the in-memory agents array during their own tick (FR4.2)
+    // Partner reads myLastSpeech from in-memory agents array (FR4.2)
   } else if (wasInConversation) {
-    // Clear current agent's conversation state
     await ctx.runMutation(internal.functions.agents.clearConversationState, { agentId: agent._id });
-    // Clear partner's conversation state AND reset partner's action via dedicated mutation
+    // Clear partner's state via dedicated mutation
     const partnerId = agent.conversationState?.partnerId;
     if (partnerId) {
       await ctx.runMutation(internal.functions.agents.resetConversationEnd, { agentId: partnerId as Id<"agents"> });
@@ -226,8 +222,17 @@ async function handleConversationState(ctx: ActionCtx, agent: Doc<"agents">, nor
 }
 
 // Helper function to process a single agent
-async function processAgent(ctx: ActionCtx, agent: Doc<"agents">, agents: Doc<"agents">[], worldState: Doc<"world_state"> | null, interactionRadius: number, speedMultiplier: number): Promise<void> {
-  // Safety Layer: Check for critical needs
+async function processAgent(
+  ctx: ActionCtx,
+  agent: Doc<"agents">,
+  agents: Doc<"agents">[],
+  worldState: Doc<"world_state"> | null,
+  interactionRadius: number,
+  speedMultiplier: number,
+  reflectionIntervalTicks: number,
+  maxConversationTurns: number,
+): Promise<void> {
+  // Critical needs override
   if (agent.hunger > 90 || agent.energy < 10) {
     const survivalAction = agent.hunger > 90 ? "eating" : "sleeping";
     await ctx.runMutation(internal.functions.agents.updateAction, { agentId: agent._id, action: survivalAction });
@@ -239,16 +244,13 @@ async function processAgent(ctx: ActionCtx, agent: Doc<"agents">, agents: Doc<"a
     });
     return;
   }
-  // REMOVED: listening skip guard — every agent gets an LLM call every tick
-  // Agents that AI-chose "listening" can change their action on the next tick
-
   await ctx.runMutation(internal.functions.agents.updateNeeds, { agentId: agent._id });
 
   // Reflection Logic
   const currentTicks = worldState?.totalTicks || 0;
   const lastReflected = agent.lastReflectedTick || 0;
   const jitter = Math.floor(Math.random() * 40) - 20;
-  if (currentTicks - lastReflected > (REFLECTION_INTERVAL_TICKS + jitter)) {
+  if (currentTicks - lastReflected > (reflectionIntervalTicks + jitter)) {
     void ctx.runAction(api.functions.ai.reflect, { agentId: agent._id });
     await ctx.runMutation(internal.functions.agents.updateIdentity, { agentId: agent._id, newTraits: [], lastReflectedTick: currentTicks });
   }
@@ -265,8 +267,6 @@ async function processAgent(ctx: ActionCtx, agent: Doc<"agents">, agents: Doc<"a
     }
   }
   await ctx.runMutation(internal.functions.agents.recordPassivePerception, { agentId: agent._id });
-
-  // Use by_position index query instead of brute-force filter — O(k) vs O(n)
   const nearbyDocs = await ctx.runQuery(internal.functions.agents.getNearbyAgents, {
     agentId: agent._id, gridX: agent.gridX, gridY: agent.gridY, radius: interactionRadius,
   });
@@ -274,7 +274,6 @@ async function processAgent(ctx: ActionCtx, agent: Doc<"agents">, agents: Doc<"a
   const validArchetypes = ["builder", "socialite", "philosopher", "explorer", "nurturer"];
   const aiArchetype = validArchetypes.includes(agent.archetype) ? agent.archetype : "builder";
 
-  // Conversation context — reads partner's myLastSpeech from in-memory agents array
   let conversationContext = "";
   if (agent.conversationState) {
     const convState = agent.conversationState;
@@ -282,7 +281,7 @@ async function processAgent(ctx: ActionCtx, agent: Doc<"agents">, agents: Doc<"a
     const partnerName = partner?.name || "Unknown";
     const myLastSpeech = agent.conversationState?.myLastSpeech;
     const partnerLastSpeech = partner?.conversationState?.myLastSpeech;
-    conversationContext = `\n\nACTIVE CONVERSATION:\nYou are in a conversation with ${partnerName}.\nYour role: ${convState.role}\nTurn count: ${convState.turnCount}/5\n`;
+    conversationContext = `\n\nACTIVE CONVERSATION:\nYou are in a conversation with ${partnerName}.\nYour role: ${convState.role}\nTurn count: ${convState.turnCount}/${maxConversationTurns}\n`;
     if (myLastSpeech) conversationContext += `What you last said: "${myLastSpeech}"\n`;
     if (partnerLastSpeech) conversationContext += `What ${partnerName} last said: "${partnerLastSpeech}"\n`;
     else conversationContext += `You just initiated the conversation. ${partnerName} hasn't responded yet.\n`;
@@ -351,12 +350,12 @@ async function processAgent(ctx: ActionCtx, agent: Doc<"agents">, agents: Doc<"a
   await ctx.runMutation(api.functions.memory.addEvent, { agentId: agent._id, type: decision.speech ? "conversation" : "movement", description, gridX: agent.gridX, gridY: agent.gridY });
 }
 
-/**
- * Clean stale conversations that have exceeded the TTL.
- * Performs hard cleanup (DB + in-memory) with partner deduplication.
- */
+/** Clean stale conversations exceeding TTL (DB + in-memory, partner dedup). */
 async function cleanStaleConversations(ctx: ActionCtx, agents: Doc<"agents">[], config: Doc<"config"> | null): Promise<number> {
-  const MAX_TURNS = 5, SAFETY_MULTIPLIER = 2;
+  const envTurns = parseInt(process.env.MAX_CONVERSATION_TURNS ?? "", 10);
+  const envMultiplier = parseInt(process.env.SAFETY_MULTIPLIER ?? "", 10);
+  const maxTurns = !isNaN(envTurns) ? envTurns : (config?.maxConversationTurns ?? 5);
+  const safetyMultiplier = !isNaN(envMultiplier) ? envMultiplier : (config?.safetyMultiplier ?? 2);
   let ttlMs: number;
 
   if (config?.conversationMaxTtlMs != null) {
@@ -364,7 +363,7 @@ async function cleanStaleConversations(ctx: ActionCtx, agents: Doc<"agents">[], 
   } else {
     const envOverride = parseInt(process.env.CONVERSATION_MAX_TTL_MS ?? "", 10);
     ttlMs = isNaN(envOverride)
-      ? MAX_TURNS * (config?.defaultTickInterval ?? 180) * SAFETY_MULTIPLIER * 1000
+      ? maxTurns * (config?.defaultTickInterval ?? 180) * safetyMultiplier * 1000
       : envOverride;
   }
 
@@ -442,21 +441,22 @@ export const tick = action({
     const worldState = await ctx.runQuery(api.functions.world.getState);
     const config = await ctx.runQuery(api.functions.config.get);
     const interactionRadius = config?.interactionRadius ?? 5;
+    const envR = parseInt(process.env.REFLECTION_INTERVAL_TICKS ?? "", 10);
+    const reflectionIntervalTicks = !isNaN(envR) ? envR : (config?.reflectionIntervalTicks ?? 480);
+    const envT = parseInt(process.env.MAX_CONVERSATION_TURNS ?? "", 10);
+    const maxConversationTurns = !isNaN(envT) ? envT : (config?.maxConversationTurns ?? 5);
     const weather = worldState?.weather || "sunny";
     const weatherMultipliers: Record<string, number> = { sunny: 1.0, cloudy: 1.0, rainy: 0.8, stormy: 0.5 };
     const speedMultiplier = weatherMultipliers[weather] || 1.0;
-    // Clean stale conversations before processing agents
     const cleanedConvs = await cleanStaleConversations(ctx, agents, config);
     if (cleanedConvs > 0) {
       console.log(`[WORLD] Cleaned ${cleanedConvs} stale conversations`);
     }
-    // Process all agents in parallel with error isolation — no inter-batch delays
-    // The chat model has no concurrency limits, so batching is unnecessary
-    console.log(`[WORLD] Processing all ${agents.length} agents in parallel with error isolation`);
+    console.log(`[WORLD] Processing all ${agents.length} agents in parallel`);
     await Promise.all(agents.map(async (agent: Doc<"agents">) => {
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
-          await processAgent(ctx, agent, agents, worldState, interactionRadius, speedMultiplier);
+          await processAgent(ctx, agent, agents, worldState, interactionRadius, speedMultiplier, reflectionIntervalTicks, maxConversationTurns);
           break; // Success, exit retry loop
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : String(error);

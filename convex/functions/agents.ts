@@ -136,7 +136,8 @@ export const resolveMovement = internalMutation({
 
     if (agent.targetX === undefined || agent.targetY === undefined) return;
 
-    const AGENT_SPEED = 6; // grid units per tick
+    const agentSpeedConfig = await ctx.db.query("config").first();
+    const AGENT_SPEED = agentSpeedConfig?.agentSpeed ?? 6; // grid units per tick
     const dx = agent.targetX - agent.gridX;
     const dy = agent.targetY - agent.gridY;
     const distance = Math.sqrt(dx * dx + dy * dy);
@@ -352,7 +353,9 @@ export const updateRelationship = internalMutation({
     const type = (args.delta > 0 ? "positive" : (args.delta < 0 ? "negative" : "neutral")) as "positive" | "negative" | "neutral";
 
     if (relationship) {
-      const history = [type, ...(relationship.valenceHistory || [])].slice(0, 5) as ("positive" | "negative" | "neutral")[];
+      const valenceConfig = await ctx.db.query("config").first();
+      const maxValence = valenceConfig?.maxConversationTurns ?? 5;
+      const history = [type, ...(relationship.valenceHistory || [])].slice(0, maxValence) as ("positive" | "negative" | "neutral")[];
       await ctx.db.patch(relationship._id, {
         affinity: Math.max(-100, Math.min(100, relationship.affinity + args.delta)),
         interactionsCount: relationship.interactionsCount + 1,
@@ -385,8 +388,10 @@ export const updateIdentity = internalMutation({
     const agent = await ctx.db.get(args.agentId);
     if (!agent) return;
 
-    // Merge traits and keep unique ones, limited to 10
-    const combinedTraits = Array.from(new Set([...agent.coreTraits, ...args.newTraits])).slice(0, 10);
+    // Merge traits and keep unique ones, limited by config maxTraits
+    const traitsConfig = await ctx.db.query("config").first();
+    const maxTraits = traitsConfig?.maxTraits ?? 10;
+    const combinedTraits = Array.from(new Set([...agent.coreTraits, ...args.newTraits])).slice(0, maxTraits);
 
     const patch: Partial<Doc<"agents">> = {
       coreTraits: combinedTraits,
@@ -452,9 +457,7 @@ export const resetConversationEnd = internalMutation({
   },
 });
 
-/**
- * Query: Get all agents with active conversation states
- */
+/** Query: Get all agents with active conversation states */
 export const getActiveConversations = query({
   args: {},
   handler: async (ctx) => {
