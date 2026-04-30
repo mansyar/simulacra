@@ -1,8 +1,0 @@
-{
-  "track_id": "poi-aware-behavior_20260501",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-05-01T04:44:00Z",
-  "updated_at": "2026-05-01T04:44:00Z",
-  "description": "Make agents aware of Points of Interest (POIs) so they walk to contextual locations for activities, with location-based need multipliers for deeper gameplay."
-}

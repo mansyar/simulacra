@@ -12,7 +12,7 @@
 | 6 | Fluid Movement | Organic idle + Predictive pathing | ✅ Complete | 3-4 days |
 | 7 | The Mind | AI Context Fidelity | ✅ Complete (Tracks A & B ✅, C covered by B) | 1 week |
 | 8 | The Backbone | Robustness & Scaling | ✅ Complete (All Tracks) | 1 week |
-| 9 | The Soul | Deeper Social Dynamics | ✅ Tracks A-D, ⏳ Track E | 1 week |
+| 9 | The Soul | Deeper Social Dynamics | ✅ Complete (All Tracks A-E) | 1 week |
 | 10 | Movement Coherence | Fix agent trajectory, weather sync, and logical gaps | 🆕 Planned | 2-3 days |
 | 11 | The Polish | Master Panel + Deploy | ⏳ Not Started | 1 week |
 
@@ -489,7 +489,7 @@ A1 + A2 + A3 (quick fixes) ✅
 
 **Goal:** Fix the conversation system to be truly bidirectional, then layer on dynamic sentiment, lifecycle cleanup, and runtime configurability.
 
-**Status:** ✅ Tracks A-D Complete, ⏳ Track E Remaining
+**Status:** ✅ ALL TRACKS COMPLETE
 
 > **Completed:** 2026-04-29 — Track A: Bidirectional Conversation System
 > **Completed:** 2026-04-29 — Track B: Sentiment-Based Affinity During Conversations
@@ -499,6 +499,13 @@ A1 + A2 + A3 (quick fixes) ✅
 >   - 20 new tests, 301 total, 69 test files
 >   - All 5 config fields extracted to config table with env var fallbacks
 >   - `maxTraits`, `reflectionIntervalTicks`, `maxConversationTurns`, `safetyMultiplier`, `agentSpeed` all config-driven
+> **Completed:** 2026-05-01 — Track E: POI-Aware Agent Behavior
+>   - 4 new test files (15+ tests), ~330 tests total
+>   - POI context injected into LLM decisions (FR1)
+>   - POI name → coordinate resolution with case-insensitive `includes()` matching (FR2)
+>   - Activity action override to walking when POI targeted (FR3)
+>   - POI-named arrival events (FR4)
+>   - Location-based need multipliers (FR5)
 >
 > **Design Context:** The current conversation system has two critical flaws discovered during Phase 8 testing:
 > 1. When agent A talks to agent B, B is force-set to `action: "listening"` and skipped on subsequent ticks — B never gets to respond
@@ -587,37 +594,38 @@ A1 + A2 + A3 (quick fixes) ✅
 - [x] Add integration test: disable sleep mode → run tick → verify agents process (skipSleep bypass)
 - [x] All 301 tests pass across 69 test files
 
-### Track E: POI-Aware Agent Behavior
+### Track E: POI-Aware Agent Behavior [COMPLETE: 2026-05-01]
 
 **Problem:** POIs (Library, Plaza, Cafe, Forest Grove) are rendered on the canvas and stored in the database, but the LLM has no awareness they exist. Agents eat, sleep, and work while standing in place — the world feels empty because locations have no meaning to the AI.
 
-- [ ] **Inject POI context into LLM decisions** — Add a `## Nearby Locations` section to the user prompt in `buildContextPrompt()`. Include all POIs with name, coordinates, description, and distance from the agent.
+- [x] **Inject POI context into LLM decisions** — Add a `## Nearby Locations` section to the user prompt in `buildContextPrompt()`. Include all POIs with name, coordinates, description, and distance from the agent.
   - Format: `"- Cozy Cafe (45, 15): Fresh coffee and good conversation. [1.2 tiles away]"`
   - Add activity suggestions: `"eating → Cozy Cafe"`, `"working → The Great Library"`, etc.
   - The LLM can then output a POI name as `target` instead of raw coordinates
   - Include an explicit note listing valid POI names to reduce hallucination of fake locations:
     `"Valid destinations: Cozy Cafe, The Great Library, Central Plaza, Forest Grove. Do not invent locations."`
 
-- [ ] **Add POI name → coordinate resolution** — In `processAgent()`, after the existing agent name lookup, add a POI name lookup that converts a POI name to coordinates.
+- [x] **Add POI name → coordinate resolution** — In `processAgent()`, after the existing agent name lookup, add a POI name lookup that converts a POI name to coordinates.
   - Use `includes()` matching (case-insensitive) instead of strict `===` — e.g., `"Cafe"` resolves to `"Cozy Cafe"`. If multiple POIs match, prefer the closest one by distance.
   - If no POI matches AND no agent name matches AND coordinates can't be parsed → fall back to a random nearby coordinate within 5 tiles of the agent's current position. Prevents the agent from standing still when the LLM outputs a hallucinated target.
 
-- [ ] **Handle POI target + non-walking action** — When the LLM returns a POI name as target but the action is an activity (e.g., `action: "eating"`, `target: "Cozy Cafe"`), override the action to `"walking"` so the agent actually moves toward the POI. The LLM can decide on the activity after arrival.
+- [x] **Handle POI target + non-walking action** — When the LLM returns a POI name as target but the action is an activity (e.g., `action: "eating"`, `target: "Cozy Cafe"`), override the action to `"walking"` so the agent actually moves toward the POI. The LLM can decide on the activity after arrival.
   - Exception: if the agent is already within 1 tile of the POI, keep the original action (they're already there).
 
-- [ ] **Add POI arrival events** — When an agent reaches coordinates that match a POI, log an event like `"Arrived at Cozy Cafe to eat."` instead of the generic `"Arrived at destination (45, 15)"`.
+- [x] **Add POI arrival events** — When an agent reaches coordinates that match a POI, log an event like `"Arrived at Cozy Cafe to eat."` instead of the generic `"Arrived at destination (45, 15)"`.
   - Include the agent's current action in the event description for rich context.
   - If the agent was already at the POI (didn't walk there), log `"Already at Cozy Cafe"` to avoid misleading "arrival" messages.
 
-- [ ] **Add POI context to `buildFullContext`** — Add `poiContext` field to the return type, query the `pois` table, compute distances from the agent's position.
+- [x] **Add POI context to `buildFullContext`** — Add `poiContext` field to the return type, query the `pois` table, compute distances from the agent's position.
 
-- [ ] **Write tests:**
-  - Test: LLM context string includes all POI names and coordinates
-  - Test: `processAgent()` resolves POI name to coordinates (exact match + partial match via `includes()`)
+- [x] **Write tests:**
+  - Test: `buildFullContext` returns `poiContext` string field with all POI data (4 tests)
+  - Test: POI name resolution (exact match + partial match via `includes()`) — 6 tests
   - Test: LLM hallucinates fake POI name → fallback to random nearby coordinate
   - Test: LLM returns POI target with `action: "eating"` → overridden to `"walking"` (unless already at POI)
-  - Test: POI arrival events are logged with the POI name when agent reaches a POI
-  - Test: POI arrival events use different message when agent was already at the POI
+  - Test: Talking + POI target (no matching agent) → overridden to walking
+  - Test: POI arrival events logged with POI name and "Already at" variant (2 tests)
+  - Test: Need multipliers applied at matching POIs (7 tests)
   - Run test suite and confirm all existing tests still pass
 
 ### Phase 9 Checkpoints
@@ -629,11 +637,11 @@ A1 + A2 + A3 (quick fixes) ✅
 - [x] Affinity scores change dynamically during multi-turn conversations — Track B
 - [x] Stale conversations auto-cleanup after timeout — Track C
 - [x] All thresholds configurable via config table — Track D (5 fields: maxTraits, reflectionIntervalTicks, maxConversationTurns, safetyMultiplier, agentSpeed)
-- [ ] **Agents walk to POIs for contextual actions (eat at Cafe, work at Library, etc.)** — Track E
-- [ ] **Thought stream shows arrival events like "Arrived at Cozy Cafe to eat."** — Track E
-- [ ] **LLM decisions reference location names instead of raw coordinates** — Track E
+- [x] **Agents walk to POIs for contextual actions (eat at Cafe, work at Library, etc.)** — Track E
+- [x] **Thought stream shows arrival events like "Arrived at Cozy Cafe to eat."** — Track E
+- [x] **LLM decisions reference location names instead of raw coordinates** — Track E
 - [x] Integration tests verify config-driven behavior — Track D (20 tests, 301 total, 69 test files)
-- [x] All 301 tests pass across 69 test files (Track D verified)
+- [x] All 330+ tests pass across 73 test files (All tracks verified)
 
 ---
 
@@ -829,7 +837,7 @@ Phase 9 (Soul)
     │       ├──► Sentiment-based affinity (Track B) ✅
     │       ├──► Conversation TTL & cleanup (Track C) ✅
     │       ├──► Runtime configuration & integration testing (Track D) ✅
-    │       └──► POI-aware agent behavior (Track E) ⏳
+    │       └──► POI-aware agent behavior (Track E) ✅
             │
             ▼
 Phase 10 (Movement Coherence)
@@ -871,7 +879,7 @@ Phase 11 (Polish)
 
 ## Recommended Development Order
 
-### Current Status: Phase 9 (Track E) Up Next 🎯
+### Current Status: Phase 10 (Movement Coherence) Up Next 🎯
 
 1. ✅ **Done:** Grid rendering (Phase 1)
 2. ✅ **Done:** Convex + real-time sync (Phase 2)
@@ -889,7 +897,7 @@ Phase 11 (Polish)
 14. ✅ **Done:** Sentiment-based affinity during conversations (Phase 9 — Track B)
 15. ✅ **Done:** Conversation TTL & cleanup (Phase 9 — Track C) — Auto-cleanup stale conversations with configurable TTL, hard cleanup (DB + in-memory), partner dedup, and event logging
 16. ✅ **Done:** Runtime configuration & integration testing (Phase 9 — Track D) — Extracted 5 constants to config table with env var fallbacks, added getConfigValue helper, 20 new tests (301 total)
-17. ⏳ **Planned:** POI-aware agent behavior (Phase 9 — Track E)
+17. ✅ **Done:** POI-aware agent behavior (Phase 9 — Track E) — LLM context includes POI data, agents walk to contextual locations, arrival events show POI names, need multipliers applied at matching POIs. 4 test files with 15+ tests.
 18. 🆕 **Planned:** LLM sees its own trajectory (Phase 10 — Track A)
 19. 🆕 **Planned:** Weather-aware frontend speed (Phase 10 — Track B)
 20. 🆕 **Planned:** Arrival cleanup (Phase 10 — Track C)
