@@ -56,9 +56,9 @@ test("getConfigValue: config maxTraits overrides default 10", async () => {
   // Read back via getConfigValue
   const result = await t.query(
     api.functions.config.getConfigValue,
-    { field: "agentSpeed", defaultValue: 6 },
+    { field: "maxTraits", defaultValue: 10 },
   );
-  expect(result).toBe(6);
+  expect(result).toBe(3);
 });
 
 // ─── Integration: Config-driven behavior via tick ─────────────────────────
@@ -253,7 +253,7 @@ test("updateIdentity respects config maxTraits cap (not hardcoded 10)", async ()
   });
 
   const agent = await t.query(api.functions.agents.getById, { agentId });
-  // FIXME: Currently hardcoded at 10 — this test will fail until config-driven
+  // Config-driven maxTraits cap should limit to 3
   expect(agent!.coreTraits.length).toBe(3);
 });
 
@@ -284,7 +284,7 @@ test("updateRelationship respects config maxConversationTurns for valenceHistory
 
   const rels = await t.query(api.functions.agents.getRelationships, { agentId: agentA });
   const rel = rels.find(r => r.agentBId === agentB || r.agentAId === agentB);
-  // FIXME: Currently hardcoded at 5 — this test will fail until config-driven
+  // Config-driven valence cap should limit to 2
   expect(rel).toBeDefined();
   expect(rel!.valenceHistory.length).toBe(2);
 });
@@ -373,10 +373,7 @@ test("cleanStaleConversations reads maxConversationTurns from config", async () 
     turnCount: 1,
   });
 
-  // Run tick (which calls cleanStaleConversations internally)
-  // FIXME: Currently uses hardcoded MAX_TURNS=5 and SAFETY_MULTIPLIER=2
-  // This test may not directly validate — the TTL formula uses config values
-  // For now, verify config values are readable
+  // Verify config values used by cleanStaleConversations are set correctly
   const config = await t.query(api.functions.config.get);
   expect(config!.maxConversationTurns).toBe(2);
   expect(config!.safetyMultiplier).toBe(2);

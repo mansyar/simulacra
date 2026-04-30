@@ -1,4 +1,4 @@
-import { query, internalQuery, mutation } from "../_generated/server";
+import { query, internalQuery, mutation, internalMutation } from "../_generated/server";
 import { v } from "convex/values";
 
 // Mapping from config field names to env var names
@@ -87,7 +87,7 @@ export const setConfigValue = mutation({
 /**
  * Internal mutation: Set a config value using the internal API.
  */
-export const setConfigValueInternal = mutation({
+export const setConfigValueInternal = internalMutation({
   args: {
     field: v.string(),
     value: v.float64(),
