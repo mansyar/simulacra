@@ -47,11 +47,13 @@ This track fixes that by:
 - Use case-insensitive `includes()` matching (e.g., `"Cafe"` resolves to `"Cozy Cafe"`)
 - If multiple POIs match, prefer the closest one by Euclidean distance
 - If NO POI matches AND no agent name matches AND coordinates can't be parsed → fall back to a random nearby coordinate within 5 tiles of the agent's current position (prevents the agent from standing still when the LLM outputs a hallucinated target)
+- **Bounds safety:** The random fallback coordinate MUST be clamped to the world boundary [0, 63] to prevent off-map targeting
 
 ### FR3: POI Target + Non-Walking Action Override
 
 - When the LLM returns a POI name as target with an activity action (e.g., `{action: "eating", target: "Cozy Cafe"}`), override action to `"walking"` so the agent actually moves toward the POI
 - Exception: if agent is already within 1 tile of the POI, keep the original action (they're already there)
+- **Edge case:** If the LLM outputs `{action: "talking", target: "Cozy Cafe"}` — the talking handler won't find an agent named "Cozy Cafe", so `targetAgentId` stays `undefined`. In this case, also treat the POI as a location target and override action to `"walking"`, since the intent is clearly to go to that POI
 
 ### FR4: POI Arrival Events
 
@@ -61,18 +63,26 @@ This track fixes that by:
 
 ### FR5: Location-Based Need Multipliers
 
-- Modify `updateNeeds` to accept optional `gridX`/`gridY` parameters (agent position)
+- No change to `updateNeeds` function signature — it already reads the agent from DB (including `gridX`/`gridY`). Add a POI query internally instead.
 - Query the `pois` table; check if the agent is within 1 tile of a matching POI type
 - Matching rules (POI type → matching action):
   - `cafe` → `eating`
   - `library` → `working`
   - `plaza` → `talking`
   - `nature` → `exploring`
-- Multiplier rule when at a matching POI:
-  - All beneficial deltas: ×2
-  - All draining deltas: ×0.5
+- Precise multiplier logic (by need type and delta sign):
+
+  | Need | Delta sign | Effect | Category | Multiplier |
+  |------|-----------|--------|----------|------------|
+  | hunger | negative (↓) | Good | beneficial | ×2 |
+  | hunger | positive (↑) | Bad | draining | ×0.5 |
+  | energy | positive (↑) | Good | beneficial | ×2 |
+  | energy | negative (↓) | Bad | draining | ×0.5 |
+  | social | positive (↑) | Good | beneficial | ×2 |
+  | social | negative (↓) | Bad | draining | ×0.5 |
+
+- All multiplied values MUST be rounded with `Math.round()` to prevent floating-point drift over many ticks
 - No POI nearby, or non-matching action at a POI → normal deltas (no multiplier)
-- Update `processAgent` to pass agent grid position to `updateNeeds`
 
 ---
 
@@ -83,6 +93,7 @@ This track fixes that by:
 - [ ] Multiple matching POIs → closest by distance is preferred
 - [ ] Hallucinated POI name → fallback to random nearby coordinate within 5 tiles
 - [ ] Activity action + POI target → overridden to "walking" unless already within 1 tile
+- [ ] Talking action + POI target (no matching agent) → also overridden to "walking"
 - [ ] POI arrival events logged with POI name when agent reaches coordinates
 - [ ] "Already at POI" message when agent was already at the location
 - [ ] Need deltas multiplied when agent is near a matching POI type
