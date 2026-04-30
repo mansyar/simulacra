@@ -4,6 +4,6 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [x] **Track: POI-Aware Agent Behavior**
-  *Link: [./tracks/poi-aware-behavior_20260501/](./tracks/poi-aware-behavior_20260501/)*
+- [x] **Archived: POI-Aware Agent Behavior**
+  *Archive: [./archive/poi-aware-behavior_20260501/](./archive/poi-aware-behavior_20260501/)*
 
