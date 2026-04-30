@@ -29,8 +29,8 @@
 - [x] Run tests and confirm all pass (Green Phase) [e90a65f]
 
 ### Task 1.4: Update seed config data
-- [ ] Update `convex/functions/seed.ts` to include all new config fields with defaults
-- [ ] Add migration logic for existing config rows (no action needed for optional fields)
+- [x] Update `convex/functions/seed.ts` to include all new config fields with defaults (no changes needed — optional fields default to undefined, getConfigValue handles fallback)
+- [x] Add migration logic for existing config rows (no action needed for optional fields)
 
 - [ ] Task: Conductor - Phase Completion Verification 'Phase 1: Config Table Schema & Helpers' (Protocol in workflow.md)
 
