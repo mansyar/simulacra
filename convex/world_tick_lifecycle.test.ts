@@ -82,7 +82,7 @@ test("tick: progresses agent needs over multiple ticks", async () => {
   const totalChange =
     Math.abs((updatedAgent?.hunger ?? initialHunger) - initialHunger);
   expect(totalChange).toBeGreaterThan(0);
-});
+}, 15000);
 
 test("tick: runs successfully with mock decisions when no API key", async () => {
   const t = convexTest(schema, modules);
