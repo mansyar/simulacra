@@ -4,44 +4,23 @@ import { api, internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import { analyzeSentiment } from "./sentiment";
 
-/**
- * Query: Get the current world state
- */
-export const getState = query({
-  args: {},
-  handler: async (ctx) => {
-    const state = await ctx.db.query("world_state").first();
-    return state;
-  },
-});
-
-/**
- * Query: Get sleep mode configuration
- */
+// Query: Get the current world state
+export const getState = query({ args: {}, handler: async (ctx) => await ctx.db.query("world_state").first() });
+// Query: Get sleep mode configuration
 export const getSleepConfig = query({
   args: {},
-  handler: async () => {
-    return {
-      roomId: process.env.PRESENCE_ROOM_ID || "main-app",
-      enableSleepMode: process.env.ENABLE_SLEEP_MODE === "true",
-      gracePeriod: parseInt(process.env.SLEEP_MODE_GRACE_PERIOD || "30000"),
-    };
-  },
+  handler: async () => ({
+    roomId: process.env.PRESENCE_ROOM_ID || "main-app",
+    enableSleepMode: process.env.ENABLE_SLEEP_MODE === "true",
+    gracePeriod: parseInt(process.env.SLEEP_MODE_GRACE_PERIOD || "30000"),
+  }),
 });
-
-/**
- * Query: Get all points of interest
- */
+// Query: Get all points of interest
 export const getPois = query({
   args: {},
-  handler: async (ctx) => {
-    return await ctx.db.query("pois").collect();
-  },
+  handler: async (ctx) => await ctx.db.query("pois").collect(),
 });
-
-/**
- * Query: Get relationship between two agents
- */
+// Query: Get relationship between two agents
 export const getRelationship = query({
   args: {
     agentAId: v.id("agents"),
@@ -58,10 +37,7 @@ export const getRelationship = query({
       .first();
   },
 });
-
-/**
- * Mutation: Update the world state
- */
+// Mutation: Update the world state
 export const updateState = mutation({
   args: {
     weather: v.optional(v.union(
@@ -221,6 +197,60 @@ async function handleConversationState(ctx: ActionCtx, agent: Doc<"agents">, nor
   }
 }
 
+// Helper: resolve target coordinates with POI name lookup and action overrides (FR2 + FR3)
+async function resolveAgentTarget(
+  ctx: ActionCtx,
+  agent: Doc<"agents">,
+  agents: Doc<"agents">[],
+  decision: { target?: string },
+  normalizedAction: string,
+  targetAgentId: Id<"agents"> | undefined,
+): Promise<{ targetX: number | undefined; targetY: number | undefined; overriddenAction: string | undefined }> {
+  const pois = await ctx.runQuery(api.functions.world.getPois);
+  let targetX: number | undefined, targetY: number | undefined;
+  let overriddenAction: string | undefined;
+
+  // 1. Try coordinate format
+  if (decision.target && decision.target !== "none" && normalizedAction !== "talking") {
+    const coords = decision.target.split(",");
+    if (coords.length === 2) {
+      const x = parseFloat(coords[0]), y = parseFloat(coords[1]);
+      if (!isNaN(x) && !isNaN(y)) { targetX = x; targetY = y; }
+    }
+  }
+  // 2. Try agent name lookup
+  if (targetX === undefined && decision.target && decision.target !== "none") {
+    const targetAgent = agents.find((a: Doc<"agents">) => a.name === decision.target);
+    if (targetAgent) { targetX = targetAgent.gridX; targetY = targetAgent.gridY; }
+  }
+  // 3. Try POI name lookup (FR2) - case-insensitive includes() matching, closest by distance
+  if (targetX === undefined && decision.target && decision.target !== "none" && pois?.length) {
+    const dt = decision.target.toLowerCase();
+    const matches = pois.filter((p) => p.name.toLowerCase().includes(dt) || dt.includes(p.name.toLowerCase()));
+    if (matches.length > 0) {
+      const closest = matches.sort((a, b) => {
+        const da = Math.sqrt((a.gridX - agent.gridX) ** 2 + (a.gridY - agent.gridY) ** 2);
+        const db = Math.sqrt((b.gridX - agent.gridX) ** 2 + (b.gridY - agent.gridY) ** 2);
+        return da - db;
+      })[0];
+      targetX = closest.gridX;
+      targetY = closest.gridY;
+      // FR3: Override activity actions to walking (unless within 1 tile)
+      const dist = Math.sqrt((closest.gridX - agent.gridX) ** 2 + (closest.gridY - agent.gridY) ** 2);
+      if (dist > 1) {
+        if (["eating", "sleeping", "working", "exploring"].includes(normalizedAction)) overriddenAction = "walking";
+        if (normalizedAction === "talking" && !targetAgentId) overriddenAction = "walking";
+      }
+    }
+  }
+  // 4. Fallback: hallucinated → random within 5 tiles, clamped [0, 63]
+  if (targetX === undefined && decision.target && decision.target !== "none" && normalizedAction !== "talking") {
+    targetX = Math.max(0, Math.min(63, agent.gridX + Math.floor(Math.random() * 11) - 5));
+    targetY = Math.max(0, Math.min(63, agent.gridY + Math.floor(Math.random() * 11) - 5));
+  }
+  return { targetX, targetY, overriddenAction };
+}
+
 // Helper function to process a single agent
 async function processAgent(
   ctx: ActionCtx,
@@ -305,48 +335,41 @@ async function processAgent(
   });
 
   const normalizedAction = normalizeAction(decision.action);
+  let finalAction = normalizedAction;
   let targetAgentId: Id<"agents"> | undefined;
+
+  // Agent name resolution for talking
   if (normalizedAction === "talking") {
     const targetAgent = agents.find((a: Doc<"agents">) => a.name === decision.target);
     if (targetAgent && targetAgent._id !== agent._id) {
       targetAgentId = targetAgent._id;
-      // Analyze speech sentiment and update relationship affinity per turn
       if (decision.speech) {
         const { delta } = analyzeSentiment(decision.speech);
         await ctx.runMutation(internal.functions.agents.updateRelationship, {
-          agentAId: agent._id,
-          agentBId: targetAgentId,
-          delta,
+          agentAId: agent._id, agentBId: targetAgentId, delta,
         });
       }
     }
   }
 
-  let targetX: number | undefined, targetY: number | undefined;
-  if (decision.target && decision.target !== "none" && normalizedAction !== "talking") {
-    const coords = decision.target.split(",");
-    if (coords.length === 2) {
-      const x = parseFloat(coords[0]), y = parseFloat(coords[1]);
-      if (!isNaN(x) && !isNaN(y)) { targetX = x; targetY = y; }
-    }
-    if (targetX === undefined) {
-      const targetAgent = agents.find((a: Doc<"agents">) => a.name === decision.target);
-      if (targetAgent) { targetX = targetAgent.gridX; targetY = targetAgent.gridY; }
-    }
-  }
+  // Resolve target coordinates and handle POI-aware action overrides (FR2 + FR3)
+  const resolveResult = await resolveAgentTarget(ctx, agent, agents, decision, normalizedAction, targetAgentId);
+  const targetX = resolveResult.targetX;
+  const targetY = resolveResult.targetY;
+  if (resolveResult.overriddenAction) finalAction = resolveResult.overriddenAction as typeof finalAction;
 
-  await handleConversationState(ctx, agent, normalizedAction, targetAgentId, decision.speech);
+  await handleConversationState(ctx, agent, finalAction, targetAgentId, decision.speech);
   await ctx.runMutation(internal.functions.agents.updateAction, {
-    agentId: agent._id, action: normalizedAction, targetX, targetY, interactionPartnerId: targetAgentId,
+    agentId: agent._id, action: finalAction, targetX, targetY, interactionPartnerId: targetAgentId,
     lastThought: decision.thought, speech: decision.speech, lastSpeechAt: decision.speech ? Date.now() : undefined,
   });
 
-  if (normalizedAction === "exploring" && targetX === undefined) {
+  if (finalAction === "exploring" && targetX === undefined) {
     const randomX = Math.floor(Math.random() * 64), randomY = Math.floor(Math.random() * 64);
     await ctx.runMutation(internal.functions.agents.updateAction, { agentId: agent._id, action: "exploring", targetX: randomX, targetY: randomY });
   }
 
-  let description = `Thought: ${decision.thought} | Action: ${normalizedAction}`;
+  let description = `Thought: ${decision.thought} | Action: ${finalAction}`;
   if (decision.speech) description += ` | Said: "${decision.speech}"`;
   await ctx.runMutation(api.functions.memory.addEvent, { agentId: agent._id, type: decision.speech ? "conversation" : "movement", description, gridX: agent.gridX, gridY: agent.gridY });
 }
@@ -388,17 +411,13 @@ async function cleanStaleConversations(ctx: ActionCtx, agents: Doc<"agents">[], 
         gridX: agent.gridX, gridY: agent.gridY,
       });
     } catch { /* isolated error */ }
-
     try { await ctx.runMutation(internal.functions.agents.resetConversationEnd, { agentId: agent._id }); }
-    catch { /* isolated error — continue with in-memory cleanup */ }
-
+    catch { /* isolated error */ }
     agent.conversationState = undefined;
     agent.currentAction = "idle";
     agent.interactionPartnerId = undefined;
     processed.add(agent._id);
-
     if (partner) {
-      // Log cleanup event for partner
       try {
         await ctx.runMutation(api.functions.memory.addEvent, {
           agentId: partner._id, type: "interaction",
@@ -406,14 +425,12 @@ async function cleanStaleConversations(ctx: ActionCtx, agents: Doc<"agents">[], 
           gridX: partner.gridX, gridY: partner.gridY,
         });
       } catch { /* isolated error */ }
-
       try { await ctx.runMutation(internal.functions.agents.resetConversationEnd, { agentId: partner._id }); } catch { /* isolated error */ }
       partner.conversationState = undefined;
       partner.currentAction = "idle";
       partner.interactionPartnerId = undefined;
       processed.add(partner._id);
     }
-
     cleanedCount++;
   }
   return cleanedCount;
@@ -462,28 +479,12 @@ export const tick = action({
           console.error(`[WORLD] Agent ${agent.name} failed (attempt ${attempt + 1}/2):`, errorMsg);
 
           if (attempt === 0) {
-            // Log first failure and wait 500ms before retry
-            try {
-              await ctx.runMutation(api.functions.memory.addEvent, {
-                agentId: agent._id,
-                type: "movement",
-                description: `Error during processing, retrying...`,
-                gridX: agent.gridX,
-                gridY: agent.gridY,
-              });
-            } catch (innerErr) { console.warn(`[WORLD] Failed to log retry event for agent ${agent.name}:`, innerErr) }
+            try { await ctx.runMutation(api.functions.memory.addEvent, { agentId: agent._id, type: "movement", description: "Error during processing, retrying...", gridX: agent.gridX, gridY: agent.gridY }); }
+            catch (innerErr) { console.warn(`[WORLD] Failed to log retry event for agent ${agent.name}:`, innerErr) }
             await new Promise(resolve => setTimeout(resolve, 500));
           } else {
-            // Second failure — log and skip this agent for this tick
-            try {
-              await ctx.runMutation(api.functions.memory.addEvent, {
-                agentId: agent._id,
-                type: "movement",
-                description: `Error: Skipped this tick after 2 failed attempts`,
-                gridX: agent.gridX,
-                gridY: agent.gridY,
-              });
-            } catch (innerErr) { console.warn(`[WORLD] Failed to log skip event for agent ${agent.name}:`, innerErr) }
+            try { await ctx.runMutation(api.functions.memory.addEvent, { agentId: agent._id, type: "movement", description: "Error: Skipped this tick after 2 failed attempts", gridX: agent.gridX, gridY: agent.gridY }); }
+            catch (innerErr) { console.warn(`[WORLD] Failed to log skip event for agent ${agent.name}:`, innerErr) }
             console.error(`[WORLD] Agent ${agent.name} — skipped after 2 failed attempts`);
           }
         }
