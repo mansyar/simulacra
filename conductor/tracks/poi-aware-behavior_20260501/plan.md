@@ -8,28 +8,28 @@
 
 ## Phase 1: POI Context in LLM Decisions (FR1)
 
-- [ ] Task: Write failing tests for POI context in LLM decisions
-    - [ ] Test: `buildFullContext` returns a `poiContext` string field with all POI data
-    - [ ] Test: `poiContext` contains POI names (`"Cozy Cafe"`, `"The Great Library"`, etc.)
-    - [ ] Test: `poiContext` includes POI coordinates, descriptions, and distances from agent
-    - [ ] Test: `buildContextPrompt` output contains `"## Nearby Locations"` section header
-    - [ ] Run tests and confirm they fail (Red phase)
-- [ ] Task: Implement POI context retrieval in `buildFullContext`
-    - [ ] Query POIs table, compute Euclidean distance from agent position
-    - [ ] Format each POI as `"- Cozy Cafe (45, 15): description [1.2 tiles away]"`
-    - [ ] Return `poiContext` as new field in `buildFullContext` action
-    - [ ] Update the `buildFullContext` return type signature
-- [ ] Task: Add `## Nearby Locations` section to `buildContextPrompt`
-    - [ ] Add `poiContext` optional parameter to `buildContextPrompt`
-    - [ ] Add `## Nearby Locations` section with activity suggestions per POI type
-    - [ ] Append valid POI list disclaimer: `"Valid destinations: ... Do not invent locations."`
-    - [ ] Pass `poiContext` through `decision` action to the prompt builder
-    - [ ] Update `decision` action args to accept `poiContext`
-- [ ] Task: Run tests and confirm they pass (Green phase)
-- [ ] Task: Verify coverage and run full test suite
-    - [ ] Run `pnpm test` to confirm all tests pass
-    - [ ] Run `pnpm test:coverage` to verify >80% coverage
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: POI Context in LLM Decisions' (Protocol in workflow.md)
+- [x] Task: Write failing tests for POI context in LLM decisions
+    - [x] Test: `buildFullContext` returns a `poiContext` string field with all POI data
+    - [x] Test: `poiContext` contains POI names (`"Cozy Cafe"`, `"The Great Library"`, etc.)
+    - [x] Test: `poiContext` includes POI coordinates, descriptions, and distances from agent
+    - [x] Test: `buildContextPrompt` output contains `"## Nearby Locations"` section header
+    - [x] Run tests and confirm they fail (Red phase)
+- [x] Task: Implement POI context retrieval in `buildFullContext`
+    - [x] Query POIs table, compute Euclidean distance from agent position
+    - [x] Format each POI as `"- Cozy Cafe (45, 15): description [1.2 tiles away]"`
+    - [x] Return `poiContext` as new field in `buildFullContext` action
+    - [x] Update the `buildFullContext` return type signature
+- [x] Task: Add `## Nearby Locations` section to `buildContextPrompt`
+    - [x] Add `poiContext` optional parameter to `buildContextPrompt`
+    - [x] Add `## Nearby Locations` section with activity suggestions per POI type
+    - [x] Append valid POI list disclaimer: `"Valid destinations: ... Do not invent locations."`
+    - [x] Pass `poiContext` through `decision` action to the prompt builder
+    - [x] Update `decision` action args to accept `poiContext`
+- [x] Task: Run tests and confirm they pass (Green phase)
+- [x] Task: Verify coverage and run full test suite
+    - [x] Run `pnpm test` to confirm all tests pass
+    - [x] Run `pnpm test:coverage` to verify >80% coverage
+- [x] Task: Conductor - User Manual Verification 'Phase 1: POI Context in LLM Decisions' (Protocol in workflow.md) [64564e5]
 
 ---
 
