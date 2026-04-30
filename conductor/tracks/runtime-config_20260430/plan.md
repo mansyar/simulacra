@@ -52,16 +52,16 @@
 - [x] In `resolveMovement`: Replace `const AGENT_SPEED = 6` with config-driven value from `agentSpeed`
 
 ### Task 2.3: Update world.ts (Green Phase)
-- [~] Remove `const REFLECTION_INTERVAL_TICKS = 480` — replace with config/env var read
-- [~] Replace `/5` in conversation context string (line ~285) with config value
-- [~] In `cleanStaleConversations`: Replace `const MAX_TURNS = 5, SAFETY_MULTIPLIER = 2` with config/env var reads
-- [~] Pass config values through `processAgent` parameters or use internal query
-- [~] Handle config read performance: read config once at start of tick, pass down to helpers
+- [x] Remove `const REFLECTION_INTERVAL_TICKS = 480` — replace with config/env var read
+- [x] Replace `/5` in conversation context string with config value
+- [x] In `cleanStaleConversations`: Replace `const MAX_TURNS = 5, SAFETY_MULTIPLIER = 2` with config/env var reads
+- [x] Pass config values through `processAgent` parameters or use internal query
+- [x] Handle config read performance: read config once at start of tick, pass down to helpers
 
 ### Task 2.4: Verify all tests pass
-- [ ] Run full test suite
-- [ ] Confirm all tests pass (258+ tests)
-- [ ] Verify coverage remains >80%
+- [x] Run full test suite — 298 tests pass (69 test files)
+- [x] Confirm all tests pass (258+ tests)
+- [x] Verify coverage remains >80% [4d67246]
 
 - [ ] Task: Conductor - Phase Completion Verification 'Phase 2: Code Updates' (Protocol in workflow.md)
 
