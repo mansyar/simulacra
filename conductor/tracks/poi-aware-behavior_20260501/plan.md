@@ -55,6 +55,7 @@
     - [x] When LLM returns "talking" + POI target that doesn't match any agent name, also override to "walking"
     - [x] Check distance to POI: within 1 tile → keep original action (already there)
 - [x] Optimization: Query POIs once at the start of `processAgent` and pass the list to all consumers (target resolution, action override check, arrival events, updateNeeds) to avoid 4× redundant queries per tick
+    - [~] **Note:** Review found that POIs were queried twice per tick (inside `resolveAgentTarget` + arrival event). Fixed by querying once in `processAgent` and passing to both consumers. `updateNeeds` remains a separate standalone query.
 - [x] Task: Run tests and confirm they pass (Green phase)
 - [x] Task: Verify coverage and run full test suite
     - [x] Run `pnpm test` to confirm all tests pass
@@ -83,35 +84,46 @@
 
 ## Phase 4: Location-Based Need Multipliers (FR5)
 
-- [ ] Task: Write failing tests for POI need multipliers in `updateNeeds`
-    - [ ] Test: Eating at Cozy Cafe → hunger delta is -40 (×2 of baseline -20, beneficial)
-    - [ ] Test: Working at The Great Library → energy delta is -2 (×0.5 of baseline -5, draining)
-    - [ ] Test: Talking at Central Plaza → social delta is +20 (×2 of baseline +10, beneficial)
-    - [ ] Test: Exploring at Forest Grove → energy delta is -2 (×0.5 of baseline -3, draining)
-    - [ ] Test: No POI nearby → normal deltas applied (no change)
-    - [ ] Test: Non-matching action at POI location → normal deltas (no multiplier)
-    - [ ] Test: Multiplied values are rounded (e.g., 5 × 0.5 = Math.round(2.5) = 3, not 2.5)
-    - [ ] Run tests and confirm they fail (Red phase)
-- [ ] Task: Implement POI-aware need multipliers in `updateNeeds`
-    - [ ] **No signature change** — `updateNeeds` already reads agent `gridX`/`gridY` from DB internally
-    - [ ] Query POIs table from within `updateNeeds`, check if agent is within 1 tile of a matching POI
-    - [ ] Define POI type → action mappings: cafe→eating, library→working, plaza→talking, nature→exploring
-    - [ ] Apply precise multiplier logic per need type and delta sign:
+- [x] Task: Write failing tests for POI need multipliers in `updateNeeds`
+    - [x] Test: Eating at Cozy Cafe → hunger delta is -40 (×2 of baseline -20, beneficial)
+    - [x] Test: Working at The Great Library → energy delta is -2 (×0.5 of baseline -5, draining)
+    - [x] Test: Talking at Central Plaza → social delta is +20 (×2 of baseline +10, beneficial)
+    - [x] Test: Exploring at Forest Grove → energy delta is -1 (×0.5 of baseline -3, draining, Math.round(-1.5)=-1)
+    - [x] Test: No POI nearby → normal deltas applied (no change)
+    - [x] Test: Non-matching action at POI location → normal deltas (no multiplier)
+    - [x] Test: Multiplied values are rounded (e.g., 5 × 0.5 = Math.round(2.5) = 3, not 2.5)
+    - [x] Run tests and confirm they fail (Red phase)
+- [x] Task: Implement POI-aware need multipliers in `updateNeeds`
+    - [x] **No signature change** — `updateNeeds` already reads agent `gridX`/`gridY` from DB internally
+    - [x] Query POIs table from within `updateNeeds`, check if agent is within 1 tile of a matching POI
+    - [x] Define POI type → action mappings: cafe→eating, library→working, plaza→talking, nature→exploring
+    - [x] Apply precise multiplier logic per need type and delta sign:
         - `(hunger && delta < 0) || (energy && delta > 0) || (social && delta > 0)` → beneficial → ×2
         - Otherwise → draining → ×0.5
-    - [ ] Round all multiplied deltas with `Math.round()` to prevent float drift
-- [ ] Task: Run tests and confirm they pass (Green phase)
-- [ ] Task: Verify coverage and run full test suite
-    - [ ] Run `pnpm test` to confirm all 300+ tests pass
-    - [ ] Run `pnpm test:coverage` to verify >80%
+    - [x] Round all multiplied deltas with `Math.round()` to prevent float drift
+- [x] Task: Run tests and confirm they pass (Green phase)
+- [x] Task: Verify coverage and run full test suite
+    - [x] Run `pnpm test` to confirm all 300+ tests pass
+    - [x] Run `pnpm test:coverage` to verify >80%
 - [ ] Task: Conductor - User Manual Verification 'Phase 4: Location-Based Need Multipliers' (Protocol in workflow.md)
 
 ---
 
 ## Phase 5: Final Integration & Full Test Suite
 
-- [ ] Task: Run full integration test suite
-    - [ ] Verify all 300+ existing tests still pass
-    - [ ] Verify all new POI tests pass
-    - [ ] Run `npx tsc --noEmit` for type checking
+- [x] Task: Run full integration test suite
+    - [x] Verify all 300+ existing tests still pass
+    - [x] Verify all new POI tests pass
+    - [x] Run `npx tsc --noEmit` for type checking
 - [ ] Task: Conductor - User Manual Verification 'Phase 5: Final Integration' (Protocol in workflow.md)
+
+---
+
+## Phase 6: Review Fixes
+
+- [x] Task: Apply review suggestions [302496d]
+    - [x] Restore JSDoc comments for `buildContextPrompt` and `reflect` in ai.ts
+    - [x] Fix redundant POI query: query POIs once in `processAgent` and pass to `resolveAgentTarget` and arrival event code
+    - [x] Strengthen `resolveAgentTarget` return type from `string | undefined` to `"walking" | undefined`
+    - [x] Remove unnecessary `as typeof finalAction` type assertion
+    - [x] Verify all POI tests still pass (11/11)
