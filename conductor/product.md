@@ -54,6 +54,7 @@
   - `speech`: Spoken dialogue
   - `confidence`: Decision certainty
 - **Rate Limit Handling**: Exponential backoff retry (up to 3 attempts) with graceful fallback to mock responses
+- **POI-Aware Behavior**: Agents are aware of nearby Points of Interest (Library, Plaza, Cafe, Forest Grove). LLM context includes POI names, coordinates, descriptions, and distances with activity suggestions. Agents walk to POIs when selecting location-based activities. Need multipliers are applied (±2× beneficial, ×0.5 draining) when agents perform matching activities at POIs. Arrival events log POI names for richer thought stream output.
 
 ### 4. User Roles
 | Role | Permissions |
