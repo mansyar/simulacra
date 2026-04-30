@@ -37,46 +37,46 @@
 
 > **Testing note:** `processAgent` is a private function inside `world.ts`. All tests in this phase must use the established integration pattern: mock `global.fetch` to return specific LLM decisions, then call `tick()` and inspect resulting agent position/action/events.
 
-- [ ] Task: Write failing tests for POI name resolution and action override
-    - [ ] Test: Mock fetch returns `{action:"walking", target:"Cozy Cafe"}` → agent targetX/Y set to (45, 15)
-    - [ ] Test: Mock fetch returns `{action:"walking", target:"Cafe"}` → resolves via `includes()` to Cozy Cafe coords
-    - [ ] Test: Multiple POIs match (e.g., "The") → closest by distance is selected
-    - [ ] Test: Mock fetch returns hallucinated name + unparseable coords → agent target is within 5 tiles, clamped to [0, 63]
-    - [ ] Test: `{action:"eating", target:"Cozy Cafe"}` → action overridden to `"walking"`, target set to POI coords
-    - [ ] Test: Already within 1 tile of POI → no action override (keeps `"eating"`)
-    - [ ] Test: `{action:"talking", target:"Cozy Cafe"}` (no agent named Cozy Cafe) → overridden to `"walking"` like other activity actions
-    - [ ] Run tests and confirm they fail (Red phase)
-- [ ] Task: Implement POI name resolution in `processAgent`
-    - [ ] After existing agent-name lookup, add POI name lookup with case-insensitive `includes()` matching
-    - [ ] Multiple POI matches → closest by distance wins
-    - [ ] Fallback: no match → random coordinate within 5 tiles, clamped to [0, 63]
-- [ ] Task: Implement action override for POI targets
-    - [ ] When LLM returns activity action (eating/sleeping/working/exploring) + POI target, override to "walking"
-    - [ ] When LLM returns "talking" + POI target that doesn't match any agent name, also override to "walking"
-    - [ ] Check distance to POI: within 1 tile → keep original action (already there)
-- [ ] Optimization: Query POIs once at the start of `processAgent` and pass the list to all consumers (target resolution, action override check, arrival events, updateNeeds) to avoid 4× redundant queries per tick
-- [ ] Task: Run tests and confirm they pass (Green phase)
-- [ ] Task: Verify coverage and run full test suite
-    - [ ] Run `pnpm test` to confirm all tests pass
-    - [ ] Run `pnpm test:coverage` to verify >80% coverage
+- [x] Task: Write failing tests for POI name resolution and action override
+    - [x] Test: Mock fetch returns `{action:"walking", target:"Cozy Cafe"}` → agent targetX/Y set to (45, 15)
+    - [x] Test: Mock fetch returns `{action:"walking", target:"Cafe"}` → resolves via `includes()` to Cozy Cafe coords
+    - [x] Test: Multiple POIs match (e.g., "The") → closest by distance is selected
+    - [x] Test: Mock fetch returns hallucinated name + unparseable coords → agent target is within 5 tiles, clamped to [0, 63]
+    - [x] Test: `{action:"eating", target:"Cozy Cafe"}` → action overridden to `"walking"`, target set to POI coords
+    - [x] Test: Already within 1 tile of POI → no action override (keeps `"eating"`)
+    - [x] Test: `{action:"talking", target:"Cozy Cafe"}` (no agent named Cozy Cafe) → overridden to `"walking"` like other activity actions
+    - [x] Run tests and confirm they fail (Red phase)
+- [x] Task: Implement POI name resolution in `processAgent`
+    - [x] After existing agent-name lookup, add POI name lookup with case-insensitive `includes()` matching
+    - [x] Multiple POI matches → closest by distance wins
+    - [x] Fallback: no match → random coordinate within 5 tiles, clamped to [0, 63]
+- [x] Task: Implement action override for POI targets
+    - [x] When LLM returns activity action (eating/sleeping/working/exploring) + POI target, override to "walking"
+    - [x] When LLM returns "talking" + POI target that doesn't match any agent name, also override to "walking"
+    - [x] Check distance to POI: within 1 tile → keep original action (already there)
+- [x] Optimization: Query POIs once at the start of `processAgent` and pass the list to all consumers (target resolution, action override check, arrival events, updateNeeds) to avoid 4× redundant queries per tick
+- [x] Task: Run tests and confirm they pass (Green phase)
+- [x] Task: Verify coverage and run full test suite
+    - [x] Run `pnpm test` to confirm all tests pass
+    - [x] Run `pnpm test:coverage` to verify >80% coverage
 - [ ] Task: Conductor - User Manual Verification 'Phase 2: POI Name Resolution & Target Override' (Protocol in workflow.md)
 
 ---
 
 ## Phase 3: POI Arrival Events (FR4)
 
-- [ ] Task: Write failing tests for POI arrival events
-    - [ ] Test: Agent reaches POI coordinates → event logged with POI name and action
-    - [ ] Test: Agent already at POI → `"Already at <POI Name>"` message logged
-    - [ ] Run tests and confirm they fail (Red phase)
-- [ ] Task: Implement POI-aware arrival event logging
-    - [ ] After `resolveMovement` returns `arrived: true`, check if destination is a POI (reuse POI list from the top of `processAgent`)
-    - [ ] Log `"Arrived at Cozy Cafe to eat"` if action is `"eating"` at Cafe, etc.
-    - [ ] Log `"Already at Cozy Cafe"` if agent was already at the POI (didn't walk) instead of a generic "arrived" message
-- [ ] Task: Run tests and confirm they pass (Green phase)
-- [ ] Task: Verify coverage and run full test suite
-    - [ ] Run `pnpm test` to confirm all tests pass
-    - [ ] Run `pnpm test:coverage` to verify >80% coverage
+- [x] Task: Write failing tests for POI arrival events
+    - [x] Test: Agent reaches POI coordinates → event logged with POI name and action
+    - [x] Test: Agent already at POI → `"Already at <POI Name>"` message logged
+    - [x] Run tests and confirm they fail (Red phase)
+- [x] Task: Implement POI-aware arrival event logging
+    - [x] After `resolveMovement` returns `arrived: true`, check if destination is a POI (reuse POI list from the top of `processAgent`)
+    - [x] Log `"Arrived at Cozy Cafe to eat"` if action is `"eating"` at Cafe, etc.
+    - [x] Log `"Already at Cozy Cafe"` if agent was already at the POI (didn't walk) instead of a generic "arrived" message
+- [x] Task: Run tests and confirm they pass (Green phase)
+- [x] Task: Verify coverage and run full test suite
+    - [x] Run `pnpm test` to confirm all tests pass
+    - [x] Run `pnpm test:coverage` to verify >80% coverage
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: POI Arrival Events' (Protocol in workflow.md)
 
 ---

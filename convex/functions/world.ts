@@ -3,7 +3,6 @@ import { v } from "convex/values";
 import { api, internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import { analyzeSentiment } from "./sentiment";
-
 // Query: Get the current world state
 export const getState = query({ args: {}, handler: async (ctx) => await ctx.db.query("world_state").first() });
 // Query: Get sleep mode configuration
@@ -285,14 +284,16 @@ async function processAgent(
     await ctx.runMutation(internal.functions.agents.updateIdentity, { agentId: agent._id, newTraits: [], lastReflectedTick: currentTicks });
   }
 
-  // Movement Resolution
+  // Movement Resolution - with POI-aware arrival events (FR4)
   if (agent.targetX !== undefined && agent.targetY !== undefined) {
     const result = await ctx.runMutation(internal.functions.agents.resolveMovement, { agentId: agent._id, speedMultiplier });
     if (result?.arrived) {
+      const pois = await ctx.runQuery(api.functions.world.getPois);
+      const poi = pois?.find((p) => Math.round(result.newX) === p.gridX && Math.round(result.newY) === p.gridY);
+      const prevPoi = !poi ? pois?.find((p) => Math.round(agent.gridX) === p.gridX && Math.round(agent.gridY) === p.gridY) : undefined;
+      const desc = poi ? `Arrived at ${poi.name} to ${agent.currentAction}.` : prevPoi ? `Already at ${prevPoi.name}` : `Arrived at destination (${Math.round(result.newX)}, ${Math.round(result.newY)})`;
       await ctx.runMutation(api.functions.memory.addEvent, {
-        agentId: agent._id, type: "movement",
-        description: `Arrived at destination (${Math.round(result.newX)}, ${Math.round(result.newY)})`,
-        gridX: result.newX, gridY: result.newY,
+        agentId: agent._id, type: "movement", description: desc, gridX: result.newX, gridY: result.newY,
       });
     }
   }
@@ -333,7 +334,6 @@ async function processAgent(
     conversationContext: conversationContext || undefined,
     poiContext: context.poiContext || undefined,
   });
-
   const normalizedAction = normalizeAction(decision.action);
   let finalAction = normalizedAction;
   let targetAgentId: Id<"agents"> | undefined;
