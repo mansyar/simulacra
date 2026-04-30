@@ -2,9 +2,7 @@ import { query, mutation, internalQuery, internalMutation } from "../_generated/
 import { internal } from "../_generated/api";
 import { v } from "convex/values";
 import type { Doc } from "../_generated/dataModel";
-
 export type AgentDoc = Doc<"agents">;
-
 /** Query: Get all active agents */
 export const getAll = query({
   args: {},
@@ -16,7 +14,6 @@ export const getAll = query({
     return agents;
   },
 });
-
 /** Query: Get a single agent by ID */
 export const getById = query({
   args: { agentId: v.id("agents") },
@@ -25,7 +22,6 @@ export const getById = query({
     return agent;
   },
 });
-
 /** Query: Get agent relationships with names resolved */
 export const getRelationships = query({
   args: { agentId: v.id("agents") },
@@ -35,14 +31,11 @@ export const getRelationships = query({
       .query("relationships")
       .withIndex("by_agents", (q) => q.eq("agentAId", agentId))
       .collect();
-    
     const relsB = await ctx.db
       .query("relationships")
       .withIndex("by_agentB", (q) => q.eq("agentBId", agentId))
       .collect();
-    
     const allRels = [...relsA, ...relsB];
-    
     const results = await Promise.all(allRels.map(async (rel) => {
       const otherId = rel.agentAId === agentId ? rel.agentBId : rel.agentAId;
       const otherAgent = await ctx.db.get(otherId);
@@ -56,7 +49,6 @@ export const getRelationships = query({
     return results.sort((a, b) => b.affinity - a.affinity);
   },
 });
-
 /** Internal Query: Get nearby agents via by_position index (O(k) vs O(n)) */
 export const getNearbyAgents = internalQuery({
   args: {
@@ -133,7 +125,6 @@ export const resolveMovement = internalMutation({
   handler: async (ctx, args) => {
     const agent = await ctx.db.get(args.agentId);
     if (!agent) return;
-
     if (agent.targetX === undefined || agent.targetY === undefined) return;
 
     const agentSpeedConfig = await ctx.db.query("config").first();
@@ -240,7 +231,18 @@ export const updateNeeds = internalMutation({
         socialDelta = 2;
         break;
     }
-
+    // POI location-based need multipliers (FR5)
+    const poiMap: Record<string, string> = { eating: "cafe", working: "library", talking: "plaza", exploring: "nature" };
+    const poiType = poiMap[agent.currentAction];
+    if (poiType) {
+      const pois = await ctx.db.query("pois").collect();
+      const hasPoi = pois.some((p) => p.type === poiType && Math.abs(p.gridX - agent.gridX) <= 1 && Math.abs(p.gridY - agent.gridY) <= 1);
+      if (hasPoi) {
+        if (hungerDelta < 0) hungerDelta = Math.round(hungerDelta * 2); else hungerDelta = Math.round(hungerDelta * 0.5);
+        if (energyDelta > 0) energyDelta = Math.round(energyDelta * 2); else energyDelta = Math.round(energyDelta * 0.5);
+        if (socialDelta > 0) socialDelta = Math.round(socialDelta * 2); else socialDelta = Math.round(socialDelta * 0.5);
+      }
+    }
     await ctx.db.patch(args.agentId, {
       hunger: Math.max(0, Math.min(100, agent.hunger + hungerDelta)),
       energy: Math.max(0, Math.min(100, agent.energy + energyDelta)),
@@ -249,7 +251,6 @@ export const updateNeeds = internalMutation({
     });
   },
 });
-
 /** Internal Mutation: Update agent action and target */
 export const updateAction = internalMutation({
   args: {
