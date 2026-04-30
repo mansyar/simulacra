@@ -3,11 +3,11 @@
 ## Phase 1: Utility Modules
 
 ### Task 1.1: Write tests for `src/lib/convex.ts`
-- [ ] Write failing unit test: Verify `VITE_CONVEX_URL` missing throws error
-- [ ] Write failing unit test: Verify client creation when URL is set
-- [ ] Implement to make tests pass
-- [ ] Verify coverage >80% for `src/lib/convex.ts`
-- [ ] Commit changes (`test(lib): Add unit tests for convex client initialization`)
+- [x] Write failing unit test: Verify `VITE_CONVEX_URL` missing throws error
+- [x] Write failing unit test: Verify client creation when URL is set
+- [x] Implement to make tests pass
+- [x] Verify coverage >80% for `src/lib/convex.ts`
+- [x] Commit changes (`test(lib): Add unit tests for convex client initialization`) [e8e5d33]
 
 ### Task 1.2: Write tests for `src/lib/server-functions.ts`
 - [ ] Write failing unit tests: Mock ConvexHttpClient and verify each server function triggers the correct API call
