@@ -154,6 +154,12 @@ export default defineSchema({
     llmModel: v.string(),
     interactionRadius: v.number(),
     conversationMaxTtlMs: v.optional(v.float64()), // ms override; computed default: 5 × tickInterval × 2 × 1000
+    // Runtime configuration with env var fallbacks
+    maxTraits: v.optional(v.float64()), // Max coreTraits entries per agent (env: MAX_TRAITS)
+    reflectionIntervalTicks: v.optional(v.float64()), // Ticks between agent reflections (env: REFLECTION_INTERVAL_TICKS)
+    maxConversationTurns: v.optional(v.float64()), // Max turns in a single conversation (env: MAX_CONVERSATION_TURNS)
+    safetyMultiplier: v.optional(v.float64()), // TTL formula multiplier (env: SAFETY_MULTIPLIER)
+    agentSpeed: v.optional(v.float64()), // Grid units per tick for agent movement (env: AGENT_SPEED)
   }),
 
   archetypes: defineTable({

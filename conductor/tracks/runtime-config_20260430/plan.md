@@ -3,29 +3,29 @@
 ## Phase 1: Config Table Schema & Helpers
 
 ### Task 1.1: Extend config table schema
-- [ ] Add `maxTraits` field to config table (`v.optional(v.float64())`, comment: `Max coreTraits entries per agent`)
-- [ ] Add `reflectionIntervalTicks` field (`v.optional(v.float64())`, comment: `Ticks between agent reflections`)
-- [ ] Add `maxConversationTurns` field (`v.optional(v.float64())`, comment: `Max turns in a single conversation`)
-- [ ] Add `safetyMultiplier` field (`v.optional(v.float64())`, comment: `TTL formula multiplier`)
-- [ ] Add `agentSpeed` field (`v.optional(v.float64())`, comment: `Grid units per tick for agent movement`)
+- [x] Add `maxTraits` field to config table (`v.optional(v.float64())`, comment: `Max coreTraits entries per agent`)
+- [x] Add `reflectionIntervalTicks` field (`v.optional(v.float64())`, comment: `Ticks between agent reflections`)
+- [x] Add `maxConversationTurns` field (`v.optional(v.float64())`, comment: `Max turns in a single conversation`)
+- [x] Add `safetyMultiplier` field (`v.optional(v.float64())`, comment: `TTL formula multiplier`)
+- [x] Add `agentSpeed` field (`v.optional(v.float64())`, comment: `Grid units per tick for agent movement`)
 
 ### Task 1.2: Write failing tests for config extraction (Red Phase)
-- [ ] Create test file `convex/config_runtime.test.ts`
-- [ ] Write test: `config table maxTraits overrides hardcoded 10`
-- [ ] Write test: `config table reflectionIntervalTicks overrides hardcoded 480`
-- [ ] Write test: `config table maxConversationTurns overrides hardcoded 5`
-- [ ] Write test: `config table safetyMultiplier overrides hardcoded 2`
-- [ ] Write test: `config table agentSpeed overrides hardcoded 6`
-- [ ] Write test: `env var fallback for each config field`
-- [ ] Run tests and confirm they fail as expected (Red Phase)
+- [x] Create test file `convex/config_runtime.test.ts`
+- [x] Write test: `config table maxTraits overrides hardcoded 10`
+- [x] Write test: `config table reflectionIntervalTicks overrides hardcoded 480`
+- [x] Write test: `config table maxConversationTurns overrides hardcoded 5`
+- [x] Write test: `config table safetyMultiplier overrides hardcoded 2`
+- [x] Write test: `config table agentSpeed overrides hardcoded 6`
+- [x] Write test: `env var fallback for each config field`
+- [x] Run tests and confirm they fail as expected (Red Phase)
 
 ### Task 1.3: Create config helper functions (Green Phase)
-- [ ] Create `getConfigValue` helper in `convex/functions/config.ts` that accepts optional field name
-- [ ] Add env var fallback logic: `process.env.MAX_TRAITS ?? config?.maxTraits ?? 10`
-- [ ] Add env var fallback logic: `process.env.REFLECTION_INTERVAL_TICKS ?? config?.reflectionIntervalTicks ?? 480`
-- [ ] Add env var fallback logic: `process.env.MAX_CONVERSATION_TURNS ?? config?.maxConversationTurns ?? 5`
-- [ ] Add env var fallback logic: `process.env.SAFETY_MULTIPLIER ?? config?.safetyMultiplier ?? 2`
-- [ ] Add env var fallback logic: `process.env.AGENT_SPEED ?? config?.agentSpeed ?? 6`
+- [~] Create `getConfigValue` helper in `convex/functions/config.ts` that accepts optional field name
+- [~] Add env var fallback logic: `process.env.MAX_TRAITS ?? config?.maxTraits ?? 10`
+- [~] Add env var fallback logic: `process.env.REFLECTION_INTERVAL_TICKS ?? config?.reflectionIntervalTicks ?? 480`
+- [~] Add env var fallback logic: `process.env.MAX_CONVERSATION_TURNS ?? config?.maxConversationTurns ?? 5`
+- [~] Add env var fallback logic: `process.env.SAFETY_MULTIPLIER ?? config?.safetyMultiplier ?? 2`
+- [~] Add env var fallback logic: `process.env.AGENT_SPEED ?? config?.agentSpeed ?? 6`
 - [ ] Run tests and confirm all pass (Green Phase)
 
 ### Task 1.4: Update seed config data
