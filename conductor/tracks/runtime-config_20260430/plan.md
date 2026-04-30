@@ -68,21 +68,12 @@
 ## Phase 3: Integration Tests
 
 ### Task 3.1: Write integration test — Config-driven behavior
-- [ ] In `convex/config_runtime.test.ts`, write integration test:
-    - [ ] Seed config with non-default values (e.g., `maxTraits=3`, `maxConversationTurns=2`)
-    - [ ] Seed agents and world state
-    - [ ] Run `tick()` action with mocked LLM responses
-    - [ ] Verify trait cap at 3 after tick
-    - [ ] Verify conversation turn behavior respects maxConversationTurns=2
-- [ ] Run test and confirm it fails (Red Phase)
+- [~] Write integration test: Seed config with non-default values, run tick, verify behavior
+- [ ] Run test and confirm it fails (Red Phase) — if needed
 - [ ] Implement any missing wiring to make it pass (Green Phase)
 
 ### Task 3.2: Write integration test — Sleep mode bypass
-- [ ] In `convex/config_runtime.test.ts`, write integration test:
-    - [ ] Set `enableSleepMode = true` in config
-    - [ ] Run tick with `skipSleep = true`
-    - [ ] Verify agents are processed (success=true, skipped=false)
-    - [ ] Run tick without `skipSleep` — verify agents are skipped
+- [~] Write integration test: Sleep mode bypass via skipSleep flag
 - [ ] Run test and confirm it passes
 
 ### Task 3.3: Final verification

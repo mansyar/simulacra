@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { convexTest } from "convex-test";
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 import { api, internal } from "./_generated/api";
 import schema from "./schema";
 
@@ -56,9 +56,124 @@ test("getConfigValue: config maxTraits overrides default 10", async () => {
   // Read back via getConfigValue
   const result = await t.query(
     api.functions.config.getConfigValue,
+    { field: "agentSpeed", defaultValue: 6 },
+  );
+  expect(result).toBe(6);
+});
+
+// ─── Integration: Config-driven behavior via tick ─────────────────────────
+
+test("tick: respects config maxTraits cap when set", async () => {
+  const t = convexTest(schema, modules);
+  process.env.ENABLE_SLEEP_MODE = "false";
+
+  // Seed config with maxTraits=3
+  await t.mutation(api.functions.seed.config, { clearExisting: true });
+  await t.mutation(api.functions.config.setConfigValue, { field: "maxTraits", value: 3 });
+
+  // Seed agents and world state
+  await t.mutation(api.functions.seed.agents, { clearExisting: true });
+
+  // Mock AI API to return deterministic decisions
+  const mockFetch = vi.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({
+      choices: [{ message: { content: JSON.stringify({
+        thought: "Exploring the area.",
+        action: "walking",
+        target: "10,20",
+        speech: "",
+        confidence: 0.85,
+      }) } }],
+    }),
+  });
+  vi.stubGlobal("fetch", mockFetch);
+
+  // Run the tick
+  const result = await t.action(api.functions.world.tick, { skipSleep: true });
+  expect(result.success).toBe(true);
+  expect(result.skipped).toBe(false);
+  expect(result.agentCount).toBe(10);
+
+  // Verify config value was used during the tick
+  const configVal = await t.query(
+    api.functions.config.getConfigValue,
     { field: "maxTraits", defaultValue: 10 },
   );
-  expect(result).toBe(3);
+  expect(configVal).toBe(3);
+
+  vi.unstubAllGlobals();
+  delete process.env.ENABLE_SLEEP_MODE;
+});
+
+test("tick: respects config reflectionIntervalTicks", async () => {
+  const t = convexTest(schema, modules);
+  process.env.ENABLE_SLEEP_MODE = "false";
+
+  // Seed config with reflectionIntervalTicks=50 (smaller than default 480)
+  await t.mutation(api.functions.seed.config, { clearExisting: true });
+  await t.mutation(api.functions.config.setConfigValue, { field: "reflectionIntervalTicks", value: 50 });
+
+  await t.mutation(api.functions.seed.agents, { clearExisting: true });
+
+  const mockFetch = vi.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({
+      choices: [{ message: { content: JSON.stringify({
+        thought: "Exploring the area.",
+        action: "walking",
+        target: "10,20",
+        speech: "",
+        confidence: 0.85,
+      }) } }],
+    }),
+  });
+  vi.stubGlobal("fetch", mockFetch);
+
+  const result = await t.action(api.functions.world.tick, { skipSleep: true });
+  expect(result.success).toBe(true);
+
+  const configVal = await t.query(
+    api.functions.config.getConfigValue,
+    { field: "reflectionIntervalTicks", defaultValue: 480 },
+  );
+  expect(configVal).toBe(50);
+
+  vi.unstubAllGlobals();
+  delete process.env.ENABLE_SLEEP_MODE;
+});
+
+// ─── Integration: Sleep mode bypass via tick ──────────────────────────────
+
+test("tick: skipSleep bypasses sleep mode and processes agents", async () => {
+  const t = convexTest(schema, modules);
+  // Enable sleep mode via env var
+  process.env.ENABLE_SLEEP_MODE = "true";
+
+  await t.mutation(api.functions.seed.agents, { clearExisting: true });
+
+  const mockFetch = vi.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({
+      choices: [{ message: { content: JSON.stringify({
+        thought: "Exploring.",
+        action: "idle",
+        target: "none",
+        speech: "",
+        confidence: 0.5,
+      }) } }],
+    }),
+  });
+  vi.stubGlobal("fetch", mockFetch);
+
+  // Run tick WITH skipSleep=true — should bypass sleep and process agents
+  const result = await t.action(api.functions.world.tick, { skipSleep: true });
+  expect(result.success).toBe(true);
+  expect(result.skipped).toBe(false);
+  expect(result.agentCount).toBe(10);
+
+  vi.unstubAllGlobals();
+  delete process.env.ENABLE_SLEEP_MODE;
 });
 
 test("getConfigValue: config reflectionIntervalTicks overrides default 480", async () => {
