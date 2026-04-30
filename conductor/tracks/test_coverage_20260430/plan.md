@@ -15,7 +15,7 @@
 - [x] Verify coverage >80% for `src/lib/server-functions.ts`
 - [x] Commit changes (`test(lib): Add unit tests for server function wrappers`) [a948b8f]
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Utility Modules' (Protocol in workflow.md)
+- [~] Task: Conductor - User Manual Verification 'Phase 1: Utility Modules' (Protocol in workflow.md)
 
 ---
 

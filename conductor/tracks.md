@@ -4,6 +4,6 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [ ] **Track: Increase test coverage using unit tests or integration tests**
+- [~] **Track: Increase test coverage using unit tests or integration tests**
   *Link: [./tracks/test_coverage_20260430/](./tracks/test_coverage_20260430/)*
 
