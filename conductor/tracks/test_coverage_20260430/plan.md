@@ -66,14 +66,14 @@
 ## Phase 4: Coverage Configuration Fix
 
 ### Task 4.1: Update `vitest.config.ts` coverage exclusions
-- [ ] Remove `src/lib/**`, `src/routes/**`, `src/components/**` from coverage exclude list
-- [ ] Keep legitimate exclusions (node_modules, config files, generated files, test files)
-- [ ] Commit changes (`chore(config): Fix vitest coverage exclusions for frontend code`)
+- [x] Remove `src/lib/**`, `src/routes/**`, `src/components/**` from coverage exclude list
+- [x] Keep legitimate exclusions (node_modules, config files, generated files, test files)
+- [x] Commit changes (`chore(config): Fix vitest coverage exclusions for frontend code`)
 
 ### Task 4.2: Verify coverage thresholds are enforceable
-- [ ] Run `pnpm test:coverage` and verify the report measures frontend code
-- [ ] Confirm 80% lines / 80% functions / 70% branches / 80% statements thresholds
-- [ ] Verify all existing tests still pass
-- [ ] Commit changes (`chore(config): Verify coverage thresholds with updated exclusions`)
+- [x] Run `pnpm test:coverage` and verify the report measures frontend code
+- [x] Confirm 80% lines / 80% functions / 70% branches / 80% statements thresholds
+- [x] Verify all existing tests still pass
+- [x] Commit changes (`chore(config): Verify coverage thresholds with updated exclusions`)
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 4: Coverage Configuration Fix' (Protocol in workflow.md)

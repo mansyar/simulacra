@@ -53,9 +53,7 @@ export default defineConfig({
         'convex/functions/seed.ts',
         'convex/presence.ts',
         'convex/README.md',
-        'src/lib/**',
-        'src/routes/**',
-        'src/components/**',
+
       ],
     },
   },
