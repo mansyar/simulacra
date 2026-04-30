@@ -12,7 +12,7 @@
 | 6 | Fluid Movement | Organic idle + Predictive pathing | ✅ Complete | 3-4 days |
 | 7 | The Mind | AI Context Fidelity | ✅ Complete (Tracks A & B ✅, C covered by B) | 1 week |
 | 8 | The Backbone | Robustness & Scaling | ✅ Complete (All Tracks) | 1 week |
-| 9 | The Soul | Deeper Social Dynamics | ⏳ Tracks A-C ✅, D-E ⏳ | 1 week |
+| 9 | The Soul | Deeper Social Dynamics | ✅ Tracks A-D, ⏳ Track E | 1 week |
 | 10 | Movement Coherence | Fix agent trajectory, weather sync, and logical gaps | 🆕 Planned | 2-3 days |
 | 11 | The Polish | Master Panel + Deploy | ⏳ Not Started | 1 week |
 
@@ -489,12 +489,16 @@ A1 + A2 + A3 (quick fixes) ✅
 
 **Goal:** Fix the conversation system to be truly bidirectional, then layer on dynamic sentiment, lifecycle cleanup, and runtime configurability.
 
-**Status:** ⏳ Tracks A-C ✅, Tracks D-E ⏳
+**Status:** ✅ Tracks A-D Complete, ⏳ Track E Remaining
 
 > **Completed:** 2026-04-29 — Track A: Bidirectional Conversation System
 > **Completed:** 2026-04-29 — Track B: Sentiment-Based Affinity During Conversations
 > **Completed:** 2026-04-30 — Track C: Conversation TTL & Cleanup
 >   - 11 new tests, 258 total, 62 test files
+> **Completed:** 2026-04-30 — Track D: Runtime Configuration & Integration Testing
+>   - 20 new tests, 301 total, 69 test files
+>   - All 5 config fields extracted to config table with env var fallbacks
+>   - `maxTraits`, `reflectionIntervalTicks`, `maxConversationTurns`, `safetyMultiplier`, `agentSpeed` all config-driven
 >
 > **Design Context:** The current conversation system has two critical flaws discovered during Phase 8 testing:
 > 1. When agent A talks to agent B, B is force-set to `action: "listening"` and skipped on subsequent ticks — B never gets to respond
@@ -560,19 +564,28 @@ A1 + A2 + A3 (quick fixes) ✅
 - [x] Write tests: TTL formula, hard cleanup prevents restart, partner dedup, event logging, env var override, non-stale conversations unaffected (11 tests in `convex/conversation_ttl.test.ts`)
 - [x] All 258 tests pass across 62 test files
 
-### Track D: Runtime Configuration & Integration Testing
+### Track D: Runtime Configuration & Integration Testing [COMPLETE: 2026-04-30]
 
 **Problem:** Several thresholds remain as magic numbers or disconnected values across files. No integration tests verify config-driven behavior end-to-end.
 
-- [ ] Extract to config table (with env var fallbacks):
-  - `MAX_TRAITS` (default 10)
-  - `REFLECTION_INTERVAL_TICKS` (default 480)
-  - `SENTIMENT_AFFINITY_BOOST` (default 2)
-  - `MAX_CONVERSATION_TURNS` (default 5)
+- [x] Extract to config table (with env var fallbacks):
+  - `maxTraits` (default 10) — env: `MAX_TRAITS`
+  - `reflectionIntervalTicks` (default 480) — env: `REFLECTION_INTERVAL_TICKS`
+  - `maxConversationTurns` (default 5) — env: `MAX_CONVERSATION_TURNS`
+  - `safetyMultiplier` (default 2) — env: `SAFETY_MULTIPLIER`
+  - `agentSpeed` (default 6) — env: `AGENT_SPEED`
   - ~~`CONVERSATION_MAX_TTL_MS`~~ → already added in Track C as `conversationMaxTtlMs` with dynamic default
-- [ ] Update all affected files to read from config or env var with fallback to defaults
-- [ ] Add integration test: set config → run tick → verify behavior matches config values
-- [ ] Add integration test: disable sleep mode → run tick → verify agents process
+- [x] Update all affected files to read from config/env var with fallback to defaults:
+  - `updateIdentity` — reads `maxTraits` from config
+  - `updateRelationship` — reads `maxConversationTurns` for valence cap
+  - `resolveMovement` — reads `agentSpeed` from config
+  - `processAgent` — reads `reflectionIntervalTicks` and `maxConversationTurns`
+  - `cleanStaleConversations` — reads `maxConversationTurns` and `safetyMultiplier`
+  - Conversation context string shows dynamic turn cap
+- [x] Add `getConfigValue` helper with priority: env var → config table → hardcoded default
+- [x] Add integration test: set config → run tick → verify behavior matches config values
+- [x] Add integration test: disable sleep mode → run tick → verify agents process (skipSleep bypass)
+- [x] All 301 tests pass across 69 test files
 
 ### Track E: POI-Aware Agent Behavior
 
@@ -615,12 +628,12 @@ A1 + A2 + A3 (quick fixes) ✅
 - [x] `myLastSpeech` correctly stores each agent's own speech — Track A
 - [x] Affinity scores change dynamically during multi-turn conversations — Track B
 - [x] Stale conversations auto-cleanup after timeout — Track C
-- [ ] All thresholds configurable via config table — Track D
+- [x] All thresholds configurable via config table — Track D (5 fields: maxTraits, reflectionIntervalTicks, maxConversationTurns, safetyMultiplier, agentSpeed)
 - [ ] **Agents walk to POIs for contextual actions (eat at Cafe, work at Library, etc.)** — Track E
 - [ ] **Thought stream shows arrival events like "Arrived at Cozy Cafe to eat."** — Track E
 - [ ] **LLM decisions reference location names instead of raw coordinates** — Track E
-- [ ] Integration tests verify config-driven behavior — Track D
-- [ ] All 106 tests pass (Track A verified)
+- [x] Integration tests verify config-driven behavior — Track D (20 tests, 301 total, 69 test files)
+- [x] All 301 tests pass across 69 test files (Track D verified)
 
 ---
 
@@ -815,8 +828,8 @@ Phase 9 (Soul)
     │       │
     │       ├──► Sentiment-based affinity (Track B) ✅
     │       ├──► Conversation TTL & cleanup (Track C) ✅
-    │       ├──► Runtime configuration (Track D)
-    │       └──► POI-aware agent behavior (Track E)
+    │       ├──► Runtime configuration & integration testing (Track D) ✅
+    │       └──► POI-aware agent behavior (Track E) ⏳
             │
             ▼
 Phase 10 (Movement Coherence)
@@ -858,7 +871,7 @@ Phase 11 (Polish)
 
 ## Recommended Development Order
 
-### Current Status: Phase 9 (Tracks D-E) Up Next 🎯
+### Current Status: Phase 9 (Track E) Up Next 🎯
 
 1. ✅ **Done:** Grid rendering (Phase 1)
 2. ✅ **Done:** Convex + real-time sync (Phase 2)
@@ -875,7 +888,7 @@ Phase 11 (Polish)
 13. ✅ **Done:** Fix bidirectional conversation system (Phase 9 — Track A)
 14. ✅ **Done:** Sentiment-based affinity during conversations (Phase 9 — Track B)
 15. ✅ **Done:** Conversation TTL & cleanup (Phase 9 — Track C) — Auto-cleanup stale conversations with configurable TTL, hard cleanup (DB + in-memory), partner dedup, and event logging
-16. ⏳ **Planned:** Runtime configuration & integration testing (Phase 9 — Track D)
+16. ✅ **Done:** Runtime configuration & integration testing (Phase 9 — Track D) — Extracted 5 constants to config table with env var fallbacks, added getConfigValue helper, 20 new tests (301 total)
 17. ⏳ **Planned:** POI-aware agent behavior (Phase 9 — Track E)
 18. 🆕 **Planned:** LLM sees its own trajectory (Phase 10 — Track A)
 19. 🆕 **Planned:** Weather-aware frontend speed (Phase 10 — Track B)
