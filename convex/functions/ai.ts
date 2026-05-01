@@ -32,10 +32,7 @@ You MUST return your reflection in the following JSON format:
   "thought": "Your reasoning for these reflections"
 }
 `;
-
-/**
- * Build a structured user prompt from agent state and context data
- */
+/** Build a structured user prompt from agent state and context data */
 function buildContextPrompt(
   agentState: { name: string; hunger: number; energy: number; social: number; currentAction: string },
   context?: {
@@ -299,14 +296,17 @@ export const buildAgentContext = internalQuery({
     context += `Inventory: ${inventory}\n`;
     context += `Current Goal: ${agent.currentGoal}\n\n`;
     context += `Personality & Instructions: ${basePrompt}\n`;
-
+    context += `Current Position: (${agent.gridX}, ${agent.gridY})\n`;
+    if (agent.targetX !== undefined && agent.targetY !== undefined) {
+      const dist = Math.round(Math.sqrt((agent.targetX - agent.gridX) ** 2 + (agent.targetY - agent.gridY) ** 2));
+      context += `Destination: (${agent.targetX}, ${agent.targetY})\nDistance Remaining: ~${dist} tiles\n`;
+    } else {
+      context += `Destination: None\n`;
+    }
     return context;
   },
 });
-
-/**
- * Action: Build full context with identity, relationships, and memories
- */
+/** Action: Build full context with identity, relationships, and memories */
 export const buildFullContext = action({
   args: {
     agentId: v.id("agents"),

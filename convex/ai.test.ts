@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { convexTest } from "convex-test";
 import { expect, test, vi } from "vitest";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import schema from "./schema";
 
 const modules = import.meta.glob("./**/*.ts");
@@ -155,6 +155,110 @@ test("buildContextPrompt renders currentAction value alongside needs", async () 
 
   delete process.env.OPENAI_API_KEY;
   vi.unstubAllGlobals();
+});
+
+test("buildAgentContext contains Current Position and Destination with target set", async () => {
+  const t = convexTest(schema, modules);
+
+  // Seed archetypes so buildAgentContext can look them up
+  await t.mutation(api.functions.seed.world, {});
+
+  // Create an agent with a known position and target
+  const agentId = await t.mutation(api.functions.agents.create, {
+    name: "Wanderer",
+    archetype: "explorer",
+    gridX: 10,
+    gridY: 20,
+  });
+
+  // Set target on the agent directly via run
+  await t.run(async (ctx) => {
+    const agent = await ctx.db.get(agentId);
+    if (agent) {
+      await ctx.db.patch(agentId, { targetX: 30, targetY: 40 });
+    }
+  });
+
+  const context = await t.query(internal.functions.ai.buildAgentContext, { agentId });
+
+  // Should contain position and destination
+  expect(context).toContain("Current Position");
+  expect(context).toContain("Destination");
+});
+
+test("buildAgentContext shows None when no target is set", async () => {
+  const t = convexTest(schema, modules);
+
+  await t.mutation(api.functions.seed.world, {});
+
+  const agentId = await t.mutation(api.functions.agents.create, {
+    name: "Idler",
+    archetype: "builder",
+    gridX: 5,
+    gridY: 5,
+  });
+
+  const context = await t.query(internal.functions.ai.buildAgentContext, { agentId });
+
+  // Should show "None" for destination when no target is set
+  expect(context).toContain("Destination: None");
+});
+
+test("buildAgentContext includes Distance Remaining when target set, omits when not set", async () => {
+  const t = convexTest(schema, modules);
+
+  await t.mutation(api.functions.seed.world, {});
+
+  // Agent WITH target
+  const agentWithTarget = await t.mutation(api.functions.agents.create, {
+    name: "Traveler",
+    archetype: "explorer",
+    gridX: 10,
+    gridY: 10,
+  });
+  await t.run(async (ctx) => {
+    await ctx.db.patch(agentWithTarget, { targetX: 20, targetY: 20 });
+  });
+
+  const contextWithTarget = await t.query(internal.functions.ai.buildAgentContext, { agentId: agentWithTarget });
+  expect(contextWithTarget).toContain("Distance Remaining");
+
+  // Agent WITHOUT target
+  const agentWithoutTarget = await t.mutation(api.functions.agents.create, {
+    name: "Sitter",
+    archetype: "builder",
+    gridX: 0,
+    gridY: 0,
+  });
+
+  const contextWithoutTarget = await t.query(internal.functions.ai.buildAgentContext, { agentId: agentWithoutTarget });
+  // The default targetX/targetY may be undefined, so Distance Remaining should NOT appear
+  expect(contextWithoutTarget).not.toContain("Distance Remaining");
+});
+
+test("trajectory fields appear after Personality & Instructions in agentContext", async () => {
+  const t = convexTest(schema, modules);
+
+  await t.mutation(api.functions.seed.world, {});
+
+  const agentId = await t.mutation(api.functions.agents.create, {
+    name: "PosTest",
+    archetype: "explorer",
+    gridX: 7,
+    gridY: 8,
+  });
+  await t.run(async (ctx) => {
+    await ctx.db.patch(agentId, { targetX: 15, targetY: 25 });
+  });
+
+  const context = await t.query(internal.functions.ai.buildAgentContext, { agentId });
+
+  // Find the index of "Personality & Instructions" and "Current Position"
+  const personalityIdx = context.indexOf("Personality & Instructions");
+  const positionIdx = context.indexOf("Current Position");
+
+  expect(personalityIdx).toBeGreaterThanOrEqual(0);
+  expect(positionIdx).toBeGreaterThan(personalityIdx);
 });
 
 test("AI decision handles all primary archetypes", async () => {
