@@ -3,16 +3,18 @@
 ## Phase 1: Structured `currentAction` in `agentState` (FR1)
 
 ### Task 1.1: Write failing test for `currentAction` in `agentState`
-- [ ] Write a unit test that verifies the `decision` action's `agentState` args schema includes `currentAction` as a required `v.string()` field
-- [ ] Run the test and confirm it FAILS (Red phase)
+- [x] Write a unit test that verifies the `decision` action's `agentState` args schema includes `currentAction` as a required `v.string()` field
+- [x] Run the test and confirm it FAILS (Red phase)
 
 ### Task 1.2: Add `currentAction` to `agentState` schema
-- [ ] In `convex/functions/ai.ts`, add `currentAction: v.string()` to the `agentState` `v.object()` in the `decision` action args
-- [ ] Run the test and confirm it PASSES (Green phase)
+- [x] In `convex/functions/ai.ts`, add `currentAction: v.string()` to the `agentState` `v.object()` in the `decision` action args
+- [x] Run the test and confirm it PASSES (Green phase)
 
 ### Task 1.3: Update `world.ts` to pass `currentAction` to `decision`
-- [ ] In `convex/functions/world.ts`, update the `decision` call to pass `currentAction: agent.currentAction`
-- [ ] Write a test verifying that `world.ts`'s `processAgent` includes `currentAction` when calling `decision`
+- [x] In `convex/functions/world.ts`, update the `decision` call to pass `currentAction: agent.currentAction`
+- [x] Write a test verifying that `world.ts`'s `processAgent` includes `currentAction` when calling `decision`
+
+## Phase 1: ✅ Complete [checkpoint: 0e2885b]
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
 
