@@ -261,6 +261,95 @@ test("trajectory fields appear after Personality & Instructions in agentContext"
   expect(positionIdx).toBeGreaterThan(personalityIdx);
 });
 
+test("full decision pipeline includes both currentAction and trajectory info in user prompt", async () => {
+  const t = convexTest(schema, modules);
+
+  // Seed POIs and archetypes
+  await t.mutation(api.functions.seed.world, {});
+  await t.mutation(api.functions.seed.agents, { clearExisting: true });
+
+  // Create an agent with a target
+  const agentId = await t.mutation(api.functions.agents.create, {
+    name: "Pathfinder",
+    archetype: "explorer",
+    gridX: 5,
+    gridY: 10,
+  });
+  await t.run(async (ctx) => {
+    await ctx.db.patch(agentId, { targetX: 20, targetY: 30 });
+  });
+
+  process.env.OPENAI_API_KEY = "sk-test-key";
+  let capturedBody: any = null;
+
+  const mockFetch = vi.fn().mockImplementation(async (_url: string, options: any) => {
+    capturedBody = JSON.parse(options.body);
+    return {
+      ok: true,
+      json: async () => ({
+        choices: [{
+          message: {
+            content: JSON.stringify({
+              thought: "I'm on a journey.",
+              action: "walking",
+              target: "20,30",
+              speech: "",
+              confidence: 0.9,
+            }),
+          },
+        }],
+      }),
+    };
+  });
+  vi.stubGlobal("fetch", mockFetch);
+
+  // Get full context
+  const context = await t.action(api.functions.ai.buildFullContext, {
+    agentId,
+    query: "What should I do?",
+  });
+
+  // Call decision with full context
+  await t.action(api.functions.ai.decision, {
+    agentState: {
+      name: "Pathfinder",
+      hunger: 50,
+      energy: 60,
+      social: 40,
+      currentAction: "walking",
+    },
+    nearbyAgents: [],
+    archetype: "explorer",
+    agentContext: context.agentContext,
+    relationshipContext: context.relationshipContext,
+    events: context.events,
+    memories: context.memories,
+    poiContext: context.poiContext,
+  });
+
+  const userMessage = capturedBody.messages.find((m: any) => m.role === "user").content;
+
+  // Verify everything appears in the user prompt
+  expect(userMessage).toContain("## Your Identity");
+  expect(userMessage).toContain("## Your State");
+  expect(userMessage).toContain("Current Action");
+  expect(userMessage).toContain("Current Position");
+  expect(userMessage).toContain("Destination");
+  expect(userMessage).toContain("Hunger");
+  expect(userMessage).toContain("Energy");
+  expect(userMessage).toContain("Social");
+  // Trajectory should be in the Your Identity section
+  const identitySection = userMessage.split("## Your State")[0];
+  expect(identitySection).toContain("Current Position");
+  expect(identitySection).toContain("Destination");
+  // currentAction should be in the Your State section
+  const stateSection = userMessage.split("## Your State")[1]?.split("##")[0] || "";
+  expect(stateSection).toContain("Current Action");
+
+  delete process.env.OPENAI_API_KEY;
+  vi.unstubAllGlobals();
+});
+
 test("AI decision handles all primary archetypes", async () => {
   const t = convexTest(schema, modules);
   const primaryArchetypes = ["builder", "socialite", "philosopher", "explorer", "nurturer"] as const;
