@@ -9,6 +9,6 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [x] **Track: Phase 10 Track A — LLM Sees Its Own Trajectory**
-  *Link: [./tracks/llm_sees_trajectory_20260501/](./tracks/llm_sees_trajectory_20260501/)*
+- [x] **Archived: Phase 10 Track A — LLM Sees Its Own Trajectory**
+  *Archive: [./archive/llm_sees_trajectory_20260501/](./archive/llm_sees_trajectory_20260501/)*
 
