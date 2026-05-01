@@ -16,8 +16,6 @@
 
 ## Phase 1: ✅ Complete [checkpoint: 0e2885b]
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
-
 ## Phase 2: Render `currentAction` in `## Your State` (FR2)
 
 ### Task 2.1: Write failing tests for `currentAction` in `## Your State`
@@ -35,10 +33,10 @@
 ## Phase 3: Position, target & distance in `## Your Identity` (FR3)
 
 ### Task 3.1: Write failing tests for trajectory fields in `agentContext`
-- [~] Write a test that `buildAgentContext` output contains `"Current Position"` and `"Destination"` strings
-- [~] Write a test that `buildAgentContext` shows `"None"` when no target is set
-- [~] Write a test that `buildAgentContext` includes `"Distance Remaining"` when target is set and omits it when not set
-- [~] Write a test that trajectory fields appear after `Personality & Instructions` in the context string
+- [x] Write a test that `buildAgentContext` output contains `"Current Position"` and `"Destination"` strings
+- [x] Write a test that `buildAgentContext` shows `"None"` when no target is set
+- [x] Write a test that `buildAgentContext` includes `"Distance Remaining"` when target is set and omits it when not set
+- [x] Write a test that trajectory fields appear after `Personality & Instructions` in the context string
 - [x] Run the tests and confirm they FAIL (Red phase)
 
 ### Task 3.2: Add trajectory fields to `buildAgentContext`
