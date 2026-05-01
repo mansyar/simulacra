@@ -1,0 +1,8 @@
+{
+  "track_id": "llm_sees_trajectory_20260501",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-05-01T14:57:00Z",
+  "updated_at": "2026-05-01T14:57:00Z",
+  "description": "Phase 10 Track A: LLM Sees Its Own Trajectory — inject trajectory awareness (currentAction, position, target, distance) into LLM decision context"
+}
