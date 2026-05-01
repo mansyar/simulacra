@@ -37,7 +37,7 @@ You MUST return your reflection in the following JSON format:
  * Build a structured user prompt from agent state and context data
  */
 function buildContextPrompt(
-  agentState: { name: string; hunger: number; energy: number; social: number },
+  agentState: { name: string; hunger: number; energy: number; social: number; currentAction: string },
   context?: {
     agentContext?: string;
     relationshipContext?: string;
@@ -55,6 +55,7 @@ function buildContextPrompt(
   if (!prompt.endsWith("\n")) prompt += "\n";
   prompt += "\n";
   prompt += `## Your State\n`;
+  prompt += `Current Action: ${agentState.currentAction}\n`;
   prompt += `Hunger: ${agentState.hunger}\n`;
   prompt += `Energy: ${agentState.energy}\n`;
   prompt += `Social: ${agentState.social}\n`;
@@ -91,7 +92,6 @@ function buildContextPrompt(
     prompt += "\n";
   }
   prompt += `Based on ALL of the above context, what is your next action? Consider your personality, relationships, recent experiences, and current state.`;
-
   return prompt;
 }
 export const decision = action({
