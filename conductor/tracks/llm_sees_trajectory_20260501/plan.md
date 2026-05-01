@@ -35,20 +35,20 @@
 ## Phase 3: Position, target & distance in `## Your Identity` (FR3)
 
 ### Task 3.1: Write failing tests for trajectory fields in `agentContext`
-- [ ] Write a test that `buildAgentContext` output contains `"Current Position"` and `"Destination"` strings
-- [ ] Write a test that `buildAgentContext` shows `"None"` when no target is set
-- [ ] Write a test that `buildAgentContext` includes `"Distance Remaining"` when target is set and omits it when not set
-- [ ] Write a test that trajectory fields appear after `Personality & Instructions` in the context string
-- [ ] Run the tests and confirm they FAIL (Red phase)
+- [~] Write a test that `buildAgentContext` output contains `"Current Position"` and `"Destination"` strings
+- [~] Write a test that `buildAgentContext` shows `"None"` when no target is set
+- [~] Write a test that `buildAgentContext` includes `"Distance Remaining"` when target is set and omits it when not set
+- [~] Write a test that trajectory fields appear after `Personality & Instructions` in the context string
+- [x] Run the tests and confirm they FAIL (Red phase)
 
 ### Task 3.2: Add trajectory fields to `buildAgentContext`
-- [ ] In `convex/functions/ai.ts`, modify `buildAgentContext` to append (after `Personality & Instructions`):
+- [x] In `convex/functions/ai.ts`, modify `buildAgentContext` to append (after `Personality & Instructions`):
     - `Current Position: (<agent.gridX>, <agent.gridY>)`
     - `Destination: (<agent.targetX>, <agent.targetY>)` or `"None"` when undefined
     - `Distance Remaining: ~N tiles` (Euclidean) when target exists (omitted otherwise)
-- [ ] Run the tests and confirm they PASS (Green phase)
+- [x] Run the tests and confirm they PASS (Green phase)
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md)
+## Phase 3: ✅ Complete [checkpoint: 7cbc38f]
 
 ## Phase 4: Integration & verification
 
