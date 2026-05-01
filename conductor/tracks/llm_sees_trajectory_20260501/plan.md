@@ -21,16 +21,16 @@
 ## Phase 2: Render `currentAction` in `## Your State` (FR2)
 
 ### Task 2.1: Write failing tests for `currentAction` in `## Your State`
-- [ ] Write a test that `buildContextPrompt` output contains `"Current Action"` in the `## Your State` section
-- [ ] Write a test verifying `currentAction` renders alongside `Hunger`, `Energy`, `Social`
-- [ ] Run the tests and confirm they FAIL (Red phase)
+- [x] Write a test that `buildContextPrompt` output contains `"Current Action"` in the `## Your State` section
+- [x] Write a test verifying `currentAction` renders alongside `Hunger`, `Energy`, `Social`
+- [x] Run the tests and confirm they FAIL (Red phase)
 
 ### Task 2.2: Update `buildContextPrompt` to render `currentAction`
-- [ ] Update the `agentState` parameter type of `buildContextPrompt` to include `currentAction: string`
-- [ ] Add `Current Action: ${agentState.currentAction}\n` to the `## Your State` section in `buildContextPrompt`
-- [ ] Run the tests and confirm they PASS (Green phase)
+- [x] Update the `agentState` parameter type of `buildContextPrompt` to include `currentAction: string`
+- [x] Add `Current Action: ${agentState.currentAction}\n` to the `## Your State` section in `buildContextPrompt`
+- [x] Run the tests and confirm they PASS (Green phase)
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
+## Phase 2: ✅ Complete [checkpoint: c615c13]
 
 ## Phase 3: Position, target & distance in `## Your Identity` (FR3)
 
