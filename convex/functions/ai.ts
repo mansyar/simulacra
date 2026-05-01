@@ -16,7 +16,6 @@ You MUST return your decision in the following JSON format:
   "confidence": 0.0 to 1.0 (how sure you are about this decision)
 }
 `;
-
 const REFLECTION_SYSTEM_PROMPT = `
 You are the subconscious of an AI agent. 
 Review the agent's recent sensory events and identify significant patterns or important memories.
@@ -102,6 +101,7 @@ export const decision = action({
       hunger: v.number(),
       energy: v.number(),
       social: v.number(),
+      currentAction: v.string(),
       model: v.optional(v.string()),
     }),
     nearbyAgents: v.array(v.string()),

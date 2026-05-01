@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { convexTest } from "convex-test";
 import { expect, test, vi } from "vitest";
 import { api, internal } from "./_generated/api";
@@ -40,6 +41,7 @@ test("ai:decision user prompt contains all context sections when API key is set"
       hunger: 50,
       energy: 60,
       social: 40,
+      currentAction: "idle",
     },
     nearbyAgents: ["Alice", "Charlie"],
     archetype: "explorer",
@@ -129,7 +131,7 @@ test("ai:decision system prompt includes archetype-specific prompt for the agent
   vi.stubGlobal("fetch", mockFetch);
 
   await t.action(api.functions.ai.decision, {
-    agentState: { name: "Test", hunger: 50, energy: 50, social: 50 },
+    agentState: { name: "Test", hunger: 50, energy: 50, social: 50, currentAction: "idle" },
     nearbyAgents: [],
     archetype: "builder",
   });
@@ -212,7 +214,7 @@ test("ai:decision user prompt includes relationship data from real DB agents via
   vi.stubGlobal("fetch", mockFetch);
 
   await t.action(api.functions.ai.decision, {
-    agentState: { name: "Alice", hunger: 50, energy: 50, social: 50 },
+    agentState: { name: "Alice", hunger: 50, energy: 50, social: 50, currentAction: "idle" },
     nearbyAgents: ["Bob"],
     archetype: "socialite",
     agentContext: context.agentContext,

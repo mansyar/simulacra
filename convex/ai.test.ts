@@ -16,6 +16,7 @@ test("AI decision returns new schema fields", async () => {
       hunger: 50,
       energy: 50,
       social: 50,
+      currentAction: "idle",
     },
     nearbyAgents: ["Wendy"],
     archetype: "builder",
@@ -30,6 +31,24 @@ test("AI decision returns new schema fields", async () => {
   expect(typeof result.confidence).toBe("number");
 });
 
+test("decision action accepts currentAction in agentState", async () => {
+  const t = convexTest(schema, modules);
+
+  const result = await t.action(api.functions.ai.decision, {
+    agentState: {
+      name: "Bob",
+      hunger: 50,
+      energy: 50,
+      social: 50,
+      currentAction: "idle",
+    },
+    nearbyAgents: [],
+    archetype: "builder",
+  });
+
+  expect(result).toHaveProperty("action");
+});
+
 test("AI decision handles all primary archetypes", async () => {
   const t = convexTest(schema, modules);
   const primaryArchetypes = ["builder", "socialite", "philosopher", "explorer", "nurturer"] as const;
@@ -41,6 +60,7 @@ test("AI decision handles all primary archetypes", async () => {
         hunger: 50,
         energy: 50,
         social: 50,
+        currentAction: "idle",
       },
       nearbyAgents: [],
       archetype,

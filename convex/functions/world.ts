@@ -327,7 +327,7 @@ async function processAgent(
   });
 
   const decision = await ctx.runAction(api.functions.ai.decision, {
-    agentState: { name: agent.name, hunger: agent.hunger, energy: agent.energy, social: agent.social, model: agent.model },
+    agentState: { name: agent.name, hunger: agent.hunger, energy: agent.energy, social: agent.social, currentAction: agent.currentAction, model: agent.model },
     nearbyAgents, archetype: aiArchetype,
     agentContext: context.agentContext,
     relationshipContext: context.relationshipContext,

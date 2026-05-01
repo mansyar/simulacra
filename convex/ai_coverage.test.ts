@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { convexTest } from "convex-test";
 import { expect, test, vi } from "vitest";
 import { api } from "./_generated/api";
@@ -146,7 +147,7 @@ test("ai:decision does not retry 429 (chat calls skip 429 backoff)", async () =>
   // Chat calls (ai.decision) use skip429Backoff=true — 429 returned immediately
   // decision's catch block handles the error and falls back to mock response
   const response = await t.action(api.functions.ai.decision, {
-    agentState: { name: "Test", hunger: 50, energy: 50, social: 50 },
+    agentState: { name: "Test", hunger: 50, energy: 50, social: 50, currentAction: "idle" },
     nearbyAgents: [],
     archetype: "builder",
   });
@@ -177,7 +178,7 @@ test("ai:decision failure after retries", async () => {
   });
 
   const response = await t.action(api.functions.ai.decision, {
-    agentState: { name: "Test", hunger: 50, energy: 50, social: 50 },
+    agentState: { name: "Test", hunger: 50, energy: 50, social: 50, currentAction: "idle" },
     nearbyAgents: [],
     archetype: "builder",
   });
@@ -204,7 +205,7 @@ test("ai:decision handles JSON parse error from API", async () => {
   vi.stubGlobal("fetch", mockFetch);
 
   const response = await t.action(api.functions.ai.decision, {
-    agentState: { name: "Test", hunger: 50, energy: 50, social: 50 },
+    agentState: { name: "Test", hunger: 50, energy: 50, social: 50, currentAction: "idle" },
     nearbyAgents: [],
     archetype: "builder",
   });

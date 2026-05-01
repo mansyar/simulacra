@@ -38,7 +38,7 @@ test("world tick updates agents needs and triggers decisions", async () => {
 
   // Verify needs were updated
   const agents = await t.query(api.functions.agents.getAll, {});
-  const agent = agents.find((a: any) => a._id === agentId);
+  const agent = agents.find((a) => a._id === agentId);
   
   // Hunger should increase, Energy should decrease
   expect(agent?.hunger).toBeGreaterThan(50);
@@ -48,8 +48,27 @@ test("world tick updates agents needs and triggers decisions", async () => {
   const events = await t.query(api.functions.memory.getEvents, { agentId });
   expect(events.length).toBeGreaterThan(0);
 
-  const hasDecision = events.some((e: any) => e.description.includes("Thought:") && e.description.includes("Action:"));
+  const hasDecision = events.some((e) => e.description.includes("Thought:") && e.description.includes("Action:"));
   expect(hasDecision).toBe(true);
+});
+
+test("world tick passes currentAction to decision action", async () => {
+  const t = convexTest(schema, modules);
+
+  // Seed everything needed for a tick
+  await t.mutation(api.functions.seed.agents, {});
+  await t.mutation(api.functions.seed.world, {});
+
+  // Run tick - this will fail if currentAction isn't passed to decision
+  const result = await t.action(api.functions.world.tick, {});
+  expect(result.success).toBe(true);
+
+  // Verify agents have a valid currentAction after processing
+  const agents = await t.query(api.functions.agents.getAll, {});
+  const validActions = ["idle", "walking", "eating", "sleeping", "talking", "working", "exploring"];
+  for (const agent of agents) {
+    expect(validActions).toContain(agent.currentAction);
+  }
 });
 
 test("interaction radius is fetched from config", async () => {
