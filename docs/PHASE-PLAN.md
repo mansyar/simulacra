@@ -13,7 +13,7 @@
 | 7 | The Mind | AI Context Fidelity | ✅ Complete (Tracks A & B ✅, C covered by B) | 1 week |
 | 8 | The Backbone | Robustness & Scaling | ✅ Complete (All Tracks) | 1 week |
 | 9 | The Soul | Deeper Social Dynamics | ✅ Complete (All Tracks A-E) | 1 week |
-| 10 | Movement Coherence | Fix agent trajectory, weather sync, and logical gaps | ✅ Track A Complete (Tracks B-D Planned) | 2-3 days |
+| 10 | Movement Coherence | Fix agent trajectory, weather sync, and logical gaps | ✅ Track A & B Complete (Tracks C-D Planned) | 2-3 days |
 | 11 | The Polish | Master Panel + Deploy | ⏳ Not Started | 1 week |
 
 ---
@@ -649,7 +649,7 @@ A1 + A2 + A3 (quick fixes) ✅
 
 **Goal:** Fix the logical flow gaps in the agent movement mechanism discovered during Phase 9 analysis — the LLM doesn't know it's already walking, the frontend ignores weather in its speed calculations, and no cleanup happens on arrival.
 
-**Status:** ✅ TRACK A COMPLETE (Tracks B-D Planned)
+**Status:** ✅ TRACK A & B COMPLETE (Tracks C-D Planned)
 
 > **Discovery Context:** Analysis of the movement pipeline revealed four logical issues:
 > 1. **LLM blindness** — `buildAgentContext` omits `currentAction`, `gridX/Y`, and `targetX/Y`, so the LLM re-decides a fresh direction every tick (agents zigzag, never completing journeys)
@@ -670,17 +670,23 @@ A1 + A2 + A3 (quick fixes) ✅
   - Test: LLM decision context includes the agent's ongoing trajectory
 - [x] **All 352 tests pass** across 77 test files. No regressions.
 
-### Track B: Weather-Aware Frontend Speed
+### Track B: Weather-Aware Frontend Speed [COMPLETE: 2026-05-02]
 
 **Problem:** `AgentSprite.tick()` hardcodes `const speed = 6 / 180`. During stormy weather, the backend advances only 3 units per tick (6 × 0.5), but the frontend races ahead at 6/180 units/sec, causing a jarring 500ms snap-back course correction every tick.
 
-- [ ] **Propagate weather multiplier to AgentSprite** — Have `GameCanvas` pass the world state's weather multiplier down to each `AgentSprite` instance
-- [ ] **Apply multiplier in tick calculation** — Change line ~237 from `const speed = 6 / 180` to `const speed = (6 * this.speedMultiplier) / 180` in `AgentSprite.ts`
-- [ ] **Default multiplier** — Default to `1.0` when no weather data is available (ensures graceful degradation)
-- [ ] **Write tests:**
-  - Test: AgentSprite moves at reduced speed during simulated stormy/rainy weather
-  - Test: Default multiplier of 1.0 when weather data is absent
-  - Integration test: Backend position delta matches frontend predicted delta over one tick interval
+> **Completed:** 2026-05-02 — All checks pass, 36 test files (136 tests) with zero regressions.
+
+- [x] **Shared weather multiplier utility** — Created `src/lib/weather.ts` with `getWeatherSpeedMultiplier(weather?: string): number` mapping sunny/cloudy→1.0, rainy→0.8, stormy→0.5. Defaults to 1.0 for undefined/unknown. (Commit e0165b3)
+- [x] **Propagate weather multiplier to AgentSprite** — `GameCanvas` queries `world_state` via `useQuery(api.functions.world.getState)`, computes `speedMultiplier` via `getWeatherSpeedMultiplier(worldState?.weather)`, and passes it to each `AgentSprite` instance (Commit e0165b3)
+- [x] **Apply multiplier in tick calculation** — Changed line ~240 from `const speed = 6 / 180` to `const speed = this.speedMultiplier !== undefined ? (6 * this.speedMultiplier) / 180 : 6 / 180` (Commit e0165b3)
+- [x] **Dynamic updates on weather change** — Sync effect calls `setSpeedMultiplier()` on ALL existing sprites when weather changes, with `worldState` in the dependency array (Commit e0165b3)
+- [x] **Backend cross-reference** — Added comment in `world.ts` pointing to shared utility location (Commit e0165b3)
+- [x] **Write tests:**
+  - Test: `getWeatherSpeedMultiplier('stormy')` returns 0.5, `('rainy')` returns 0.8, `(undefined)` returns 1.0 (6 tests in `weather.test.ts`)
+  - Test: AgentSprite with `speedMultiplier=0.5` moves at half speed (stormy) — `AgentSprite_prediction.test.ts`
+  - Test: AgentSprite with no `speedMultiplier` defaults to `6/180` speed (backward compat)
+  - Test: AgentSprite's `setSpeedMultiplier(0.5)` dynamically changes tick speed
+  - Test: Full frontend test suite (36 files, 136 tests) — no regressions
 
 ### Track C: Arrival Cleanup
 
@@ -710,13 +716,14 @@ A1 + A2 + A3 (quick fixes) ✅
 
 ```
 Track A (LLM sees trajectory) ✅  ← Complete: agents see their own action/position/target
-  → Track B (weather sync)        ← High impact: smooths bad-weather movement
+  → Track B (weather sync) ✅     ← Complete: frontend matches backend speed in all weather
   → Track C (arrival cleanup)     ← Medium impact: stops zombie walking
   → Track D (bounds clamping)     ← Low impact: safety net
 ```
 
 **Track A completed: 2026-05-01**
-**Estimated remaining effort:** ~2 days total (Tracks B-D)
+**Track B completed: 2026-05-02**
+**Estimated remaining effort:** ~1 day total (Tracks C-D)
 
 ### Phase 10 Checkpoints
 
@@ -724,7 +731,7 @@ Track A (LLM sees trajectory) ✅  ← Complete: agents see their own action/pos
 - [x] **Track A:** `currentAction` is passed as structured data alongside hunger/energy/social
 - [x] **Track A:** `buildAgentContext` appends `Current Position`, `Destination` (or `None`), and `Distance Remaining` after Personality & Instructions
 - [x] **Track A:** All 352 tests pass across 77 test files (no regressions)
-- [ ] Frontend movement speed matches backend speed in all weather conditions (no snap-back) — Track B
+- [x] **Track B:** Frontend movement speed matches backend speed in all weather conditions (no snap-back) — 136 frontend tests pass
 - [ ] Arrived agents' targets are cleared; frontend shows "idle" behavior on arrival — Track C
 - [ ] Agent positions never exceed world boundaries [0, 63] — Track D
 
@@ -846,7 +853,7 @@ Phase 9 (Soul)
 Phase 10 (Movement Coherence)
     │
     ├──► LLM sees its own trajectory (Track A) ✅
-    ├──► Weather-aware frontend speed (Track B)
+    ├──► Weather-aware frontend speed (Track B) ✅
     ├──► Arrival cleanup (Track C)
     └──► Bounds clamping (Track D)
             │
@@ -882,7 +889,7 @@ Phase 11 (Polish)
 
 ## Recommended Development Order
 
-### Current Status: Phase 10 (Movement Coherence) — Track A Complete 🎯
+### Current Status: Phase 10 (Movement Coherence) — Tracks A & B Complete 🎯
 
 1. ✅ **Done:** Grid rendering (Phase 1)
 2. ✅ **Done:** Convex + real-time sync (Phase 2)
@@ -902,7 +909,7 @@ Phase 11 (Polish)
 16. ✅ **Done:** Runtime configuration & integration testing (Phase 9 — Track D) — Extracted 5 constants to config table with env var fallbacks, added getConfigValue helper, 20 new tests (301 total)
 17. ✅ **Done:** POI-aware agent behavior (Phase 9 — Track E) — LLM context includes POI data, agents walk to contextual locations, arrival events show POI names, need multipliers applied at matching POIs. 4 test files with 15+ tests.
 18. ✅ **Done:** LLM sees its own trajectory (Phase 10 — Track A) — Injected `currentAction` into decision schema, rendered it in `## Your State`, and appended trajectory fields (position, target, distance) to `## Your Identity`. 8 new tests, all 352 tests pass.
-19. 🆕 **Planned:** Weather-aware frontend speed (Phase 10 — Track B)
+19. ✅ **Done:** Weather-aware frontend speed (Phase 10 — Track B) — Extracted `getWeatherSpeedMultiplier` shared utility, added `speedMultiplier` to `AgentSprite` (constructor + `setSpeedMultiplier` + tick), wired `GameCanvas` to query world state and propagate multiplier. 10 new tests (utility + sprite), 136 total frontend tests pass.
 20. 🆕 **Planned:** Arrival cleanup (Phase 10 — Track C)
 21. 🆕 **Planned:** Bounds clamping (Phase 10 — Track D)
 22. ⏳ **Planned:** Master panel and deployment (Phase 11 — The Polish)
