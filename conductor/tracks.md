@@ -14,6 +14,6 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [ ] **Track: Phase 10 Track B — Weather-Aware Frontend Speed**
+- [x] **Track: Phase 10 Track B — Weather-Aware Frontend Speed**
   *Link: [./tracks/weather_frontend_speed_20260502/](./tracks/weather_frontend_speed_20260502/)**
 
