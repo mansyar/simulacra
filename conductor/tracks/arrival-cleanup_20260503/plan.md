@@ -2,14 +2,12 @@
 
 ## Phase 1: Arrival Cleanup Implementation
 
-- [ ] Task: Write failing tests for early return and target clearing
-    - [ ] Sub-task: Add test in `convex/agents.test.ts` to verify `resolveMovement` skips the database patch when distance < 0.1 and returns `arrived: true`.
-    - [ ] Sub-task: Add test in `convex/world.test.ts` to verify that when `resolveMovement` returns `arrived: true`, the agent's `targetX` and `targetY` are cleared.
-- [ ] Task: Implement early return guard in `resolveMovement`
-    - [ ] Sub-task: Update `resolveMovement` in `convex/functions/agents.ts` to explicitly return early without patching the database if `distance < 0.1`.
-- [ ] Task: Implement target clearing on arrival
-    - [ ] Sub-task: In `convex/functions/agents.ts`, create an internal mutation `clearTarget` that sets `targetX: undefined` and `targetY: undefined`.
-    - [ ] Sub-task: In `convex/functions/world.ts`, call `clearTarget` for the agent when `resolveMovement` returns `arrived: true`.
+- [ ] Task: Write failing tests for atomic arrival and snapping
+    - [ ] Sub-task: Add/update test in `convex/agents.test.ts` to verify `resolveMovement` snaps `gridX`/`gridY` to exactly `targetX`/`targetY` when distance < 0.1, clears the targets, and returns `arrived: true`.
+    - [ ] Sub-task: Add/update test in `convex/agents.test.ts` to verify `resolveMovement` clears targets when `ratio === 1`.
+- [ ] Task: Implement atomic arrival and snapping in `resolveMovement`
+    - [ ] Sub-task: Update `resolveMovement` in `convex/functions/agents.ts`. When `distance < 0.1` or `ratio === 1`, patch the database to clear `targetX` and `targetY`, and ensure `gridX` and `gridY` are snapped precisely to the target coordinates if distance < 0.1.
+    - [ ] Sub-task: Ensure `convex/functions/world.ts` only logs the arrival event and does not perform redundant cleanup.
 - [ ] Task: Verify functionality and Refactor
     - [ ] Sub-task: Run all tests to ensure the new tests pass and there are no regressions.
     - [ ] Sub-task: Refactor if necessary.

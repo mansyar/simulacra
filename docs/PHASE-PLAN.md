@@ -692,12 +692,15 @@ A1 + A2 + A3 (quick fixes) ✅
 
 **Problem:** When `resolveMovement` returns `arrived: true`, `targetX/targetY` remain set on the agent. The frontend continues predicting movement toward an already-reached destination, and subsequent ticks wastefully call `resolveMovement` on an arrived agent.
 
-- [ ] **Clear targets on arrival in `processAgent`** — After logging the arrival event in `world.ts` (~line 260), call an internal mutation to set `targetX: undefined, targetY: undefined`
-- [ ] **Skip `resolveMovement` when distance is zero** — Add an early return guard in `resolveMovement`: if distance < 0.1, skip the DB patch entirely
+- [ ] **Atomic target clearing and snapping in `resolveMovement`** — Update `resolveMovement` in `agents.ts` to be the single source of truth for arrival:
+  - If `distance < 0.1`, snap `gridX/Y` to exactly `targetX/Y` and clear `targetX/Y` in a single DB patch.
+  - If `ratio === 1`, also clear `targetX/Y`.
+  - Simplifies `world.ts` to just log the arrival event.
 - [ ] **Write tests:**
-  - Test: Agent's `targetX/targetY` are cleared after `resolveMovement` returns `arrived: true`
-  - Test: `resolveMovement` skips DB patch when distance is already zero (no wasted writes)
-  - Test: Frontend stops predicting movement toward target after arrival
+  - Test: `resolveMovement` snaps to exact target and clears fields when distance < 0.1.
+  - Test: `resolveMovement` clears fields when ratio === 1.
+  - Test: `world.ts` correctly logs arrival event without needing separate cleanup.
+  - Test: Frontend stops predicting movement after target is cleared.
 
 ### Track D: Bounds Clamping
 
