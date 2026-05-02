@@ -8,14 +8,21 @@ This track propagates the weather-based speed multiplier from `world_state.weath
 
 ## Functional Requirements
 
-### FR1: Weather Multiplier Propagation
-- `GameCanvas` shall query `world_state` via `useQuery(api.functions.world.getState)`
-- GameCanvas shall compute a `speedMultiplier` from the current weather using the same mapping as the backend:
+### FR1: Shared Weather Multiplier Utility
+- A pure utility function `getWeatherSpeedMultiplier(weather?: string): number` shall be extracted to `src/lib/weather.ts`
+- The utility shall use the same mapping as the backend:
   - `sunny` → 1.0, `cloudy` → 1.0, `rainy` → 0.8, `stormy` → 0.5
+- Default to `1.0` when weather is `undefined` or unknown
+- This utility replaces the inline multiplier logic in `convex/functions/world.ts` to keep the mapping DRY
+
+### FR2: Weather Multiplier Propagation
+- `GameCanvas` shall query `world_state` via `useQuery(api.functions.world.getState)`
+- GameCanvas shall compute a `speedMultiplier` using the shared utility: `getWeatherSpeedMultiplier(worldState?.weather)`
 - The computed multiplier shall be passed to each `AgentSprite` instance
 
-### FR2: Multiplier Applied in Tick Calculation
-- `AgentSprite` shall accept an optional `speedMultiplier` constructor parameter
+### FR3: Multiplier Applied in Tick Calculation
+- `AgentSprite` shall accept an optional `speedMultiplier` constructor parameter for initial setup
+- `AgentSprite` shall expose a `setSpeedMultiplier(multiplier: number | undefined): void` method for dynamic updates
 - In the tick method, the movement speed calculation shall change from:
   ```
   const speed = 6 / 180
@@ -27,14 +34,16 @@ This track propagates the weather-based speed multiplier from `world_state.weath
     : 6 / 180
   ```
 - When `speedMultiplier` is `undefined`, the original behavior shall be preserved (backward compatibility)
+- No additional per-frame allocations in `AgentSprite.tick()`
 
-### FR3: Graceful Degradation
+### FR4: Graceful Degradation
 - If `world_state` query returns `null` or `undefined`, no multiplier shall be passed (AgentSprite uses default behavior)
 - No error shall be thrown if weather data is unavailable
 
-### FR4: Dynamically Updated
+### FR5: Dynamically Updated
 - When weather changes (e.g., sunny → stormy), `AgentSprite` instances that were created earlier must receive the updated multiplier
-- This shall be achieved by passing the multiplier via the existing sync effect in GameCanvas that runs when `agentsData` or `worldState` changes
+- This shall be achieved by calling `setSpeedMultiplier()` on all sprites in the existing sync effect
+- The sync effect's dependency array must include `worldState` to re-run on weather changes
 
 ## Non-Functional Requirements
 
