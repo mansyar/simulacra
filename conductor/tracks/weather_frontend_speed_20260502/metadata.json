@@ -1,8 +1,0 @@
-{
-  "track_id": "weather_frontend_speed_20260502",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-05-02T18:52:00Z",
-  "updated_at": "2026-05-02T18:52:00Z",
-  "description": "Phase 10 Track B: Weather-Aware Frontend Speed — Propagate the weather speed multiplier from the backend to AgentSprite so frontend movement prediction matches backend speed in all weather conditions."
-}
