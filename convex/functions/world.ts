@@ -465,6 +465,7 @@ export const tick = action({
     const envT = parseInt(process.env.MAX_CONVERSATION_TURNS ?? "", 10);
     const maxConversationTurns = !isNaN(envT) ? envT : (config?.maxConversationTurns ?? 5);
     const weather = worldState?.weather || "sunny";
+    // Shared weather multiplier mapping — keep in sync with src/lib/weather.ts
     const weatherMultipliers: Record<string, number> = { sunny: 1.0, cloudy: 1.0, rainy: 0.8, stormy: 0.5 };
     const speedMultiplier = weatherMultipliers[weather] || 1.0;
     const cleanedConvs = await cleanStaleConversations(ctx, agents, config);
@@ -478,7 +479,6 @@ export const tick = action({
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : String(error);
           console.error(`[WORLD] Agent ${agent.name} failed (attempt ${attempt + 1}/2):`, errorMsg);
-
           if (attempt === 0) {
             try { await ctx.runMutation(api.functions.memory.addEvent, { agentId: agent._id, type: "movement", description: "Error during processing, retrying...", gridX: agent.gridX, gridY: agent.gridY }); }
             catch (innerErr) { console.warn(`[WORLD] Failed to log retry event for agent ${agent.name}:`, innerErr) }

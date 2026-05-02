@@ -11,6 +11,7 @@ import { CameraController } from './Camera'
 import { AgentSprite } from './AgentSprite'
 import { POISprite } from './POISprite'
 import { ConversationLines } from './ConversationLines'
+import { getWeatherSpeedMultiplier } from '../../lib/weather'
 
 interface ExtendedApplication extends Application {
   _handleMouseMove?: (e: MouseEvent) => void
@@ -37,6 +38,7 @@ export function GameCanvas() {
 
   const agentsData = useQuery(api.functions.agents.getAll)
   const poisData = useQuery(api.functions.world.getPois)
+  const worldState = useQuery(api.functions.world.getState)
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -237,6 +239,8 @@ export function GameCanvas() {
     
     if (!agentContainer || !poiContainer) return
 
+    const speedMultiplier = getWeatherSpeedMultiplier(worldState?.weather)
+
     const currentPois = poisRef.current
     const newPoiIds = new Set(poisData.map(p => p._id))
     currentPois.forEach((sprite, id) => {
@@ -265,7 +269,7 @@ export function GameCanvas() {
     })
     agentsData.forEach(agent => {
       if (!currentAgents.has(agent._id)) {
-        const sprite = new AgentSprite(agent)
+        const sprite = new AgentSprite(agent, speedMultiplier)
         sprite.on('select', () => {
           navigate({
             to: '/agent/$id',
@@ -286,6 +290,11 @@ export function GameCanvas() {
         const sprite = currentAgents.get(agent._id)
         sprite?.updateAgentData(agent)
       }
+    })
+
+    // --- Sync Weather Speed Multiplier on all existing sprites ---
+    currentAgents.forEach((sprite) => {
+      sprite.setSpeedMultiplier(speedMultiplier)
     })
 
     // --- Sync Conversation Lines (diff-based) ---
@@ -323,7 +332,7 @@ export function GameCanvas() {
         }
       }
     }
-  }, [agentsData, poisData, isReady])
+  }, [agentsData, poisData, worldState, isReady])
 
   // Sync Selection State
   useEffect(() => {

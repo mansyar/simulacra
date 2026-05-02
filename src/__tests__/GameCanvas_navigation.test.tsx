@@ -57,6 +57,7 @@ vi.mock('../../convex/_generated/api', () => ({
       },
       world: {
         getPois: 'world:getPois',
+        getState: 'world:getState',
       },
     },
   },
@@ -76,6 +77,7 @@ vi.mock('../components/game/AgentSprite', () => {
         tick: vi.fn(),
         addChild: vi.fn(),
         setSelected: vi.fn(),
+        setSpeedMultiplier: vi.fn(),
       }
       lastAgentSpriteInstance = instance
       return instance
@@ -106,6 +108,7 @@ describe('GameCanvas Navigation', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- vi.mock return type cast
     ;(useQuery as unknown as { mockImplementation: (cb: any) => void }).mockImplementation((name: string) => {
       if (name === 'agents:getAll') return mockAgents
+      if (name === 'world:getState') return { weather: 'sunny' }
       return []
     })
 

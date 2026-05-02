@@ -63,15 +63,17 @@ export class AgentSprite extends Container {
   private lerpSpeed: number = 0.1
   private noise: (x: number, y: number) => number
   private time: number = 0
+  private speedMultiplier?: number
   private blendProgress: number = 1.0
   private blendSourceX: number = 0
   private blendSourceY: number = 0
   private blendTargetX: number = 0
   private blendTargetY: number = 0
 
-  constructor(agent: AgentData) {
+  constructor(agent: AgentData, speedMultiplier?: number) {
     super()
     this.agent = { ...agent }
+    this.speedMultiplier = speedMultiplier
     this.targetGridX = agent.targetX ?? agent.gridX
     this.targetGridY = agent.targetY ?? agent.gridY
     this.estimatedGridX = agent.gridX
@@ -202,6 +204,10 @@ export class AgentSprite extends Container {
     this.selectionRing.visible = selected
   }
 
+  public setSpeedMultiplier(multiplier: number | undefined): void {
+    this.speedMultiplier = multiplier
+  }
+
   public tick(deltaTime: number) {
     // PIXI v8 deltaTime is usually ~1.0 for 60FPS. 
     // Convert to elapsed seconds for time-synced calculations.
@@ -234,7 +240,10 @@ export class AgentSprite extends Container {
         // Default tick interval is 180s. 
         // Backend AGENT_SPEED is 6 units per tick.
         // So speed is 6 / 180 = 0.0333 units/sec.
-        const speed = 6 / 180
+        // When speedMultiplier is set (e.g. 0.5 for stormy), adjust speed accordingly.
+        const speed = this.speedMultiplier !== undefined
+          ? (6 * this.speedMultiplier) / 180
+          : 6 / 180
         const moveStep = speed * elapsedSeconds
 
         const ratio = Math.min(1, moveStep / distance)
