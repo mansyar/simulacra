@@ -1,32 +1,36 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { useQuery, useMutation, useConvex } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import type { PresenceState } from "@convex-dev/presence/react";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- required for generic callback wrapper (single-flight pattern from presence lib)
-type AnyFn = (...args: any[]) => Promise<any>;
+import type { FunctionReference } from "convex/server";
 
 /**
  * Wraps a function to single-flight invocations, using the latest args.
  * (Copied from @convex-dev/presence internal utility)
  */
-function useSingleFlight<F extends AnyFn>(fn: F): (...args: Parameters<F>) => ReturnType<F> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Promise generic requires value: any for generic resolve
-  type FlightState = { fn: F; resolve: (value: any) => void; reject: (reason?: unknown) => void; args: Parameters<F> };
+function useSingleFlight<Args extends unknown[], Return>(
+  fn: (...args: Args) => Promise<Return>
+): (...args: Args) => Promise<Return> {
+  type FlightState = { 
+    fn: (...args: Args) => Promise<Return>; 
+    resolve: (value: Return | PromiseLike<Return>) => void; 
+    reject: (reason?: unknown) => void; 
+    args: Args 
+  };
   const flightStatus = useRef({
     inFlight: false,
     upNext: null as FlightState | null,
   });
-  return useCallback((...args: Parameters<F>): ReturnType<F> => {
+  return useCallback((...args: Args): Promise<Return> => {
     if (flightStatus.current.inFlight) {
-      const promise = new Promise<ReturnType<F>>((resolve, reject) => {
+      const promise = new Promise<Return>((resolve, reject) => {
         flightStatus.current.upNext = { fn, resolve, reject, args };
       });
-      return promise as unknown as ReturnType<F>;
+      return promise;
     }
     flightStatus.current.inFlight = true;
-    const firstReq = fn(...args) as ReturnType<F>;
+    const firstReq = fn(...args);
     void (async () => {
       try {
         await firstReq;
@@ -36,8 +40,7 @@ function useSingleFlight<F extends AnyFn>(fn: F): (...args: Parameters<F>) => Re
       while (flightStatus.current.upNext) {
         const cur = flightStatus.current.upNext;
         flightStatus.current.upNext = null;
-        await cur
-          .fn(...cur.args)
+        await cur.fn(...cur.args)
           .then(cur.resolve)
           .catch(cur.reject);
       }
@@ -51,8 +54,11 @@ function useSingleFlight<F extends AnyFn>(fn: F): (...args: Parameters<F>) => Re
  * Custom hook that duplicates @convex-dev/presence/usePresence but with sessionStorage persistence
  * for session IDs. This ensures the same session ID persists across page reloads.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- presence component API shape is dynamic; specific types not exported
-type PresenceModule = Record<string, any>;
+export interface PresenceModule {
+  heartbeat: FunctionReference<"mutation">;
+  disconnect: FunctionReference<"mutation">;
+  list: FunctionReference<"query">;
+}
 
 export default function usePresenceWithSessionStorage(
   presence: PresenceModule,
@@ -62,9 +68,13 @@ export default function usePresenceWithSessionStorage(
   convexUrl?: string
 ): PresenceState[] | undefined {
   const hasMounted = useRef(false);
-  const convex = useConvex();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- .url is an internal property of ConvexReactClient, not part of public types
-  const baseUrl = convexUrl ?? (convex ? (convex as Record<string, any>).url : "");
+  
+  // Safely access the base URL from the Convex client if not provided
+  const baseUrl = useMemo(() => {
+    if (convexUrl) return convexUrl;
+    // Prefer env var over internal property to avoid 'any' cast
+    return (import.meta.env.VITE_CONVEX_URL as string) ?? "";
+  }, [convexUrl]);
 
   // Generate or retrieve session ID from sessionStorage
   const [sessionId, setSessionId] = useState(() => {
@@ -96,10 +106,8 @@ export default function usePresenceWithSessionStorage(
   const roomTokenRef = useRef<string | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- presence component mutations have complex return types not matching useSingleFlight wrapper
-  const heartbeat: any = useSingleFlight(useMutation(presence.heartbeat));
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- presence component mutations have complex return types not matching useSingleFlight wrapper
-  const disconnect: any = useSingleFlight(useMutation(presence.disconnect));
+  const heartbeat = useSingleFlight(useMutation(presence.heartbeat));
+  const disconnect = useSingleFlight(useMutation(presence.disconnect));
 
   const isFirstMount = useRef(true);
 
@@ -138,8 +146,7 @@ export default function usePresenceWithSessionStorage(
   useEffect(() => {
     // Periodic heartbeats.
     const sendHeartbeat = async () => {
-       
-      const result: { roomToken: string; sessionToken: string } = await heartbeat({ roomId, userId, sessionId, interval });
+      const result = await heartbeat({ roomId, userId, sessionId, interval }) as { roomToken: string; sessionToken: string };
       setRoomToken(result.roomToken);
       setSessionToken(result.sessionToken);
     };
@@ -211,7 +218,7 @@ export default function usePresenceWithSessionStorage(
     hasMounted.current = true;
   }, []);
 
-  const state = useQuery(presence.list, roomToken ? { roomToken } : "skip");
+  const state = useQuery(presence.list, roomToken ? { roomToken } : "skip") as PresenceState[] | undefined;
   return useMemo(() => {
     if (!state) return [];
     return state.slice().sort((a: PresenceState, b: PresenceState) => {

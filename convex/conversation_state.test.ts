@@ -1,8 +1,8 @@
-/// <reference types="vite/client" />
 import { convexTest } from "convex-test";
 import { expect, test, describe } from "vitest";
 import { api, internal } from "./_generated/api";
 import schema from "./schema";
+import type { Doc } from "./_generated/dataModel";
 
 const modules = import.meta.glob("./**/*.ts");
 
@@ -148,10 +148,8 @@ describe("Conversation State", () => {
 
     // Verify both agents are in active conversations
     expect(activeConversations.length).toBeGreaterThanOrEqual(2);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- query result type from convex-test
-    const agentAInConv = activeConversations.find((a: any) => a._id === agentAId);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- query result type from convex-test
-    const agentBInConv = activeConversations.find((a: any) => a._id === agentBId);
+    const agentAInConv = activeConversations.find((a: Doc<"agents">) => a._id === agentAId);
+    const agentBInConv = activeConversations.find((a: Doc<"agents">) => a._id === agentBId);
     expect(agentAInConv).toBeDefined();
     expect(agentBInConv).toBeDefined();
   });

@@ -1,8 +1,8 @@
 /// <reference types="vite/client" />
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { convexTest } from "convex-test";
 import { expect, test, vi } from "vitest";
 import { api } from "./_generated/api";
+import type { Doc } from "./_generated/dataModel";
 import schema from "./schema";
 
 const modules = import.meta.glob("./**/*.ts");
@@ -80,7 +80,7 @@ test("tick: remaining 9 agents succeed when 1 agent's processing fails", async (
   // Mock fetch to fail for the first call (agent 1's decision)
   // but succeed for subsequent calls (agents 2-10)
   let fetchCallCount = 0;
-  const mockFetch = vi.fn().mockImplementation(async (_url: string, _options: any) => {
+  const mockFetch = vi.fn().mockImplementation(async (_url: string) => {
     fetchCallCount++;
     if (fetchCallCount === 1) {
       // Simulate a network error for the first agent's decision
@@ -114,8 +114,8 @@ test("tick: remaining 9 agents succeed when 1 agent's processing fails", async (
   expect(result.agentCount).toBe(10);
 
   // At least 9 agents should have had their needs updated
-  const updatedAgents = await t.query(api.functions.agents.getAll, {});
-  const succeededAgents = updatedAgents.filter((a: any) => a.hunger !== 50);
+  const updatedAgents = (await t.query(api.functions.agents.getAll, {})) as Doc<"agents">[];
+  const succeededAgents = updatedAgents.filter((a) => a.hunger !== 50);
   expect(succeededAgents.length).toBeGreaterThanOrEqual(9);
 
   delete process.env.ENABLE_SLEEP_MODE;
@@ -143,16 +143,16 @@ test("tick: error isolation wrapper does not block normal agent processing", asy
   expect(result.agentCount).toBe(10);
 
   // All agents were processed (needs updated from baseline of 50)
-  const updatedAgents = await t.query(api.functions.agents.getAll, {});
+  const updatedAgents = (await t.query(api.functions.agents.getAll, {})) as Doc<"agents">[];
    
-  const processedAgents = updatedAgents.filter((a: any) => a.hunger !== 50);
+  const processedAgents = updatedAgents.filter((a) => a.hunger !== 50);
   expect(processedAgents.length).toBe(10);
 
   // Verify no error/failure events were logged (normal path through error isolation)
   for (const agent of updatedAgents) {
-    const events = await t.query(api.functions.memory.getEvents, { agentId: agent._id });
+    const events = (await t.query(api.functions.memory.getEvents, { agentId: agent._id })) as Doc<"events">[];
      
-    const errorEvents = events.filter((e: any) =>
+    const errorEvents = events.filter((e) =>
       e.description.toLowerCase().includes("error") ||
       e.description.toLowerCase().includes("fail") ||
       e.description.toLowerCase().includes("skip")

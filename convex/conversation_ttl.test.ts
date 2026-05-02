@@ -149,8 +149,7 @@ describe("Conversation TTL & Cleanup", () => {
 
     // Retrieve events
     const events = await t.query(api.functions.memory.getEvents, { agentId });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- event type from convex-test
-    const cleanupEvent = events.find((e: any) => e.description.includes("stale after"));
+    const cleanupEvent = events.find((e) => e.description.includes("stale after"));
     expect(cleanupEvent).toBeDefined();
     expect(cleanupEvent?.type).toBe("interaction");
   });

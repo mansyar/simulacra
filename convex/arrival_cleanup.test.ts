@@ -30,7 +30,8 @@ test("resolveMovement snaps and clears targets when distance < 0.1", async () =>
     speedMultiplier: 1,
   });
 
-  expect(result?.arrived).toBe(true);
+  expect(result).toBeDefined();
+  expect(result!.arrived).toBe(true);
   
   const agent = await t.query(api.functions.agents.getById, { agentId });
   // Should snap to exact target
@@ -67,9 +68,10 @@ test("resolveMovement clears targets when ratio === 1 (arrival by move)", async 
     speedMultiplier: 1,
   });
 
-  expect(result?.arrived).toBe(true);
-  expect(result?.newX).toBe(2);
-  expect(result?.newY).toBe(2);
+  expect(result).toBeDefined();
+  expect(result!.arrived).toBe(true);
+  expect(result!.newX).toBe(2);
+  expect(result!.newY).toBe(2);
   
   const agent = await t.query(api.functions.agents.getById, { agentId });
   expect(agent?.gridX).toBe(2);

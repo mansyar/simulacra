@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, waitFor, act } from '@testing-library/react'
-import usePresenceWithSessionStorage from '../lib/usePresenceWithSessionStorage'
+import usePresenceWithSessionStorage, { type PresenceModule } from '../lib/usePresenceWithSessionStorage'
 import { useQuery, useMutation, useConvex } from 'convex/react'
 
 // Mock convex/react
@@ -15,7 +15,7 @@ describe('usePresenceWithSessionStorage', () => {
     heartbeat: 'presence:heartbeat',
     list: 'presence:list',
     disconnect: 'presence:disconnect',
-  }
+  } as unknown as PresenceModule
   const roomId = 'test-room'
   const userId = 'test-user'
   const interval = 10000
@@ -30,14 +30,13 @@ describe('usePresenceWithSessionStorage', () => {
     heartbeatMock = vi.fn().mockResolvedValue({ roomToken: 'rt', sessionToken: 'st' })
     disconnectMock = vi.fn().mockResolvedValue({})
 
-    vi.mocked(useConvex).mockReturnValue({ url: 'http://localhost:3000' } as ReturnType<typeof useConvex>)
+    vi.mocked(useConvex).mockReturnValue({ url: 'http://localhost:3000' } as unknown as ReturnType<typeof useConvex>)
      
-    vi.mocked(useMutation).mockImplementation(((name: string) => {
-      if (name === presenceApi.heartbeat) return heartbeatMock
-      if (name === presenceApi.disconnect) return disconnectMock
-      return vi.fn().mockResolvedValue({})
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- ReactMutation<...> != MockInstance<...>; mock never calls withOptimisticUpdate
-    }) as any)
+    vi.mocked(useMutation).mockImplementation((name: unknown) => {
+      if (name === (presenceApi.heartbeat as unknown)) return heartbeatMock as never
+      if (name === (presenceApi.disconnect as unknown)) return disconnectMock as never
+      return vi.fn().mockResolvedValue({}) as never
+    })
     vi.mocked(useQuery).mockReturnValue([])
   })
 

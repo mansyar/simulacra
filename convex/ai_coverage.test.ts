@@ -1,5 +1,4 @@
 /// <reference types="vite/client" />
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { convexTest } from "convex-test";
 import { expect, test, vi } from "vitest";
 import { api } from "./_generated/api";
@@ -172,9 +171,9 @@ test("ai:decision failure after retries", async () => {
   });
   vi.stubGlobal("fetch", mockFetch);
 
-  vi.spyOn(global, "setTimeout").mockImplementation((handler: any) => {
-    if (typeof handler === "function") handler();
-    return 0 as any;
+  vi.spyOn(global, "setTimeout").mockImplementation((callback) => {
+    if (typeof callback === "function") callback();
+    return 0 as unknown as NodeJS.Timeout;
   });
 
   const response = await t.action(api.functions.ai.decision, {

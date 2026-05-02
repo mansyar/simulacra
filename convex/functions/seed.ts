@@ -61,7 +61,7 @@ export const agents = mutation({
           archetype: arch.type,
           gridX: Math.floor(Math.random() * 64),
           gridY: Math.floor(Math.random() * 64),
-          coreTraits: arch.traits as unknown as string[],
+          coreTraits: [...arch.traits],
           isActive: true,
           hunger: 50,
           energy: 50,
@@ -150,7 +150,14 @@ export const world = mutation({
     }
 
     // 2. Seed Archetype details
-    const archetypeData = [
+    const archetypeData: {
+      name: "builder" | "socialite" | "philosopher" | "explorer" | "nurturer";
+      basePrompt: string;
+      goalPriorities: string[];
+      interactionStyle: string;
+      baseColor: string;
+      speechPatterns: { greeting: string[]; question: string[]; statement: string[] };
+    }[] = [
       {
         name: "builder",
         basePrompt: "You are a builder. You are organized, productive, and detail-oriented. You love creating and improving things.",
@@ -214,8 +221,7 @@ export const world = mutation({
     ];
 
     for (const arch of archetypeData) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await ctx.db.insert("archetypes", arch as any);
+      await ctx.db.insert("archetypes", arch);
     }
 
     return { message: `Seeded ${pois.length} POIs and ${archetypeData.length} archetypes` };

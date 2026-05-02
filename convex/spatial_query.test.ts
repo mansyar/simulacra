@@ -1,5 +1,4 @@
 import { describe, test, expect, vi } from "vitest";
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { convexTest } from "convex-test";
 import { api, internal } from "./_generated/api";
 import schema from "./schema";
@@ -117,7 +116,7 @@ describe("Spatial Query: getNearbyAgents", () => {
 
     // Should only return "Nearby", not "Center" itself
      
-    const centerInResults = nearby.find((a: any) => a._id === centerId);
+    const centerInResults = nearby.find((a) => a._id === centerId);
     expect(centerInResults).toBeUndefined();
   });
 
@@ -157,7 +156,7 @@ describe("Spatial Query: getNearbyAgents", () => {
 
     // FarAgent is at (20,20), distance from (10,10) ≈ 14.14 > 5
      
-    const farInResults = nearby.find((a: any) => a.name === "FarAgent");
+    const farInResults = nearby.find((a) => a.name === "FarAgent");
     expect(farInResults).toBeUndefined();
   });
 });
@@ -211,13 +210,13 @@ describe("Spatial Query: recordPassivePerception optimized", () => {
     });
 
      
-    await t.mutation(internal.functions.perception.recordPassivePerception as any, {
+    await t.mutation(internal.functions.perception.recordPassivePerception, {
       agentId: agent1Id,
     });
 
     const events = await t.query(api.functions.memory.getEvents, { agentId: agent1Id });
      
-    const sighting = events.find((e: any) => e.description.includes("saw Bob"));
+    const sighting = events.find((e) => e.description.includes("saw Bob"));
 
     expect(sighting).toBeDefined();
     expect(sighting?.type).toBe("movement");
@@ -288,7 +287,10 @@ describe("Spatial Query: 50+ Agent Scaling Benchmark", () => {
 
     // Run tick and measure duration
     const start = Date.now();
-    const result = await t.action(api.functions.world.tick, {});
+    const result = await t.action(api.functions.world.tick, {}) as {
+      success: boolean;
+      agentCount: number;
+    };
     const duration = Date.now() - start;
 
     // Verify tick completed successfully
@@ -297,7 +299,7 @@ describe("Spatial Query: 50+ Agent Scaling Benchmark", () => {
 
     // Verify all 50 agents had their needs updated (hunger changed from 50)
     const updatedAgents = await t.query(api.functions.agents.getAll, {});
-    const processedCount = updatedAgents.filter((a: any) => a.hunger !== 50).length;
+    const processedCount = updatedAgents.filter((a) => a.hunger !== 50).length;
     expect(processedCount).toBeGreaterThanOrEqual(49); // Allow 1 agent failure
 
     // Assert benchmark: tick with 50 agents must complete within 30 seconds

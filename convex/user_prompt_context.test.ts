@@ -1,5 +1,3 @@
-/// <reference types="vite/client" />
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { convexTest } from "convex-test";
 import { expect, test, vi } from "vitest";
 import { api, internal } from "./_generated/api";
@@ -7,15 +5,19 @@ import schema from "./schema";
 
 const modules = import.meta.glob("./**/*.ts");
 
+interface ChatCompletionBody {
+  messages: { role: string; content: string }[];
+}
+
 test("ai:decision user prompt contains all context sections when API key is set", async () => {
   const t = convexTest(schema, modules);
   process.env.OPENAI_API_KEY = "sk-test-key";
 
   // Track the API call payload to inspect the user prompt
-  let capturedBody: any = null;
+  let capturedBody: ChatCompletionBody | null = null;
 
-  const mockFetch = vi.fn().mockImplementation(async (_url: string, options: any) => {
-    capturedBody = JSON.parse(options.body);
+  const mockFetch = vi.fn().mockImplementation(async (_url: string, options: { body: string }) => {
+    capturedBody = JSON.parse(options.body) as ChatCompletionBody;
     return {
       ok: true,
       json: async () => ({
@@ -73,7 +75,7 @@ test("ai:decision user prompt contains all context sections when API key is set"
   });
 
   // Verify the user message in the API call contains all expected sections
-  const userMessage = capturedBody.messages.find((m: any) => m.role === "user").content;
+  const userMessage = capturedBody!.messages.find((m) => m.role === "user")!.content;
   expect(userMessage).toContain("## Your Identity");
   expect(userMessage).toContain("## Your State");
   expect(userMessage).toContain("## Your Relationships");
@@ -88,7 +90,7 @@ test("ai:decision user prompt contains all context sections when API key is set"
   expect(userMessage).toContain("Alice");
   expect(userMessage).toContain("Charlie");
   // Verify JSON schema output is in system prompt (not user prompt)
-  const systemMessage = capturedBody.messages.find((m: any) => m.role === "system").content;
+  const systemMessage = capturedBody!.messages.find((m) => m.role === "system")!.content;
   expect(systemMessage).toContain("thought");
   expect(systemMessage).toContain("action");
 
@@ -107,10 +109,10 @@ test("ai:decision system prompt includes archetype-specific prompt for the agent
   const t = convexTest(schema, modules);
   process.env.OPENAI_API_KEY = "sk-test-key";
 
-  let capturedBody: any = null;
+  let capturedBody: ChatCompletionBody | null = null;
 
-  const mockFetch = vi.fn().mockImplementation(async (_url: string, options: any) => {
-    capturedBody = JSON.parse(options.body);
+  const mockFetch = vi.fn().mockImplementation(async (_url: string, options: { body: string }) => {
+    capturedBody = JSON.parse(options.body) as ChatCompletionBody;
     return {
       ok: true,
       json: async () => ({
@@ -136,7 +138,7 @@ test("ai:decision system prompt includes archetype-specific prompt for the agent
     archetype: "builder",
   });
 
-  const systemMessage = capturedBody.messages.find((m: any) => m.role === "system").content;
+  const systemMessage = capturedBody!.messages.find((m) => m.role === "system")!.content;
 
   // Verify the builder archetype prompt is present in the system message
   expect(systemMessage).toContain("You are a builder");
@@ -190,10 +192,10 @@ test("ai:decision user prompt includes relationship data from real DB agents via
   // Now call decision with this context and a mock API key
   process.env.OPENAI_API_KEY = "sk-test-key";
 
-  let capturedBody: any = null;
+  let capturedBody: ChatCompletionBody | null = null;
 
-  const mockFetch = vi.fn().mockImplementation(async (_url: string, options: any) => {
-    capturedBody = JSON.parse(options.body);
+  const mockFetch = vi.fn().mockImplementation(async (_url: string, options: { body: string }) => {
+    capturedBody = JSON.parse(options.body) as ChatCompletionBody;
     return {
       ok: true,
       json: async () => ({
@@ -223,7 +225,7 @@ test("ai:decision user prompt includes relationship data from real DB agents via
     memories: context.memories,
   });
 
-  const userMessage = capturedBody.messages.find((m: any) => m.role === "user").content;
+  const userMessage = capturedBody!.messages.find((m) => m.role === "user")!.content;
 
   // Verify relationship context data is in the user prompt
   expect(userMessage).toContain("## Your Relationships");

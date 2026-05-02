@@ -35,8 +35,7 @@ test("buildAgentContext combines archetype and identity", async () => {
   });
 
   // 3. Call buildAgentContext (internal query)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const context = await t.query(internal.functions.ai.buildAgentContext as any, {
+  const context = await t.query(internal.functions.ai.buildAgentContext, {
     agentId,
   });
 

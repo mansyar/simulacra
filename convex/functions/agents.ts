@@ -38,6 +38,14 @@ export const create = mutation({
     spriteVariant: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    const defaultTraits: Record<string, string[]> = {
+      builder: ["organized", "focused"],
+      socialite: ["friendly", "bubbly"],
+      philosopher: ["introspective", "calm"],
+      explorer: ["adventurous", "curious"],
+      nurturer: ["caring", "protective"],
+    };
+
     const newAgent = {
       name: args.name,
       archetype: args.archetype,
@@ -50,7 +58,7 @@ export const create = mutation({
       hunger: 50,
       energy: 50,
       social: 50,
-      coreTraits: [],
+      coreTraits: defaultTraits[args.archetype] ?? [],
       isActive: true,
       lastActiveAt: Date.now(),
       bio: "",

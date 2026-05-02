@@ -1,11 +1,14 @@
 /// <reference types="vite/client" />
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { convexTest } from "convex-test";
 import { expect, test, vi } from "vitest";
 import { api, internal } from "./_generated/api";
 import schema from "./schema";
 
 const modules = import.meta.glob("./**/*.ts");
+
+interface ChatCompletionBody {
+  messages: { role: string; content: string }[];
+}
 
 test("AI decision returns new schema fields", async () => {
   const t = convexTest(schema, modules);
@@ -54,10 +57,10 @@ test("buildContextPrompt renders Current Action in ## Your State section", async
   const t = convexTest(schema, modules);
 
   process.env.OPENAI_API_KEY = "sk-test-key";
-  let capturedBody: any = null;
+  let capturedBody: ChatCompletionBody | null = null;
 
-  const mockFetch = vi.fn().mockImplementation(async (_url: string, options: any) => {
-    capturedBody = JSON.parse(options.body);
+  const mockFetch = vi.fn().mockImplementation(async (_url: string, options: { body: string }) => {
+    capturedBody = JSON.parse(options.body) as ChatCompletionBody;
     return {
       ok: true,
       json: async () => ({
@@ -89,7 +92,7 @@ test("buildContextPrompt renders Current Action in ## Your State section", async
     archetype: "builder",
   });
 
-  const userMessage = capturedBody.messages.find((m: any) => m.role === "user").content;
+  const userMessage = capturedBody!.messages.find((m) => m.role === "user")!.content;
 
   // The ## Your State section should contain "Current Action"
   const stateSection = userMessage.split("## Your State")[1]?.split("##")[0] || "";
@@ -109,10 +112,10 @@ test("buildContextPrompt renders currentAction value alongside needs", async () 
   const t = convexTest(schema, modules);
 
   process.env.OPENAI_API_KEY = "sk-test-key";
-  let capturedBody: any = null;
+  let capturedBody: ChatCompletionBody | null = null;
 
-  const mockFetch = vi.fn().mockImplementation(async (_url: string, options: any) => {
-    capturedBody = JSON.parse(options.body);
+  const mockFetch = vi.fn().mockImplementation(async (_url: string, options: { body: string }) => {
+    capturedBody = JSON.parse(options.body) as ChatCompletionBody;
     return {
       ok: true,
       json: async () => ({
@@ -144,7 +147,7 @@ test("buildContextPrompt renders currentAction value alongside needs", async () 
     archetype: "builder",
   });
 
-  const userMessage = capturedBody.messages.find((m: any) => m.role === "user").content;
+  const userMessage = capturedBody!.messages.find((m) => m.role === "user")!.content;
   const stateSection = userMessage.split("## Your State")[1]?.split("##")[0] || "";
 
   // Verify currentAction renders as a labeled line alongside needs
@@ -280,10 +283,10 @@ test("full decision pipeline includes both currentAction and trajectory info in 
   });
 
   process.env.OPENAI_API_KEY = "sk-test-key";
-  let capturedBody: any = null;
+  let capturedBody: ChatCompletionBody | null = null;
 
-  const mockFetch = vi.fn().mockImplementation(async (_url: string, options: any) => {
-    capturedBody = JSON.parse(options.body);
+  const mockFetch = vi.fn().mockImplementation(async (_url: string, options: { body: string }) => {
+    capturedBody = JSON.parse(options.body) as ChatCompletionBody;
     return {
       ok: true,
       json: async () => ({
@@ -327,7 +330,7 @@ test("full decision pipeline includes both currentAction and trajectory info in 
     poiContext: context.poiContext,
   });
 
-  const userMessage = capturedBody.messages.find((m: any) => m.role === "user").content;
+  const userMessage = capturedBody!.messages.find((m) => m.role === "user")!.content;
 
   // Verify everything appears in the user prompt
   expect(userMessage).toContain("## Your Identity");

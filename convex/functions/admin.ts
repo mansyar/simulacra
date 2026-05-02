@@ -7,8 +7,7 @@ import { api } from "../_generated/api";
  */
 export const manualTick = action({
   args: {},
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  handler: async (ctx): Promise<any> => {
+  handler: async (ctx): Promise<{ success: boolean; skipped?: boolean; agentCount?: number; tickDurationMs?: number; reason?: string }> => {
     return await ctx.runAction(api.functions.world.tick, { skipSleep: true });
   },
 });
@@ -20,8 +19,7 @@ export const manualReflect = action({
   args: {
     agentId: v.id("agents"),
   },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  handler: async (ctx, args): Promise<any> => {
+  handler: async (ctx, args): Promise<{ success: boolean }> => {
     return await ctx.runAction(api.functions.ai.reflect, {
       agentId: args.agentId,
     });

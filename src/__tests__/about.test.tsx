@@ -10,6 +10,10 @@ vi.mock('@tanstack/react-router', () => ({
 // Import after mocking
 import { Route } from '../routes/about'
 
+interface MockRoute {
+  component: ComponentType;
+}
+
 describe('About Route', () => {
   it('should export Route configuration', () => {
     expect(Route).toBeTruthy()
@@ -17,8 +21,7 @@ describe('About Route', () => {
 
   it('should render About component', () => {
     // Access component property with type assertion
-    const routeAny = Route as unknown as { component: ComponentType }
-    const AboutComponent = routeAny.component
+    const AboutComponent = (Route as unknown as MockRoute).component
     expect(AboutComponent).toBeTruthy()
     
     render(<AboutComponent />)
@@ -28,8 +31,7 @@ describe('About Route', () => {
   })
 
   it('should have correct page structure', () => {
-    const routeAny = Route as unknown as { component: ComponentType }
-    const AboutComponent = routeAny.component
+    const AboutComponent = (Route as unknown as MockRoute).component
     render(<AboutComponent />)
     
     const main = screen.getByRole('main')

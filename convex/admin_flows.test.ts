@@ -1,5 +1,4 @@
 /// <reference types="vite/client" />
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { convexTest } from "convex-test";
 import { expect, test } from "vitest";
 import { api } from "./_generated/api";
@@ -40,7 +39,11 @@ test("manual tick processes agents on demand", async () => {
   const initialTicks = beforeTick?.totalTicks ?? 0;
 
   // Run manual tick
-  const result = (await t.action(api.functions.admin.manualTick, {})) as any;
+  const result = await t.action(api.functions.admin.manualTick, {}) as {
+    success: boolean;
+    skipped?: boolean;
+    agentCount?: number;
+  };
   expect(result.success).toBe(true);
   if (result.skipped !== undefined) {
     // Not checking skipped status — depends on sleep mode

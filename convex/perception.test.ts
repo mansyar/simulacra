@@ -54,14 +54,12 @@ test("passive perception records nearby agents", async () => {
 
   // We need to implement a 'recordPassivePerception' internal mutation or similar
   // For now, this test will fail until implemented.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await t.mutation(internal.functions.perception.recordPassivePerception as any, {
+  await t.mutation(internal.functions.perception.recordPassivePerception, {
     agentId: agent1Id,
   });
 
   const events = await t.query(api.functions.memory.getEvents, { agentId: agent1Id });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sighting = events.find((e: any) => e.description.includes("saw Bob"));
+  const sighting = events.find((e) => e.description.includes("saw Bob"));
   
   expect(sighting).toBeDefined();
   expect(sighting?.type).toBe("movement");

@@ -105,34 +105,32 @@ test("updateIdentity caps coreTraits at 10 when adding beyond limit", async () =
     gridX: 5,
     gridY: 5,
   });
+// Add 12 unique traits — should be capped at 10
+await t.mutation(internal.functions.agents.updateIdentity, {
+  agentId,
+  newTraits: ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"],
+});
 
-  // Add 12 unique traits — should be capped at 10
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await t.mutation(internal.functions.agents.updateIdentity as any, {
-    agentId,
-    newTraits: ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"],
-  });
-
-  const agent = await t.query(api.functions.agents.getById, { agentId });
-  expect(agent?.coreTraits).toHaveLength(10);
+const agent = await t.query(api.functions.agents.getById, { agentId });
+expect(agent?.coreTraits).toHaveLength(10);
 });
 
 test("updateIdentity does not cap when traits are under 10", async () => {
-  const t = convexTest(schema, modules);
+const t = convexTest(schema, modules);
 
-  const agentId = await t.mutation(api.functions.agents.create, {
-    name: "Trait Tester 2",
-    archetype: "socialite",
-    gridX: 10,
-    gridY: 10,
-  });
+// Create an agent
+const agentId = await t.mutation(api.functions.agents.create, {
+  name: "Trait Tester 2",
+  archetype: "socialite",
+  gridX: 10,
+  gridY: 10,
+});
 
-  // Add 7 unique traits — no cap should trigger
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await t.mutation(internal.functions.agents.updateIdentity as any, {
-    agentId,
-    newTraits: ["a", "b", "c", "d", "e", "f", "g"],
-  });
+// Add 5 unique traits
+await t.mutation(internal.functions.agents.updateIdentity, {
+  agentId,
+  newTraits: ["x", "y", "z", "1", "2"],
+});
 
   const agent = await t.query(api.functions.agents.getById, { agentId });
   expect(agent?.coreTraits).toHaveLength(7);

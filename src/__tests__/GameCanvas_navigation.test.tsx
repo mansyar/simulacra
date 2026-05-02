@@ -63,15 +63,24 @@ vi.mock('../../convex/_generated/api', () => ({
   },
 }))
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- mock type
-let lastAgentSpriteInstance: Record<string, any> | null = null
+interface MockAgentSprite {
+  on: { mock: { calls: [string, () => void][] } };
+  position: { x: number; y: number };
+  updateAgentData: ReturnType<typeof vi.fn>;
+  tick: ReturnType<typeof vi.fn>;
+  addChild: ReturnType<typeof vi.fn>;
+  setSelected: ReturnType<typeof vi.fn>;
+  setSpeedMultiplier: ReturnType<typeof vi.fn>;
+}
+
+let lastAgentSpriteInstance: MockAgentSprite | null = null
 
 // Mock AgentSprite
 vi.mock('../components/game/AgentSprite', () => {
   return {
     AgentSprite: vi.fn().mockImplementation(() => {
       const instance = {
-        on: vi.fn(),
+        on: vi.fn() as unknown as MockAgentSprite['on'],
         position: { x: 100, y: 100 },
         updateAgentData: vi.fn(),
         tick: vi.fn(),
@@ -79,7 +88,7 @@ vi.mock('../components/game/AgentSprite', () => {
         setSelected: vi.fn(),
         setSpeedMultiplier: vi.fn(),
       }
-      lastAgentSpriteInstance = instance
+      lastAgentSpriteInstance = instance as unknown as MockAgentSprite
       return instance
     })
   }
@@ -96,8 +105,7 @@ describe('GameCanvas Navigation', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- vi.mock return type cast
-    ;(useNavigate as unknown as { mockReturnValue: (v: any) => void }).mockReturnValue(mockNavigate)
+    vi.mocked(useNavigate).mockReturnValue(mockNavigate as never) 
     lastAgentSpriteInstance = null
   })
 
@@ -105,12 +113,12 @@ describe('GameCanvas Navigation', () => {
     const mockAgents = [
       { _id: 'agent1', name: 'Agent 1', gridX: 10, gridY: 10, archetype: 'builder' }
     ]
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- vi.mock return type cast
-    ;(useQuery as unknown as { mockImplementation: (cb: any) => void }).mockImplementation((name: string) => {
+    
+    vi.mocked(useQuery).mockImplementation(((name: unknown, ..._args: unknown[]) => {
       if (name === 'agents:getAll') return mockAgents
       if (name === 'world:getState') return { weather: 'sunny' }
       return []
-    })
+    }) as never)
 
     render(<GameCanvas />)
 
@@ -118,13 +126,12 @@ describe('GameCanvas Navigation', () => {
       expect(lastAgentSpriteInstance).not.toBeNull()
       
       // Trigger select event
-      const calls = lastAgentSpriteInstance!.on.mock.calls
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- mock call args are dynamic
-      const selectCall = calls.find((call: [string, any]) => call[0] === 'select')
+      const calls = (lastAgentSpriteInstance!.on as unknown as { mock: { calls: [string, () => void][] } }).mock.calls
+      const selectCall = calls.find((call: [string, () => void]) => call[0] === 'select')
       expect(selectCall).toBeDefined()
       
-      const selectCallback = selectCall[1]
-      selectCallback()
+      const selectCallback = selectCall?.[1]
+      if (selectCallback) selectCallback()
     })
 
     expect(mockNavigate).toHaveBeenCalledWith({

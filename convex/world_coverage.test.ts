@@ -1,5 +1,4 @@
 /// <reference types="vite/client" />
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { convexTest } from "convex-test";
 import { expect, test, vi } from "vitest";
 import { api } from "./_generated/api";
@@ -66,7 +65,7 @@ test("world:tick uses normalizeAction with hallucinations", async () => {
 
   const agents = await t.query(api.functions.agents.getAll, {});
   // Check if any agent was set to "eating"
-  const anyEating = agents.some((a: any) => a.currentAction === "eating");
+  const anyEating = agents.some((a) => a.currentAction === "eating");
   expect(anyEating).toBe(true);
 
   delete process.env.OPENAI_API_KEY;
@@ -99,7 +98,7 @@ test("world:tick parses coordinate targets", async () => {
 
   const agents = await t.query(api.functions.agents.getAll, {});
    
-  const anyAgentAtTarget = agents.some((a: any) => a.targetX === 10 && a.targetY === 20);
+  const anyAgentAtTarget = agents.some((a) => a.targetX === 10 && a.targetY === 20);
   expect(anyAgentAtTarget).toBe(true);
 
   delete process.env.OPENAI_API_KEY;

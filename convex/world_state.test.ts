@@ -1,5 +1,4 @@
 import { test, expect } from "vitest";
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { convexTest } from "convex-test";
 import { api, internal } from "./_generated/api";
 import schema from "./schema";
@@ -16,7 +15,7 @@ test("advanceWorldState increments time and wraps day", async () => {
   });
 
   // 2. Advance time (Assume 1 tick = 30 minutes)
-  await t.mutation(internal.functions.world.advanceWorldState as any, {});
+  await t.mutation(internal.functions.world.advanceWorldState, {});
 
   const state = await t.query(api.functions.world.getState, {});
   
@@ -36,7 +35,7 @@ test("weather transitions stochastically", async () => {
   // without mocking Math.random(), but we can verify the function 
   // exists and runs without error.
    
-  await t.mutation(internal.functions.world.advanceWorldState as any, {});
+  await t.mutation(internal.functions.world.advanceWorldState, {});
   
   const state = await t.query(api.functions.world.getState, {});
   expect(["sunny", "cloudy", "rainy", "stormy"]).toContain(state?.weather);

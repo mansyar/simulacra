@@ -68,9 +68,7 @@ test("getGlobalEvents returns events from all agents", async () => {
     gridY: 10,
   });
 
-  // This will fail until getGlobalEvents is implemented
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const globalEvents = await t.query(api.functions.memory.getGlobalEvents as any, { limit: 10 });
+  const globalEvents = await t.query(api.functions.memory.getGlobalEvents, { limit: 10 });
   
   expect(globalEvents.length).toBe(2);
   expect(globalEvents[0].description).toBe("Agent 2 talked"); // Most recent first

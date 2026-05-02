@@ -30,12 +30,10 @@ test("agents table has new fields", async () => {
       currentGoal: "Building a test structure.",
       lastReflectedTick: 0,
       actionStartedAt: Date.now(),
-      interactionPartnerId: undefined,
       lastThought: "I am a test agent.",
       speech: "Hello world",
       lastSpeechAt: Date.now(),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any); // Use 'any' to bypass TS check for now to prove schema failure
+    });
   });
 
   const agent = await t.run(async (ctx) => {

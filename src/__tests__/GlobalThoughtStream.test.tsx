@@ -52,34 +52,31 @@ describe('GlobalThoughtStream', () => {
   })
 
   it('returns null when events data is loading (undefined)', () => {
-    vi.mocked(useQuery).mockImplementation(((fn: string) => {
+    vi.mocked(useQuery).mockImplementation(((fn: unknown, ..._args: unknown[]) => {
       if (fn === 'memory:getGlobalEvents') return undefined
       if (fn === 'agents:getAll') return undefined
       return undefined
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- vi.mocked callback type mismatch
-    }) as any)
+    }) as never)
     const { container } = render(<GlobalThoughtStream />)
     expect(container.firstChild).toBeNull()
   })
 
   it('shows empty state when there are no events', () => {
-    vi.mocked(useQuery).mockImplementation(((fn: string) => {
+    vi.mocked(useQuery).mockImplementation(((fn: unknown, ..._args: unknown[]) => {
       if (fn === 'memory:getGlobalEvents') return []
       if (fn === 'agents:getAll') return []
       return []
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- vi.mocked callback type mismatch
-    }) as any)
+    }) as never)
     render(<GlobalThoughtStream />)
     expect(screen.getByText('Waiting for simulation events...')).toBeDefined()
   })
 
   it('renders all events with agent names and descriptions', () => {
-    vi.mocked(useQuery).mockImplementation(((fn: string) => {
+    vi.mocked(useQuery).mockImplementation(((fn: unknown, ..._args: unknown[]) => {
       if (fn === 'memory:getGlobalEvents') return mockEvents
       if (fn === 'agents:getAll') return mockAgents
       return undefined
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- vi.mocked callback type mismatch
-    }) as any)
+    }) as never)
     render(<GlobalThoughtStream />)
     expect(screen.getByText('Alice moved to position')).toBeDefined()
     expect(screen.getByText('Bob spoke to someone')).toBeDefined()
@@ -88,12 +85,11 @@ describe('GlobalThoughtStream', () => {
 
   describe('Filtering', () => {
     beforeEach(() => {
-      vi.mocked(useQuery).mockImplementation(((fn: string) => {
+      vi.mocked(useQuery).mockImplementation(((fn: unknown, ..._args: unknown[]) => {
         if (fn === 'memory:getGlobalEvents') return mockEvents
         if (fn === 'agents:getAll') return mockAgents
         return undefined
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- vi.mocked callback type mismatch
-      }) as any)
+      }) as never)
     })
 
     it('renders a scrollable container for events', () => {
@@ -106,12 +102,11 @@ describe('GlobalThoughtStream', () => {
 
   describe('Highlighting', () => {
     beforeEach(() => {
-      vi.mocked(useQuery).mockImplementation(((fn: string) => {
+      vi.mocked(useQuery).mockImplementation(((fn: unknown, ..._args: unknown[]) => {
         if (fn === 'memory:getGlobalEvents') return mockEvents
         if (fn === 'agents:getAll') return mockAgents
         return undefined
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- vi.mocked callback type mismatch
-      }) as any)
+      }) as never)
     })
 
     it('highlights events for the selected agent when on /agent/$id route', () => {
