@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { convexTest } from "convex-test";
 import { expect, test, vi } from "vitest";
 import { api } from "./_generated/api";
@@ -97,6 +98,7 @@ test("world:tick parses coordinate targets", async () => {
   await t.action(api.functions.world.tick, {});
 
   const agents = await t.query(api.functions.agents.getAll, {});
+   
   const anyAgentAtTarget = agents.some((a: any) => a.targetX === 10 && a.targetY === 20);
   expect(anyAgentAtTarget).toBe(true);
 

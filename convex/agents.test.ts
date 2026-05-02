@@ -107,6 +107,7 @@ test("updateIdentity caps coreTraits at 10 when adding beyond limit", async () =
   });
 
   // Add 12 unique traits — should be capped at 10
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await t.mutation(internal.functions.agents.updateIdentity as any, {
     agentId,
     newTraits: ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"],
@@ -127,6 +128,7 @@ test("updateIdentity does not cap when traits are under 10", async () => {
   });
 
   // Add 7 unique traits — no cap should trigger
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await t.mutation(internal.functions.agents.updateIdentity as any, {
     agentId,
     newTraits: ["a", "b", "c", "d", "e", "f", "g"],

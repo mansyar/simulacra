@@ -14,7 +14,7 @@ function AgentDetail() {
   const { id } = Route.useParams()
   const navigate = useNavigate()
   const agent = useQuery(api.functions.agents.getById, { agentId: id as Id<'agents'> })
-  const relationships = useQuery(api.functions.agents.getRelationships, { agentId: id as Id<'agents'> })
+  const relationships = useQuery(api.functions.relationships.getRelationships, { agentId: id as Id<'agents'> })
   const events = useQuery(api.functions.memory.getEvents, { agentId: id as Id<'agents'> })
 
   const handleClose = () => {

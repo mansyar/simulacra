@@ -86,7 +86,7 @@ describe("Per-Turn Sentiment Integration", () => {
     });
 
     // Simulate a positive conversation turn (delta: +3 from "wonderful")
-    await t.mutation(internal.functions.agents.updateRelationship, {
+    await t.mutation(internal.functions.relationships.updateRelationship, {
       agentAId, agentBId, delta: 3,
     });
 
@@ -97,7 +97,7 @@ describe("Per-Turn Sentiment Integration", () => {
     expect(relationship?.valenceHistory).toEqual(["positive"]);
 
     // Simulate a negative conversation turn (delta: -2 from "bad")
-    await t.mutation(internal.functions.agents.updateRelationship, {
+    await t.mutation(internal.functions.relationships.updateRelationship, {
       agentAId, agentBId, delta: -2,
     });
     relationship = await t.query(api.functions.world.getRelationship, {
@@ -121,17 +121,17 @@ describe("Per-Turn Sentiment Integration", () => {
     });
 
     // Turn 1: Positive (+3 for "wonderful")
-    await t.mutation(internal.functions.agents.updateRelationship, {
+    await t.mutation(internal.functions.relationships.updateRelationship, {
       agentAId, agentBId, delta: 3,
     });
 
     // Turn 2: Positive (+1 for "good")
-    await t.mutation(internal.functions.agents.updateRelationship, {
+    await t.mutation(internal.functions.relationships.updateRelationship, {
       agentAId, agentBId, delta: 1,
     });
 
     // Turn 3: Negative (-2 for "bad")
-    await t.mutation(internal.functions.agents.updateRelationship, {
+    await t.mutation(internal.functions.relationships.updateRelationship, {
       agentAId, agentBId, delta: -2,
     });
 
@@ -159,11 +159,11 @@ describe("Per-Turn Sentiment Integration", () => {
 
     // Simulate a 5-turn conversation with mixed sentiment
     await Promise.all([
-      t.mutation(internal.functions.agents.updateRelationship, { agentAId, agentBId, delta: 3 }),  // positive
-      t.mutation(internal.functions.agents.updateRelationship, { agentAId, agentBId, delta: -3 }), // negative
-      t.mutation(internal.functions.agents.updateRelationship, { agentAId, agentBId, delta: 0 }),  // neutral
-      t.mutation(internal.functions.agents.updateRelationship, { agentAId, agentBId, delta: 1 }),  // positive
-      t.mutation(internal.functions.agents.updateRelationship, { agentAId, agentBId, delta: -1 }), // negative
+      t.mutation(internal.functions.relationships.updateRelationship, { agentAId, agentBId, delta: 3 }),  // positive
+      t.mutation(internal.functions.relationships.updateRelationship, { agentAId, agentBId, delta: -3 }), // negative
+      t.mutation(internal.functions.relationships.updateRelationship, { agentAId, agentBId, delta: 0 }),  // neutral
+      t.mutation(internal.functions.relationships.updateRelationship, { agentAId, agentBId, delta: 1 }),  // positive
+      t.mutation(internal.functions.relationships.updateRelationship, { agentAId, agentBId, delta: -1 }), // negative
     ]);
 
     const relationship = await t.query(api.functions.world.getRelationship, {
@@ -194,7 +194,7 @@ describe("Per-Turn Sentiment Integration", () => {
 
     // Simulate 7 conversation turns
     for (let i = 1; i <= 7; i++) {
-      await t.mutation(internal.functions.agents.updateRelationship, {
+      await t.mutation(internal.functions.relationships.updateRelationship, {
         agentAId, agentBId, delta: i % 2 === 0 ? 1 : -1,
       });
     }

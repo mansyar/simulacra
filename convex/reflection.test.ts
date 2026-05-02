@@ -41,6 +41,7 @@ test("reflect synthesizes events into traits and memories", async () => {
 
   // 2. Call reflect (action)
   // This will fail until implemented
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await t.action(api.functions.ai.reflect as any, {
     agentId,
   });
@@ -107,7 +108,8 @@ test("social interactions affect affinity", async () => {
 
   // 1. Trigger an interaction (normally via world:tick)
   // We'll call an internal mutation to record relationship delta
-  await t.mutation(internal.functions.agents.updateRelationship as any, {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await t.mutation(internal.functions.relationships.updateRelationship as any, {
     agentAId,
     agentBId,
     delta: 10,

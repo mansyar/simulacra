@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { convexTest } from "convex-test";
 import { expect, test, vi } from "vitest";
 import { api } from "./_generated/api";
@@ -143,12 +144,14 @@ test("tick: error isolation wrapper does not block normal agent processing", asy
 
   // All agents were processed (needs updated from baseline of 50)
   const updatedAgents = await t.query(api.functions.agents.getAll, {});
+   
   const processedAgents = updatedAgents.filter((a: any) => a.hunger !== 50);
   expect(processedAgents.length).toBe(10);
 
   // Verify no error/failure events were logged (normal path through error isolation)
   for (const agent of updatedAgents) {
     const events = await t.query(api.functions.memory.getEvents, { agentId: agent._id });
+     
     const errorEvents = events.filter((e: any) =>
       e.description.toLowerCase().includes("error") ||
       e.description.toLowerCase().includes("fail") ||

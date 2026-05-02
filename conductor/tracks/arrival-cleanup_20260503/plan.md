@@ -2,7 +2,7 @@
 
 ## Phase 1: Arrival Cleanup Implementation
 
-- [ ] Task: Write failing tests for atomic arrival and snapping
+- [~] Task: Write failing tests for atomic arrival and snapping
     - [ ] Sub-task: Add/update test in `convex/agents.test.ts` to verify `resolveMovement` snaps `gridX`/`gridY` to exactly `targetX`/`targetY` when distance < 0.1, clears the targets, and returns `arrived: true`.
     - [ ] Sub-task: Add/update test in `convex/agents.test.ts` to verify `resolveMovement` clears targets when `ratio === 1`.
 - [ ] Task: Implement atomic arrival and snapping in `resolveMovement`

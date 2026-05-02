@@ -156,7 +156,7 @@ describe("Sensory Context in buildFullContext", () => {
     });
 
     // Create a relationship between the agents
-    await t.mutation(internal.functions.agents.updateRelationship, {
+    await t.mutation(internal.functions.relationships.updateRelationship, {
       agentAId,
       agentBId,
       delta: 5,

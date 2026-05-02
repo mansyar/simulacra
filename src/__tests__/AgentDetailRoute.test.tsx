@@ -36,7 +36,9 @@ vi.mock('../../convex/_generated/api', () => ({
     functions: {
       agents: {
         getById: 'agents:getById',
-        getRelationships: 'agents:getRelationships',
+      },
+      relationships: {
+        getRelationships: 'relationships:getRelationships',
       },
       memory: {
         getEvents: 'memory:getEvents',
@@ -78,7 +80,7 @@ describe('AgentDetail Route Component', () => {
     vi.mocked(useQuery).mockImplementation((name: any, ..._args) => { void _args
       if (typeof name === 'string') {
         if (name === 'agents:getById') return mockAgent
-        if (name === 'agents:getRelationships') return mockRelationships
+        if (name === 'relationships:getRelationships') return mockRelationships
         if (name === 'memory:getEvents') return mockEvents
       } else if (name && name.name === 'getById') {
         return mockAgent

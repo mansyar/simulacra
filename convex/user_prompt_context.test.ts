@@ -170,7 +170,7 @@ test("ai:decision user prompt includes relationship data from real DB agents via
   });
 
   // Create a relationship between them
-  await t.mutation(internal.functions.agents.updateRelationship, {
+  await t.mutation(internal.functions.relationships.updateRelationship, {
     agentAId,
     agentBId,
     delta: 10,

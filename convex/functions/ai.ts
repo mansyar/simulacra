@@ -240,7 +240,7 @@ export const buildRelationshipContext = action({
   },
   handler: async (ctx, args): Promise<string> => {
     // Get all relationships for this agent
-    const relationships = await ctx.runQuery(api.functions.agents.getRelationships, {
+    const relationships = await ctx.runQuery(api.functions.relationships.getRelationships, {
       agentId: args.agentId,
     });
 

@@ -33,13 +33,13 @@ describe("Relationship Context", () => {
     });
 
     // Create relationships with different affinities
-    await t.mutation(internal.functions.agents.updateRelationship, {
+    await t.mutation(internal.functions.relationships.updateRelationship, {
       agentAId,
       agentBId,
       delta: 14, // Alice likes Bob
     });
 
-    await t.mutation(internal.functions.agents.updateRelationship, {
+    await t.mutation(internal.functions.relationships.updateRelationship, {
       agentAId,
       agentBId: agentCId,
       delta: -8, // Alice dislikes Charlie
@@ -94,7 +94,7 @@ describe("Relationship Context", () => {
     });
 
     // Create a relationship with a recent interaction
-    await t.mutation(internal.functions.agents.updateRelationship, {
+    await t.mutation(internal.functions.relationships.updateRelationship, {
       agentAId,
       agentBId,
       delta: 10,
@@ -160,7 +160,7 @@ describe("Relationship Context", () => {
     });
 
     // Create a relationship
-    await t.mutation(internal.functions.agents.updateRelationship, {
+    await t.mutation(internal.functions.relationships.updateRelationship, {
       agentAId,
       agentBId,
       delta: 5,

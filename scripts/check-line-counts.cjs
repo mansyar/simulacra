@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-require-imports */
 
 const fs = require('fs');
 const path = require('path');
@@ -24,7 +25,7 @@ function shouldExclude(filePath) {
   return EXCLUDE_PATTERNS.some(pattern => relativePath.includes(pattern));
 }
 
-function scanDirectory(dir) {
+function scanDirectory() {
   const oversizedFiles = [];
   
   function scan(currentPath) {
@@ -54,8 +55,8 @@ function scanDirectory(dir) {
     }
   }
   
-  for (const dir of SOURCE_DIRS) {
-    const fullPath = path.join(process.cwd(), dir);
+  for (const sourceDir of SOURCE_DIRS) {
+    const fullPath = path.join(process.cwd(), sourceDir);
     if (fs.existsSync(fullPath)) {
       scan(fullPath);
     }
@@ -67,7 +68,7 @@ function scanDirectory(dir) {
 // Main execution
 console.log('Checking file line counts...\n');
 
-const oversizedFiles = scanDirectory(process.cwd());
+const oversizedFiles = scanDirectory();
 
 if (oversizedFiles.length > 0) {
   console.error('❌ ERROR: The following files exceed the maximum allowed line count of 500 lines:\n');

@@ -62,7 +62,7 @@ describe("Agent Interaction Flow", () => {
     });
 
     // Create a positive relationship interaction
-    await t.mutation(internal.functions.agents.updateRelationship, {
+    await t.mutation(internal.functions.relationships.updateRelationship, {
       agentAId,
       agentBId,
       delta: 5,
@@ -78,7 +78,7 @@ describe("Agent Interaction Flow", () => {
     expect(rel!.lastInteractionType).toBe("positive");
 
     // Create a negative interaction
-    await t.mutation(internal.functions.agents.updateRelationship, {
+    await t.mutation(internal.functions.relationships.updateRelationship, {
       agentAId,
       agentBId,
       delta: -3,
@@ -192,7 +192,7 @@ describe("Agent Interaction Flow", () => {
     // Create 6 interactions with alternating sentiment
     const deltas = [5, -2, 3, -4, 6, -1];
     for (const delta of deltas) {
-      await t.mutation(internal.functions.agents.updateRelationship, {
+      await t.mutation(internal.functions.relationships.updateRelationship, {
         agentAId,
         agentBId,
         delta,
@@ -235,14 +235,14 @@ describe("Agent Interaction Flow", () => {
     });
 
     // Create relationships
-    await t.mutation(internal.functions.agents.updateRelationship, {
+    await t.mutation(internal.functions.relationships.updateRelationship, {
       agentAId, agentBId, delta: 3,
     });
-    await t.mutation(internal.functions.agents.updateRelationship, {
+    await t.mutation(internal.functions.relationships.updateRelationship, {
       agentAId, agentBId: agentCId, delta: 10,
     });
 
-    const rels = await t.query(api.functions.agents.getRelationships, {
+    const rels = await t.query(api.functions.relationships.getRelationships, {
       agentId: agentAId,
     });
     expect(rels.length).toBe(2);

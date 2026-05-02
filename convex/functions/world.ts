@@ -299,8 +299,8 @@ async function processAgent(
       });
     }
   }
-  await ctx.runMutation(internal.functions.agents.recordPassivePerception, { agentId: agent._id });
-  const nearbyDocs = await ctx.runQuery(internal.functions.agents.getNearbyAgents, {
+  await ctx.runMutation(internal.functions.perception.recordPassivePerception, { agentId: agent._id });
+  const nearbyDocs = await ctx.runQuery(internal.functions.perception.getNearbyAgents, {
     agentId: agent._id, gridX: agent.gridX, gridY: agent.gridY, radius: interactionRadius,
   });
   const nearbyAgents = nearbyDocs.map((a: Doc<"agents">) => a.name);
@@ -347,7 +347,7 @@ async function processAgent(
       targetAgentId = targetAgent._id;
       if (decision.speech) {
         const { delta } = analyzeSentiment(decision.speech);
-        await ctx.runMutation(internal.functions.agents.updateRelationship, {
+        await ctx.runMutation(internal.functions.relationships.updateRelationship, {
           agentAId: agent._id, agentBId: targetAgentId, delta,
         });
       }

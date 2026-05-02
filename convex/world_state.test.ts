@@ -1,4 +1,5 @@
 import { test, expect } from "vitest";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { convexTest } from "convex-test";
 import { api, internal } from "./_generated/api";
 import schema from "./schema";
@@ -34,6 +35,7 @@ test("weather transitions stochastically", async () => {
   // We can't easily test "stochastic" transitions in unit tests 
   // without mocking Math.random(), but we can verify the function 
   // exists and runs without error.
+   
   await t.mutation(internal.functions.world.advanceWorldState as any, {});
   
   const state = await t.query(api.functions.world.getState, {});

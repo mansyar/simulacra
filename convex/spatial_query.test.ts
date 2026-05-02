@@ -1,4 +1,5 @@
 import { describe, test, expect, vi } from "vitest";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { convexTest } from "convex-test";
 import { api, internal } from "./_generated/api";
 import schema from "./schema";
@@ -88,7 +89,7 @@ describe("Spatial Query: getNearbyAgents", () => {
       return await ctx.db.get(centerId);
     });
 
-    const nearby = await t.query(internal.functions.agents.getNearbyAgents, {
+    const nearby = await t.query(internal.functions.perception.getNearbyAgents, {
       agentId: centerId,
       gridX: center!.gridX,
       gridY: center!.gridY,
@@ -107,7 +108,7 @@ describe("Spatial Query: getNearbyAgents", () => {
       return await ctx.db.get(centerId);
     });
 
-    const nearby = await t.query(internal.functions.agents.getNearbyAgents, {
+    const nearby = await t.query(internal.functions.perception.getNearbyAgents, {
       agentId: centerId,
       gridX: center!.gridX,
       gridY: center!.gridY,
@@ -115,6 +116,7 @@ describe("Spatial Query: getNearbyAgents", () => {
     });
 
     // Should only return "Nearby", not "Center" itself
+     
     const centerInResults = nearby.find((a: any) => a._id === centerId);
     expect(centerInResults).toBeUndefined();
   });
@@ -128,7 +130,7 @@ describe("Spatial Query: getNearbyAgents", () => {
     });
 
     // Radius 1 should only match agents at exact same position
-    const nearby = await t.query(internal.functions.agents.getNearbyAgents, {
+    const nearby = await t.query(internal.functions.perception.getNearbyAgents, {
       agentId: centerId,
       gridX: center!.gridX,
       gridY: center!.gridY,
@@ -146,7 +148,7 @@ describe("Spatial Query: getNearbyAgents", () => {
       return await ctx.db.get(centerId);
     });
 
-    const nearby = await t.query(internal.functions.agents.getNearbyAgents, {
+    const nearby = await t.query(internal.functions.perception.getNearbyAgents, {
       agentId: centerId,
       gridX: center!.gridX,
       gridY: center!.gridY,
@@ -154,6 +156,7 @@ describe("Spatial Query: getNearbyAgents", () => {
     });
 
     // FarAgent is at (20,20), distance from (10,10) ≈ 14.14 > 5
+     
     const farInResults = nearby.find((a: any) => a.name === "FarAgent");
     expect(farInResults).toBeUndefined();
   });
@@ -207,11 +210,13 @@ describe("Spatial Query: recordPassivePerception optimized", () => {
       });
     });
 
-    await t.mutation(internal.functions.agents.recordPassivePerception as any, {
+     
+    await t.mutation(internal.functions.perception.recordPassivePerception as any, {
       agentId: agent1Id,
     });
 
     const events = await t.query(api.functions.memory.getEvents, { agentId: agent1Id });
+     
     const sighting = events.find((e: any) => e.description.includes("saw Bob"));
 
     expect(sighting).toBeDefined();

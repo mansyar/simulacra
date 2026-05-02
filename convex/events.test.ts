@@ -69,6 +69,7 @@ test("getGlobalEvents returns events from all agents", async () => {
   });
 
   // This will fail until getGlobalEvents is implemented
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const globalEvents = await t.query(api.functions.memory.getGlobalEvents as any, { limit: 10 });
   
   expect(globalEvents.length).toBe(2);

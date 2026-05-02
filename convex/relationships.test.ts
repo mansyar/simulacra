@@ -24,7 +24,7 @@ describe("Relationships", () => {
     });
 
     // 2. First interaction (positive)
-    await t.mutation(internal.functions.agents.updateRelationship, {
+    await t.mutation(internal.functions.relationships.updateRelationship, {
       agentAId,
       agentBId,
       delta: 5,
@@ -38,7 +38,7 @@ describe("Relationships", () => {
     expect(relationship?.valenceHistory).toEqual(["positive"]);
 
     // 3. Second interaction (negative)
-    await t.mutation(internal.functions.agents.updateRelationship, {
+    await t.mutation(internal.functions.relationships.updateRelationship, {
       agentAId,
       agentBId,
       delta: -10,
@@ -53,10 +53,10 @@ describe("Relationships", () => {
     expect(relationship?.valenceHistory).toEqual(["negative", "positive"]);
 
     // 4. Fill history (max 5)
-    await t.mutation(internal.functions.agents.updateRelationship, { agentAId, agentBId, delta: 0 }); // neutral
-    await t.mutation(internal.functions.agents.updateRelationship, { agentAId, agentBId, delta: 1 }); // positive
-    await t.mutation(internal.functions.agents.updateRelationship, { agentAId, agentBId, delta: 2 }); // positive
-    await t.mutation(internal.functions.agents.updateRelationship, { agentAId, agentBId, delta: -1 }); // negative
+    await t.mutation(internal.functions.relationships.updateRelationship, { agentAId, agentBId, delta: 0 }); // neutral
+    await t.mutation(internal.functions.relationships.updateRelationship, { agentAId, agentBId, delta: 1 }); // positive
+    await t.mutation(internal.functions.relationships.updateRelationship, { agentAId, agentBId, delta: 2 }); // positive
+    await t.mutation(internal.functions.relationships.updateRelationship, { agentAId, agentBId, delta: -1 }); // negative
 
     relationship = await t.query(api.functions.world.getRelationship, {
       agentAId,

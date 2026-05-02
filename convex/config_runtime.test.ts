@@ -275,14 +275,14 @@ test("updateRelationship respects config maxConversationTurns for valenceHistory
 
   // Update relationship multiple times to build up valence history
   for (let i = 0; i < 5; i++) {
-    await t.mutation(internal.functions.agents.updateRelationship, {
+    await t.mutation(internal.functions.relationships.updateRelationship, {
       agentAId: agentA,
       agentBId: agentB,
       delta: 10,
     });
   }
 
-  const rels = await t.query(api.functions.agents.getRelationships, { agentId: agentA });
+  const rels = await t.query(api.functions.relationships.getRelationships, { agentId: agentA });
   const rel = rels.find(r => r.agentBId === agentB || r.agentAId === agentB);
   // Config-driven valence cap should limit to 2
   expect(rel).toBeDefined();

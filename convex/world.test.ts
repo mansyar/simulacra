@@ -96,7 +96,7 @@ test("interaction radius is fetched from config", async () => {
   });
 
   // 3. Record passive perception
-  await t.mutation(internal.functions.agents.recordPassivePerception, { agentId: agentAId });
+  await t.mutation(internal.functions.perception.recordPassivePerception, { agentId: agentAId });
 
   // 4. Verify no event recorded
   let events = await t.query(api.functions.memory.getEvents, { agentId: agentAId });
@@ -108,7 +108,7 @@ test("interaction radius is fetched from config", async () => {
   });
 
   // 6. Record passive perception
-  await t.mutation(internal.functions.agents.recordPassivePerception, { agentId: agentAId });
+  await t.mutation(internal.functions.perception.recordPassivePerception, { agentId: agentAId });
 
   // 7. Verify event recorded
   events = await t.query(api.functions.memory.getEvents, { agentId: agentAId });

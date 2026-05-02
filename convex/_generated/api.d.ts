@@ -15,6 +15,8 @@ import type * as functions_ai from "../functions/ai.js";
 import type * as functions_ai_helpers from "../functions/ai_helpers.js";
 import type * as functions_config from "../functions/config.js";
 import type * as functions_memory from "../functions/memory.js";
+import type * as functions_perception from "../functions/perception.js";
+import type * as functions_relationships from "../functions/relationships.js";
 import type * as functions_seed from "../functions/seed.js";
 import type * as functions_sentiment from "../functions/sentiment.js";
 import type * as functions_types from "../functions/types.js";
@@ -35,6 +37,8 @@ declare const fullApi: ApiFromModules<{
   "functions/ai_helpers": typeof functions_ai_helpers;
   "functions/config": typeof functions_config;
   "functions/memory": typeof functions_memory;
+  "functions/perception": typeof functions_perception;
+  "functions/relationships": typeof functions_relationships;
   "functions/seed": typeof functions_seed;
   "functions/sentiment": typeof functions_sentiment;
   "functions/types": typeof functions_types;
