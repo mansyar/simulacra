@@ -1,38 +1,101 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import Footer from '../components/Footer'
+import { useQuery } from 'convex/react'
 
-describe('Footer', () => {
-  it('should render copyright with current year', () => {
-    render(<Footer />)
-    const currentYear = new Date().getFullYear()
-    const copyrightElement = screen.getByText(new RegExp(`© ${currentYear}`))
-    expect(copyrightElement).toBeTruthy()
+// Mock convex
+vi.mock('convex/react', () => ({
+  useQuery: vi.fn(),
+}))
+
+// Mock the API
+vi.mock('../../convex/_generated/api', () => ({
+  api: {
+    functions: {
+      world: {
+        getState: 'world:getState',
+      },
+      agents: {
+        getAll: 'agents:getAll',
+      },
+    },
+  },
+}))
+
+describe('Footer Status Bar', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
   })
 
-  it('should contain TanStack attribution', () => {
+  it('renders tick count from world state', () => {
+    vi.mocked(useQuery).mockImplementation(((fn: unknown) => {
+      if (fn === 'world:getState') return { totalTicks: 42, lastTickAt: Date.now(), tickIntervalSeconds: 60 }
+      if (fn === 'agents:getAll') return []
+      return undefined
+    }) as never)
     render(<Footer />)
-    const attribution = screen.getByText(/Built with TanStack Start/)
-    expect(attribution).toBeTruthy()
+    expect(screen.getByText(/42/)).toBeDefined()
   })
 
-  it('should contain social links', () => {
+  it('renders active agent count', () => {
+    vi.mocked(useQuery).mockImplementation(((fn: unknown) => {
+      if (fn === 'world:getState') return { totalTicks: 0, lastTickAt: Date.now(), tickIntervalSeconds: 60 }
+      if (fn === 'agents:getAll') return [
+        { _id: '1', name: 'Alice', isActive: true },
+        { _id: '2', name: 'Bob', isActive: true },
+        { _id: '3', name: 'Charlie', isActive: false },
+      ]
+      return undefined
+    }) as never)
     render(<Footer />)
-    const links = screen.getAllByRole('link')
-    expect(links.length).toBeGreaterThan(0)
+    // Should show 2 active agents
+    expect(screen.getByText(/2/)).toBeDefined()
   })
 
-  it('should have X (Twitter) link', () => {
+  it('renders relative time for last tick timestamp', () => {
+    const tenSecondsAgo = Date.now() - 10000
+    vi.mocked(useQuery).mockImplementation(((fn: unknown) => {
+      if (fn === 'world:getState') return { totalTicks: 1, lastTickAt: tenSecondsAgo, tickIntervalSeconds: 60 }
+      if (fn === 'agents:getAll') return []
+      return undefined
+    }) as never)
     render(<Footer />)
-    const xLink = screen.getByRole('link', { name: /Follow TanStack on X/i })
-    expect(xLink).toBeTruthy()
-    expect(xLink.getAttribute('href')).toBe('https://x.com/tan_stack')
+    // Should show "10s ago" or similar
+    expect(screen.getByText(/ago/)).toBeDefined()
   })
 
-  it('should have GitHub link', () => {
+  it('renders sleep mode indicator', () => {
+    vi.mocked(useQuery).mockImplementation(((fn: unknown) => {
+      if (fn === 'world:getState') return { totalTicks: 5, lastTickAt: Date.now(), tickIntervalSeconds: 60, lastUserActivityAt: 0 }
+      if (fn === 'agents:getAll') return []
+      return undefined
+    }) as never)
     render(<Footer />)
-    const githubLink = screen.getByRole('link', { name: /Go to TanStack GitHub/i })
-    expect(githubLink).toBeTruthy()
-    expect(githubLink.getAttribute('href')).toBe('https://github.com/TanStack')
+    // Sleep indicator should be visible (sleeping or active)
+    // Since lastUserActivityAt is 0 (far in the past), should show sleeping
+    const sleepIndicators = screen.getAllByText(/sleep|Sleeping|Active/i)
+    expect(sleepIndicators.length).toBeGreaterThan(0)
+  })
+
+  it('renders countdown timer display', () => {
+    const tenSecondsAgo = Date.now() - 10000
+    vi.mocked(useQuery).mockImplementation(((fn: unknown) => {
+      if (fn === 'world:getState') return { totalTicks: 1, lastTickAt: tenSecondsAgo, tickIntervalSeconds: 60 }
+      if (fn === 'agents:getAll') return []
+      return undefined
+    }) as never)
+    render(<Footer />)
+    // Countdown should show ~50s remaining (may be 49s due to timing)
+    expect(screen.getByText(/(49|50)s/)).toBeDefined()
+  })
+
+  it('renders nothing when world state is loading', () => {
+    vi.mocked(useQuery).mockImplementation(((fn: unknown) => {
+      if (fn === 'world:getState') return undefined
+      if (fn === 'agents:getAll') return undefined
+      return undefined
+    }) as never)
+    const { container } = render(<Footer />)
+    expect(container.firstChild).toBeNull()
   })
 })
