@@ -14,7 +14,7 @@
 | 8 | The Backbone | Robustness & Scaling | ✅ Complete | 1 week |
 | 9 | The Soul | Deeper Social Dynamics | ✅ Complete | 1 week |
 | 10 | Movement Coherence | Fix agent trajectory, weather sync, arrival cleanup, and bounds clamping | ✅ Complete | 2-3 days |
-| 11 | The Observatory | UI/UX Polish & World Immersion | ⏳ Not Started | 2-3 weeks |
+| 11 | The Observatory | UI/UX Polish & World Immersion | 🔄 In Progress | 2-3 weeks |
 | 12 | The Polish | Master Panel + Deploy | ⏳ Not Started | 1 week |
 
 ---
@@ -145,34 +145,36 @@
 
 ---
 
-## Phase 11: The Observatory — UI/UX Polish & World Immersion (Upcoming)
+## Phase 11: The Observatory — UI/UX Polish & World Immersion
 
 **Goal:** Transform the interface from functional overlays into a cohesive, immersive observatory experience. Eliminate floating panel clutter, add world navigation tools, enrich ambient feedback, and make every interaction feel intentional and polished.
 
-**Status:** ⏳ NOT STARTED — Estimated Duration: 2-3 weeks
+**Status:** 🔄 In Progress — Estimated Duration: 2-3 weeks (Track A ✅ Complete)
 
 ---
 
-### Track A: Layout Rationalization
+### Track A: Layout Rationalization ✅
 
 **Goal:** Eliminate floating-panel clutter and give the canvas full visual breathing room. Replace the boilerplate footer with useful instrumentation. Add power-user shortcuts.
 
 **Rationale:** Currently, the AdminPanel (fixed left-bottom) and ThoughtStream (fixed right) float over the canvas, competing for screen real estate. The footer contains copyright boilerplate. This track fixes all three.
 
+**Completed:** 2026-05-04 — 383 tests, 0 TypeScript errors. [View archive](../conductor/archive/layout-rationalization_20260504/)
+
 #### Checklist:
-- [ ] **ThoughtStream → Bottom Drawer**: Convert GlobalThoughtStream from a fixed right sidebar (`right-4 top-20 bottom-24`) into a collapsible bottom drawer. Default: collapsed (shows last event + ▲ expand handle). Expanded: slides up to show full event feed with existing filters. Follows the original spec's "200px footer" layout intent.
-- [ ] **Replace Footer with Status Bar**: Remove the copyright/social boilerplate from `Footer.tsx`. Replace with a thin (32px) persistent instrumentation bar showing: tick count, last tick timestamp, active agent count, and sleep mode indicator.
-- [ ] **Keyboard Shortcuts**: Register global keybindings in `__root.tsx`:
+- [x] **ThoughtStream → Bottom Drawer**: Converted GlobalThoughtStream from a fixed right sidebar into a collapsible bottom drawer. Collapsed: 32px thin bar showing last event + ▲ expand handle. Expanded: 200px slides up with full event feed, filter tags, auto-scroll, and highlighting. CSS transition (300ms ease-in-out). DrawerContext created for programmatic toggle. z-40 (above canvas, below Header/Agent Detail).
+- [x] **Replace Footer with Status Bar**: Removed copyright/social boilerplate. Thin (32px) fixed bar with live metrics: tick count, active agent count, relative last-tick time ("10s ago"), next tick countdown (cycling 180s interval), sleep/active indicator with color dot.
+- [x] **Keyboard Shortcuts**: Registered global handlers in `__root.tsx`:
   | Key | Action |
   |-----|--------|
-  | `Space` | Manual tick (if Master authenticated) |
-  | `R` | Reset camera to center |
+  | `Space` | Manual tick (guarded against input fields) |
+  | `R` | Reset camera to center of 64×64 grid |
   | `Escape` | Close agent detail / dismiss overlays |
-  | `1-5` | Focus camera on agent by index |
-  | `T` | Toggle ThoughtStream drawer |
-  | `M` | Toggle Master panel |
+  | `1-5` | Focus camera on Nth agent via `cameraRef.lookAt()` |
+  | `T` | Toggle ThoughtStream drawer via DrawerContext |
+  | `M` | Toggle Admin Master panel visibility |
 
-#### Files affected: `GlobalThoughtStream.tsx`, `Footer.tsx`, `__root.tsx`, `GameCanvas.tsx`
+#### Files affected: `GlobalThoughtStream.tsx`, `Footer.tsx`, `__root.tsx`, `GameCanvas.tsx`, `src/lib/drawer-context.ts`, `src/lib/game-canvas-context.ts`, `convex/functions/config.ts`
 
 ---
 
@@ -274,16 +276,16 @@
 
 ### Phase 11 Checkpoints
 
-- [ ] No floating panels overlap the canvas (AdminPanel and ThoughtStream are integrated into the header/bottom drawer)
+- [x] No floating panels overlap the canvas (ThoughtStream → bottom drawer, AdminPanel conditionally rendered)
+- [x] Keyboard shortcuts work: Space (tick), R (reset camera), Escape (close panel), 1-5 (focus agent), T (toggle ThoughtStream), M (toggle Master panel)
+- [x] All existing tests pass (383 tests, 81 files — no regressions)
 - [ ] Minimap renders agents, POIs, and viewport rectangle; click-to-jump works
 - [ ] PixiJS canvas background matches the active theme (light/dark)
 - [ ] Weather particles (rain, storm, clouds) render without dropping below 55 FPS
-- [ ] Keyboard shortcuts work: Space (tick), R (reset camera), Escape (close), T (toggle), M (master)
 - [ ] URL params (`?zoom=`, `?focus=`) restore camera state on page load
 - [ ] Agent detail panel shows thought text, human-relative timestamps, and horizontal relationship avatars
 - [ ] Conversation lines animate with dot flow; emoji reactions appear on sentiment-triggered speech
 - [ ] Observer dashboard surfaces top 3 "hot" events and shows a mini social graph
-- [ ] All existing tests pass (no regressions from refactoring)
 - [ ] 60 FPS maintained during weather particle rendering (test via `requestAnimationFrame` delta logging)
 
 ---
@@ -437,8 +439,8 @@ Phase 12 (Polish) ⏳
 
 ## Recommended Development Order
 
-### Current Status: Phase 10 (Movement Coherence) ✅ Complete; Phase 11-12 Planned 🎯
-**Order:** UI/UX Polish (Phase 11) → Master Panel & Deploy (Phase 12)
+### Current Status: Phase 11 Track A (Layout Rationalization) ✅ Complete; Phase 11 Tracks B-E planned 🎯
+**Order:** UI/UX Polish (Phase 11, Track A ✅) → World Navigation (Phase 11 Track B) → Ambient World (Phase 11 Track C) → Admin Panel (Phase 11 Track D) → Observer Dashboard (Phase 11 Track E) → Master Panel & Deploy (Phase 12)
 
 1. ✅ Phase 1 — Isometric grid rendering (Excalibur)
 2. ✅ Phase 2 — Convex + real-time sync
@@ -450,7 +452,7 @@ Phase 12 (Polish) ⏳
 8. ✅ Phase 8 — Backbone: parallel tick, spatial queries, batch embeddings, config cleanup
 9. ✅ Phase 9 — Soul: bidirectional conversations, sentiment, TTL cleanup, runtime config, POI awareness
 10. ✅ Phase 10 — Movement coherence: trajectory awareness, weather sync, arrival cleanup, bounds clamping
-11. ⏳ Phase 11 Track A — Layout rationalization [~2 days]
+11. ✅ Phase 11 Track A — Layout rationalization [~2 days]
 12. ⏳ Phase 11 Track B — World navigation & minimap [~2-3 days]
 13. ⏳ Phase 11 Track C — Ambient world & theme integration [~3-4 days]
 14. ⏳ Phase 11 Track D — Admin panel + agent controls [~2-3 days]
