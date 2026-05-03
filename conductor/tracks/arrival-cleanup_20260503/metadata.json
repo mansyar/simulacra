@@ -1,8 +1,0 @@
-{
-  "track_id": "arrival-cleanup_20260503",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-05-03T00:00:00Z",
-  "updated_at": "2026-05-03T00:00:00Z",
-  "description": "implement phase 10 Track C: Arrival Cleanup as detailed in @docs/PHASE-PLAN.md . Make sure there is no inconsistency with the current implementation. Think hard."
-}

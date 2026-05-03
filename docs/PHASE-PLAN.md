@@ -649,7 +649,7 @@ A1 + A2 + A3 (quick fixes) ✅
 
 **Goal:** Fix the logical flow gaps in the agent movement mechanism discovered during Phase 9 analysis — the LLM doesn't know it's already walking, the frontend ignores weather in its speed calculations, and no cleanup happens on arrival.
 
-**Status:** ✅ TRACK A & B COMPLETE (Tracks C-D Planned)
+**Status:** ✅ ALL TRACKS COMPLETE (Track C ✅, Track D Planned)
 
 > **Discovery Context:** Analysis of the movement pipeline revealed four logical issues:
 > 1. **LLM blindness** — `buildAgentContext` omits `currentAction`, `gridX/Y`, and `targetX/Y`, so the LLM re-decides a fresh direction every tick (agents zigzag, never completing journeys)
@@ -688,19 +688,19 @@ A1 + A2 + A3 (quick fixes) ✅
   - Test: AgentSprite's `setSpeedMultiplier(0.5)` dynamically changes tick speed
   - Test: Full frontend test suite (36 files, 136 tests) — no regressions
 
-### Track C: Arrival Cleanup
+### Track C: Arrival Cleanup [COMPLETE: 2026-05-03]
 
 **Problem:** When `resolveMovement` returns `arrived: true`, `targetX/targetY` remain set on the agent. The frontend continues predicting movement toward an already-reached destination, and subsequent ticks wastefully call `resolveMovement` on an arrived agent.
 
-- [ ] **Atomic target clearing and snapping in `resolveMovement`** — Update `resolveMovement` in `agents.ts` to be the single source of truth for arrival:
+- [x] **Atomic target clearing and snapping in `resolveMovement`** — Update `resolveMovement` in `agents.ts` to be the single source of truth for arrival:
   - If `distance < 0.1`, snap `gridX/Y` to exactly `targetX/Y` and clear `targetX/Y` in a single DB patch.
   - If `ratio === 1`, also clear `targetX/Y`.
   - Simplifies `world.ts` to just log the arrival event.
-- [ ] **Write tests:**
+- [x] **Write tests:**
   - Test: `resolveMovement` snaps to exact target and clears fields when distance < 0.1.
   - Test: `resolveMovement` clears fields when ratio === 1.
   - Test: `world.ts` correctly logs arrival event without needing separate cleanup.
-  - Test: Frontend stops predicting movement after target is cleared.
+- [x] **All 363 tests pass** across 79 test files. No regressions.
 
 ### Track D: Bounds Clamping
 
@@ -720,13 +720,14 @@ A1 + A2 + A3 (quick fixes) ✅
 ```
 Track A (LLM sees trajectory) ✅  ← Complete: agents see their own action/position/target
   → Track B (weather sync) ✅     ← Complete: frontend matches backend speed in all weather
-  → Track C (arrival cleanup)     ← Medium impact: stops zombie walking
+  → Track C (arrival cleanup) ✅  ← Complete: targets atomically cleared on arrival, no zombie walking
   → Track D (bounds clamping)     ← Low impact: safety net
 ```
 
 **Track A completed: 2026-05-01**
 **Track B completed: 2026-05-02**
-**Estimated remaining effort:** ~1 day total (Tracks C-D)
+**Track C completed: 2026-05-03**
+**Estimated remaining effort:** ~1 day (Track D only)
 
 ### Phase 10 Checkpoints
 
@@ -735,7 +736,7 @@ Track A (LLM sees trajectory) ✅  ← Complete: agents see their own action/pos
 - [x] **Track A:** `buildAgentContext` appends `Current Position`, `Destination` (or `None`), and `Distance Remaining` after Personality & Instructions
 - [x] **Track A:** All 352 tests pass across 77 test files (no regressions)
 - [x] **Track B:** Frontend movement speed matches backend speed in all weather conditions (no snap-back) — 136 frontend tests pass
-- [ ] Arrived agents' targets are cleared; frontend shows "idle" behavior on arrival — Track C
+- [x] Arrived agents' targets are cleared; frontend shows "idle" behavior on arrival — Track C (aad4dae)
 - [ ] Agent positions never exceed world boundaries [0, 63] — Track D
 
 ---
@@ -857,7 +858,7 @@ Phase 10 (Movement Coherence)
     │
     ├──► LLM sees its own trajectory (Track A) ✅
     ├──► Weather-aware frontend speed (Track B) ✅
-    ├──► Arrival cleanup (Track C)
+    ├──► Arrival cleanup (Track C) ✅
     └──► Bounds clamping (Track D)
             │
             ▼
@@ -892,7 +893,7 @@ Phase 11 (Polish)
 
 ## Recommended Development Order
 
-### Current Status: Phase 10 (Movement Coherence) — Tracks A & B Complete 🎯
+### Current Status: Phase 10 (Movement Coherence) — Tracks A, B & C Complete 🎯
 
 1. ✅ **Done:** Grid rendering (Phase 1)
 2. ✅ **Done:** Convex + real-time sync (Phase 2)
@@ -913,7 +914,7 @@ Phase 11 (Polish)
 17. ✅ **Done:** POI-aware agent behavior (Phase 9 — Track E) — LLM context includes POI data, agents walk to contextual locations, arrival events show POI names, need multipliers applied at matching POIs. 4 test files with 15+ tests.
 18. ✅ **Done:** LLM sees its own trajectory (Phase 10 — Track A) — Injected `currentAction` into decision schema, rendered it in `## Your State`, and appended trajectory fields (position, target, distance) to `## Your Identity`. 8 new tests, all 352 tests pass.
 19. ✅ **Done:** Weather-aware frontend speed (Phase 10 — Track B) — Extracted `getWeatherSpeedMultiplier` shared utility, added `speedMultiplier` to `AgentSprite` (constructor + `setSpeedMultiplier` + tick), wired `GameCanvas` to query world state and propagate multiplier. 10 new tests (utility + sprite), 136 total frontend tests pass.
-20. 🆕 **Planned:** Arrival cleanup (Phase 10 — Track C)
+20. ✅ **Done:** Arrival cleanup (Phase 10 — Track C) — `resolveMovement` atomically snaps positions and clears targets on arrival. 2 new tests in `arrival_cleanup.test.ts`, all 363 tests pass across 79 files.
 21. 🆕 **Planned:** Bounds clamping (Phase 10 — Track D)
 22. ⏳ **Planned:** Master panel and deployment (Phase 11 — The Polish)
 
