@@ -40,9 +40,13 @@ export default function Footer() {
   const lastActivity = worldState.lastUserActivityAt ?? 0;
   const sleeping = lastActivity > 0 && (now - lastActivity) > 30000;
 
-  // Next tick countdown
-  const nextTickAt = lastTickAt + tickInterval * 1000;
-  const countdownSeconds = Math.max(0, Math.floor((nextTickAt - now) / 1000));
+  // Next tick countdown — cycle forward past the last tick by interval until future
+  const intervalMs = tickInterval * 1000;
+  let nextTickMs = lastTickAt > 0 ? lastTickAt + intervalMs : now + intervalMs;
+  while (nextTickMs <= now) {
+    nextTickMs += intervalMs;
+  }
+  const countdownSeconds = Math.max(0, Math.floor((nextTickMs - now) / 1000));
   const countdownDisplay = countdownSeconds > 0 ? `${countdownSeconds}s` : "Tick now";
 
   // Relative time for last tick
