@@ -89,7 +89,7 @@ export default function GlobalThoughtStream() {
   return (
     <div
       data-testid="thoughtstream-drawer"
-      className={`fixed left-0 right-0 bottom-0 z-40 bg-slate-900/90 backdrop-blur-md border-t border-slate-700/50 shadow-2xl transition-all duration-300 ease-in-out ${
+      className={`fixed left-0 right-0 bottom-8 z-40 bg-slate-900/90 backdrop-blur-md border-t border-slate-700/50 shadow-2xl transition-all duration-300 ease-in-out ${
         isExpanded ? "h-[200px]" : "h-8"
       }`}
     >
