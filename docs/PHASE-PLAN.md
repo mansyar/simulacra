@@ -13,8 +13,9 @@
 | 7 | The Mind | AI Context Fidelity | ✅ Complete | 1 week |
 | 8 | The Backbone | Robustness & Scaling | ✅ Complete | 1 week |
 | 9 | The Soul | Deeper Social Dynamics | ✅ Complete | 1 week |
-| 10 | Movement Coherence | Fix agent trajectory, weather sync, and arrival cleanup | ✅ Tracks A-C Complete (Track D Planned) | 2-3 days |
-| 11 | The Polish | Master Panel + Deploy | ⏳ Not Started | 1 week |
+| 10 | Movement Coherence | Fix agent trajectory, weather sync, and arrival cleanup | ⏳ Tracks A-C Complete (Track D Pending) | 2-3 days |
+| 11 | The Observatory | UI/UX Polish & World Immersion | ⏳ Not Started | 2-3 weeks |
+| 12 | The Polish | Master Panel + Deploy | ⏳ Not Started | 1 week |
 
 ---
 
@@ -126,9 +127,11 @@
 
 ---
 
-## Phase 10: Movement Coherence ✅ (Track D Planned)
+## Phase 10: Movement Coherence ⏳ (Track D Pending)
 
 **Goal:** Fix logical gaps in the movement pipeline — LLM trajectory blindness, weather speed desync, missing arrival cleanup, and bounds clamping.
+
+**Status:** Tracks A-C ✅ Complete | Track D ⏳ Pending
 
 **Summary — Track A (LLM Sees Its Own Trajectory):** Added `currentAction` as structured data alongside `hunger/energy/social` in the `decision` action args. Appended `Current Position: (gridX, gridY)`, `Destination: (targetX, targetY)` (or `"None"`), and `Distance Remaining: ~N tiles` to the LLM context. Verified via tests that trajectory fields and `"None"` fallback appear correctly. All 352 tests pass.
 
@@ -136,19 +139,162 @@
 
 **Summary — Track C (Arrival Cleanup):** `resolveMovement` in `agents.ts` now atomically snaps `gridX/Y` to exact target coordinates and clears `targetX/Y` in a single DB patch when `distance < 0.1` or `ratio === 1`. `world.ts` simply logs the arrival event. 2 new tests. All 363 tests pass across 79 files.
 
-**Track D (Bounds Clamping — Planned):** Add `Math.max(0, Math.min(63, ...))` clamping around `resolveMovement` to prevent agents from walking off the [0, 63] map boundary.
+**Track D (Bounds Clamping — Pending):** Add `Math.max(0, Math.min(63, ...))` clamping around `resolveMovement` to prevent agents from walking off the [0, 63] map boundary.
 
-**Key outcome:** Agents see their own trajectory and complete journeys, frontend speed matches backend in all weather without snap-back, arrived agents stop cleanly, and the map boundary remains respected.
+**Key outcome (once complete):** Agents see their own trajectory and complete journeys, frontend speed matches backend in all weather without snap-back, arrived agents stop cleanly, and the map boundary remains respected.
 
 ---
 
-## Phase 11: The Polish (Upcoming)
+## Phase 11: The Observatory — UI/UX Polish & World Immersion (Upcoming)
+
+**Goal:** Transform the interface from functional overlays into a cohesive, immersive observatory experience. Eliminate floating panel clutter, add world navigation tools, enrich ambient feedback, and make every interaction feel intentional and polished.
+
+**Status:** ⏳ NOT STARTED — Estimated Duration: 2-3 weeks
+
+---
+
+### Track A: Layout Rationalization
+
+**Goal:** Eliminate floating-panel clutter and give the canvas full visual breathing room. Replace the boilerplate footer with useful instrumentation. Add power-user shortcuts.
+
+**Rationale:** Currently, the AdminPanel (fixed left-bottom) and ThoughtStream (fixed right) float over the canvas, competing for screen real estate. The footer contains copyright boilerplate. This track fixes all three.
+
+#### Checklist:
+- [ ] **ThoughtStream → Bottom Drawer**: Convert GlobalThoughtStream from a fixed right sidebar (`right-4 top-20 bottom-24`) into a collapsible bottom drawer. Default: collapsed (shows last event + ▲ expand handle). Expanded: slides up to show full event feed with existing filters. Follows the original spec's "200px footer" layout intent.
+- [ ] **Replace Footer with Status Bar**: Remove the copyright/social boilerplate from `Footer.tsx`. Replace with a thin (32px) persistent instrumentation bar showing: tick count, last tick timestamp, active agent count, and sleep mode indicator.
+- [ ] **Keyboard Shortcuts**: Register global keybindings in `__root.tsx`:
+  | Key | Action |
+  |-----|--------|
+  | `Space` | Manual tick (if Master authenticated) |
+  | `R` | Reset camera to center |
+  | `Escape` | Close agent detail / dismiss overlays |
+  | `1-5` | Focus camera on agent by index |
+  | `T` | Toggle ThoughtStream drawer |
+  | `M` | Toggle Master panel |
+
+#### Files affected: `GlobalThoughtStream.tsx`, `Footer.tsx`, `__root.tsx`, `GameCanvas.tsx`
+
+---
+
+### Track B: World Navigation & Awareness
+
+**Goal:** Make the 64×64 isometric world navigable at a glance. Users should never feel lost or resort to aimless panning.
+
+**Rationale:** 4,096 tiles is large. Without a minimap or coordinate feedback, observers have no spatial orientation. URL-synced camera enables shareable bookmarks.
+
+#### Checklist:
+- [ ] **Minimap**: Add a small (120×120px) top-down minimap in the bottom-right corner of the canvas area, showing:
+  - Agent dots color-coded by archetype (same colors as AgentSprite)
+  - POI markers with small labels
+  - Viewport rectangle indicating current camera bounds
+  - Click-to-jump: clicking a position on the minimap pans the camera there
+  - Render via a small `<canvas>` or lightweight PixiJS graphics, updated every tick
+- [ ] **URL-Synced Camera State**: Read `?zoom` and `?focus` from URL search params on mount. Write camera position back to URL on pan/zoom (debounced, 500ms). Enables bookmarkable views and browser back/forward navigation.
+- [ ] **Tile Tooltip**: Show a small floating tooltip near the cursor when hovering over the canvas, displaying: grid coordinates, agent name + archetype (if an agent is on the tile), or POI name (if a POI is on the tile). Bridge existing `grid.updateHover()` to a React state.
+
+#### Files affected: `GameCanvas.tsx`, `Camera.ts`, new `MiniMap.tsx` component
+
+---
+
+### Track C: Ambient World & Theme Integration
+
+**Goal:** Make the world feel alive between ticks. Fix the jarring mismatch between the light/dark UI theme and the static PixiJS canvas.
+
+**Rationale:** The canvas `backgroundColor` is hardcoded to `0x0f172a` (dark slate) regardless of theme toggle. Weather and time-of-day have no visual feedback in the game world itself.
+
+#### Checklist:
+- [ ] **Theme-Aware PixiJS Canvas**: On theme change, update PixiJS `app.renderer.background.color`:
+  - Dark theme → `0x0f172a` (current, dark slate)
+  - Light theme → `0xe7f3ec` (`--bg-base` from styles.css)
+  - Pass theme state down via React context. Use `app.renderer.backgroundColor` in PixiJS v8.
+- [ ] **Time-of-Day Overlay Tint**: Add a full-screen translucent `Graphics` overlay on the PixiJS stage that subtly shifts color based on `worldState.timeOfDay`:
+  - Dawn (5-7): Warm orange tint, alpha 0.08
+  - Day (7-18): No tint
+  - Dusk (18-20): Purple-orange tint, alpha 0.12
+  - Night (20-5): Deep blue tint, alpha 0.25
+  - Transition smoothly over 2-3 ticks when time changes
+- [ ] **Weather Particles**: Create a lightweight PixiJS particle system for weather effects:
+  - Rainy: Diagonal white line segments falling from top of viewport (use `Graphics` batch, ~100 lines)
+  - Stormy: Rain + occasional full-screen white flash (lightning, 200ms duration)
+  - Cloudy: Slow-moving semi-transparent cloud shapes at top of viewport
+  - Particles are viewport-culled and cleaned up on weather change
+  - Keep particle count under 150 draw calls for 60 FPS
+
+#### Files affected: `GameCanvas.tsx`, new `WeatherParticles.ts`, new `TimeOfDayOverlay.ts`, `src/styles.css` (export theme colors for PixiJS)
+
+---
+
+### Track D: Admin Panel & Agent Controls
+
+**Goal:** Centralize Master controls in the header where they belong. Add weather control (currently missing). Redesign the agent detail panel for visual hierarchy and delight.
+
+**Rationale:** The spec calls for a "Master Panel Toggle" in the header but the current AdminPanel floats at `left-4 bottom-24`. Weather control is listed in Phase 5 requirements but has no UI. The agent detail panel ("/agent/$id") stacks everything vertically with no visual hierarchy.
+
+#### Checklist:
+- [ ] **AdminPanel → Header Badge Dropdown**: Move all Master controls from the fixed floating panel into a dropdown/popover in the Header. A 🔑/🛡️ icon triggers a dropdown containing:
+  - Manual Tick button (with cooldown indicator, 180s)
+  - Weather selector: 4 icon buttons (Sun, Cloud, CloudRain, Zap) with active state
+  - World Full Reset button (with double confirmation dialog)
+  - Remove the per-agent brain reset from this panel (moves to Track E / agent detail panel)
+- [ ] **Add Weather Control Mutation**: Wire the weather selector buttons to a `server-functions.ts` mutation. The backend already supports weather changes in `advanceWorldState` — this just adds the UI.
+- [ ] **Redesign Agent Detail Panel**: Restructure `/agent/$id` with clear visual hierarchy:
+  - **Top**: Agent name (large) + archetype badge (color-coded) + live status line with action emoji (e.g., "🚶 Walking to the Cafe")
+  - **Needs bars**: Color-gradient bars using the archetype's color. Add micro-bounce animation when values change (observe delta).
+  - **Current Goal**: Prominent callout card showing the agent's last `thought` directly (not just the goal string)
+  - **Relationships**: Horizontal scroll of circular avatars with affinity color ring (green/red/neutral). Click to navigate to that agent.
+  - **Events**: Timeline with human-relative timestamps ("2m ago", "1h ago") instead of absolute times. Group by event type with section headers.
+
+#### Files affected: `AdminPanel.tsx`, `Header.tsx`, `agent.$id.tsx`, `NeedsBar.tsx`, `server-functions.ts`
+
+---
+
+### Track E: Observer Experience & Social Visualization
+
+**Goal:** Surface the most interesting social dynamics visually. Help new observers understand what's happening at a glance. Make conversations visible and delightful.
+
+**Rationale:** Conversations are the most interesting part of the simulation but are invisible unless you're watching the exact right agents at the right time. New users land on a blank canvas with no context for what to watch.
+
+#### Checklist:
+- [ ] **Conversation Visualization Enhancements**:
+  - Animated speech line: pulsating dots flowing along the conversation line between conversing agents (replace static dotted line)
+  - Typing indicator: small "..." animation on a listening agent's name tag
+  - Emoji reactions: small floating emoji (😂, 😮, 💡) that rise and fade from conversing agents, based on sentiment analysis of their speech (positive → 😊, negative → 😠, question → 🤔)
+  - Clicking a conversation line shows a mini transcript popup of the last 3 exchanges
+- [ ] **Observer Dashboard**: Create a toggleable dashboard overlay (triggered by a 👁️ "What's Happening" button in the header) showing:
+  - **World snapshot**: Agent count, day count, current tick, most recent weather change
+  - **Hot moments**: Top 3 most interesting recent events ranked by novelty (e.g., "Alice and Bob are having a deep conversation at the Library", "A storm just rolled in")
+  - **Social graph**: Simple mini force-directed graph showing agent relationships — node size = social need, edge thickness = affinity magnitude, edge color = positive/negative
+  - **Suggested watching**: "Watch Alice — she's heading to the Cafe, hungry and looking for company"
+  - Use Framer Motion for animated card reveals. Keep it lightweight — all data already exists via existing `useQuery` calls.
+- [ ] **Per-Agent Brain Reset in Detail Panel**: Move the "Reset Brain" button from AdminPanel into the Agent Detail Panel (under a "Danger Zone" section at the bottom). This is semantically correct — it's an action on a specific agent, not a world-level control.
+
+#### Files affected: `ConversationLines.tsx`, `AgentSprite.tsx`, new `ObserverDashboard.tsx`, `Header.tsx`, `agent.$id.tsx`, `AdminPanel.tsx`
+
+---
+
+### Phase 11 Checkpoints
+
+- [ ] No floating panels overlap the canvas (AdminPanel and ThoughtStream are integrated into the header/bottom drawer)
+- [ ] Minimap renders agents, POIs, and viewport rectangle; click-to-jump works
+- [ ] PixiJS canvas background matches the active theme (light/dark)
+- [ ] Weather particles (rain, storm, clouds) render without dropping below 55 FPS
+- [ ] Keyboard shortcuts work: Space (tick), R (reset camera), Escape (close), T (toggle), M (master)
+- [ ] URL params (`?zoom=`, `?focus=`) restore camera state on page load
+- [ ] Agent detail panel shows thought text, human-relative timestamps, and horizontal relationship avatars
+- [ ] Conversation lines animate with dot flow; emoji reactions appear on sentiment-triggered speech
+- [ ] Observer dashboard surfaces top 3 "hot" events and shows a mini social graph
+- [ ] All existing tests pass (no regressions from refactoring)
+- [ ] 60 FPS maintained during weather particle rendering (test via `requestAnimationFrame` delta logging)
+
+---
+
+## Phase 12: The Polish (Upcoming)
 
 **Goal:** Master panel and deployment
 
 **Status:** ⏳ NOT STARTED
 
-### Week 10: Master Panel
+### Week 12: Master Panel
 
 #### Day 1-2: Authentication
 - [ ] Create password input component
@@ -167,7 +313,7 @@
 - [ ] Add loading states
 - [ ] Error handling and toasts
 
-### Week 11: Deployment
+### Week 13: Deployment
 
 - [ ] Configure Vercel deployment
 - [ ] Set environment variables
@@ -175,7 +321,7 @@
 - [ ] Deploy frontend to Vercel
 - [ ] Test production build
 
-### Phase 11 Checkpoints
+### Phase 12 Checkpoints
 
 - [ ] Master password protects admin actions
 - [ ] Weather changes reflect in world
@@ -243,15 +389,24 @@ Phase 9 (Soul) ✅
     └──► POI-aware agent behavior (Track E)
             │
             ▼
-Phase 10 (Movement Coherence) ✅ Tracks A-C
+Phase 10 (Movement Coherence) ⏳ (Track D Pending)
     │
     ├──► LLM sees its own trajectory (Track A) ✅
     ├──► Weather-aware frontend speed (Track B) ✅
     ├──► Arrival cleanup (Track C) ✅
-    └──► Bounds clamping (Track D) ⏳ Planned
+    └──► Bounds clamping (Track D) ⏳ Pending — **must complete before Phase 11**
             │
             ▼
-Phase 11 (Polish) ⏳
+Phase 11 (Observatory) ⏳
+    │
+    ├──► Layout rationalization (Track A)
+    ├──► World navigation + minimap (Track B)
+    ├──► Ambient weather + theme integration (Track C)
+    ├──► Header admin panel + agent detail redesign (Track D)
+    └──► Observer dashboard + social visualization (Track E)
+            │
+            ▼
+Phase 12 (Polish) ⏳
     │
     ├──► Master panel
     └──► Deployment
@@ -282,7 +437,9 @@ Phase 11 (Polish) ⏳
 
 ## Recommended Development Order
 
-### Current Status: Phase 10 (Movement Coherence) — Tracks A, B & C Complete; Phase 11 Planned 🎯
+### Current Status: Phase 10 (Movement Coherence) — Track D Pending ⏳; Phase 11-12 Planned 🎯
+**Prerequisite:** Phase 10 Track D must be completed before Phase 11 starts.
+**Order:** Movement Coherence (Phase 10) → UI/UX Polish (Phase 11) → Master Panel & Deploy (Phase 12)
 
 1. ✅ Phase 1 — Isometric grid rendering (Excalibur)
 2. ✅ Phase 2 — Convex + real-time sync
@@ -295,7 +452,14 @@ Phase 11 (Polish) ⏳
 9. ✅ Phase 9 — Soul: bidirectional conversations, sentiment, TTL cleanup, runtime config, POI awareness
 10. ✅ Phase 10 Tracks A-C — Movement coherence: trajectory awareness, weather sync, arrival cleanup
 11. ⏳ Phase 10 Track D — Bounds clamping [~1 day]
-12. ⏳ Phase 11 — Master panel + deployment [~1 week]
+12. ⏳ Phase 11 Track A — Layout rationalization [~2 days]
+13. ⏳ Phase 11 Track B — World navigation & minimap [~2-3 days]
+14. ⏳ Phase 11 Track C — Ambient world & theme integration [~3-4 days]
+15. ⏳ Phase 11 Track D — Admin panel + agent controls [~2-3 days]
+16. ⏳ Phase 11 Track E — Observer experience & social visualization [~3-4 days]
+17. ⏳ Phase 12 — Master panel + deployment [~1 week]
+
+**Recommended execution order within Phase 11:** Track A first (foundational layout change), then Tracks B+C (world immersion), then Tracks D+E (controls + experience) — these last two can run in parallel since they touch different components.
 
 ---
 
