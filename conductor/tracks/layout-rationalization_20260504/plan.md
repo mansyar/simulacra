@@ -17,9 +17,9 @@
     - [x] Implement: CSS transition for expand/collapse animation (~300ms ease-in-out) `fcc532d`
     - [x] Implement: proper z-indexing (z-40, above canvas z-10/z-11, below Header z-50 and Agent Detail panel)
     - [x] Run tests and verify all pass — 80 files, 372 tests pass
-- [ ] Task: Integrate drawer toggle state into layout
-    - [ ] Wire the expanded/collapsed state so `__root.tsx` and other components can toggle it
-    - [ ] Ensure the drawer doesn't overlap with the canvas's click/interaction area when collapsed
+- [x] Task: Integrate drawer toggle state into layout `9901917`
+    - [x] Wire the expanded/collapsed state so `__root.tsx` and other components can toggle it — DrawerContext created and wired via __root.tsx provider
+    - [x] Ensure the drawer doesn't overlap with the canvas's click/interaction area when collapsed — drawer is fixed bottom-0 at z-40, canvas sits above
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: ThoughtStream → Bottom Drawer' (Protocol in workflow.md)
 
 ---
