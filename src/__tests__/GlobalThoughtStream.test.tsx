@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import GlobalThoughtStream from '../components/GlobalThoughtStream'
 import { useQuery } from "convex/react";
 
@@ -71,13 +71,16 @@ describe('GlobalThoughtStream', () => {
     expect(screen.getByText('Waiting for simulation events...')).toBeDefined()
   })
 
-  it('renders all events with agent names and descriptions', () => {
+  it('renders all events with agent names and descriptions when expanded', () => {
     vi.mocked(useQuery).mockImplementation(((fn: unknown, ..._args: unknown[]) => {
       if (fn === 'memory:getGlobalEvents') return mockEvents
       if (fn === 'agents:getAll') return mockAgents
       return undefined
     }) as never)
-    render(<GlobalThoughtStream />)
+    const { container } = render(<GlobalThoughtStream />)
+    // Expand the drawer first
+    const expandHandle = container.querySelector('[data-testid="expand-handle"]')
+    fireEvent.click(expandHandle!)
     expect(screen.getByText('Alice moved to position')).toBeDefined()
     expect(screen.getByText('Bob spoke to someone')).toBeDefined()
     expect(screen.getByText('Sky turned cloudy')).toBeDefined()
@@ -92,11 +95,88 @@ describe('GlobalThoughtStream', () => {
       }) as never)
     })
 
-    it('renders a scrollable container for events', () => {
+    it('renders a scrollable container for events when expanded', () => {
       const { container } = render(<GlobalThoughtStream />)
-      // The scroll container is inside the component with overflow-y-auto
+      // Expand the drawer to reveal the scroll container
+      const expandHandle = container.querySelector('[data-testid="expand-handle"]')
+      fireEvent.click(expandHandle!)
       const scrollContainer = container.querySelector('.overflow-y-auto')
       expect(scrollContainer).not.toBeNull()
+    })
+  })
+
+  describe('Bottom Drawer Behavior', () => {
+    beforeEach(() => {
+      vi.mocked(useQuery).mockImplementation(((fn: unknown, ..._args: unknown[]) => {
+        if (fn === 'memory:getGlobalEvents') return mockEvents
+        if (fn === 'agents:getAll') return mockAgents
+        return undefined
+      }) as never)
+    })
+
+    it('shows only the last event in collapsed state with expand handle', () => {
+      const { container } = render(<GlobalThoughtStream />)
+      
+      // Last event is "Bob walked south" (index 4) - text is nested in a composite span "Bob: Bob walked south"
+      expect(screen.getByText(/Bob walked south/)).toBeDefined()
+      
+      // Earlier events should not be visible in collapsed state
+      expect(screen.queryByText('Alice moved to position')).toBeNull()
+      expect(screen.queryByText('Bob spoke to someone')).toBeNull()
+      
+      // Should have an expand handle (▲)
+      const expandHandle = container.querySelector('[data-testid="expand-handle"]')
+      expect(expandHandle).not.toBeNull()
+      expect(expandHandle?.textContent).toBe('▲')
+    })
+
+    it('expands to show full event feed when toggled', () => {
+      const { container } = render(<GlobalThoughtStream />)
+      
+      // Click the expand handle
+      const expandHandle = container.querySelector('[data-testid="expand-handle"]')
+      fireEvent.click(expandHandle!)
+      
+      // All events should now be visible
+      expect(screen.getByText('Alice moved to position')).toBeDefined()
+      expect(screen.getByText('Bob spoke to someone')).toBeDefined()
+      expect(screen.getByText('Bob walked south')).toBeDefined()
+      
+      // Should have a collapse handle (▼)
+      const collapseHandle = container.querySelector('[data-testid="collapse-handle"]')
+      expect(collapseHandle).not.toBeNull()
+      expect(collapseHandle?.textContent).toBe('▼')
+    })
+
+    it('expanded state has 200px height class', () => {
+      const { container } = render(<GlobalThoughtStream />)
+      
+      // Click to expand
+      const expandHandle = container.querySelector('[data-testid="expand-handle"]')
+      fireEvent.click(expandHandle!)
+      
+      // The drawer should have the expanded height class
+      const drawer = container.querySelector('[data-testid="thoughtstream-drawer"]')
+      expect(drawer).not.toBeNull()
+      expect(drawer?.classList.toString()).toContain('h-')
+    })
+
+    it('collapses back when toggled again', () => {
+      const { container } = render(<GlobalThoughtStream />)
+      
+      // Expand
+      const handle = container.querySelector('[data-testid="expand-handle"]')
+      fireEvent.click(handle!)
+      
+      // Check expanded - earlier event visible
+      expect(screen.getByText('Alice moved to position')).toBeDefined()
+      
+      // Find collapse handle and click
+      const collapseHandle = container.querySelector('[data-testid="collapse-handle"]')
+      fireEvent.click(collapseHandle!)
+      
+      // Should be collapsed again - earlier events hidden
+      expect(screen.queryByText('Alice moved to position')).toBeNull()
     })
   })
 
@@ -116,6 +196,9 @@ describe('GlobalThoughtStream', () => {
       })
 
       const { container } = render(<GlobalThoughtStream />)
+      // Expand the drawer to reveal the event feed
+      const expandHandle = container.querySelector('[data-testid="expand-handle"]')
+      fireEvent.click(expandHandle!)
       
       // Alice events (2 events) should have the blue highlight class
       const highlightedCards = container.querySelectorAll('.bg-blue-800\\/30')
@@ -130,6 +213,8 @@ describe('GlobalThoughtStream', () => {
       })
 
       const { container } = render(<GlobalThoughtStream />)
+      const expandHandle = container.querySelector('[data-testid="expand-handle"]')
+      fireEvent.click(expandHandle!)
       const highlightedCards = container.querySelectorAll('.bg-blue-800\\/30')
       expect(highlightedCards.length).toBe(0)
     })
@@ -141,6 +226,9 @@ describe('GlobalThoughtStream', () => {
       })
 
       const { container } = render(<GlobalThoughtStream />)
+      // Expand the drawer to reveal the event feed
+      const expandHandle = container.querySelector('[data-testid="expand-handle"]')
+      fireEvent.click(expandHandle!)
       
       // Only Charlie has 1 event (weather_change) - should be highlighted
       const highlightedCards = container.querySelectorAll('.bg-blue-800\\/30')
