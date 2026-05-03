@@ -15,6 +15,7 @@ function formatRelativeTime(timestamp: number): string {
 export default function Footer() {
   const worldState = useQuery(api.functions.world.getState);
   const agents = useQuery(api.functions.agents.getAll);
+  const tickIntervalCfg = useQuery(api.functions.config.getTickInterval);
   const [now, setNow] = useState(Date.now());
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -29,11 +30,11 @@ export default function Footer() {
   }, []);
 
   // Loading state: render nothing
-  if (!worldState || !agents) return null;
+  if (!worldState || !agents || tickIntervalCfg === undefined) return null;
 
   const totalTicks = worldState.totalTicks ?? 0;
   const lastTickAt = worldState.lastTickAt ?? 0;
-  const tickInterval = worldState.tickIntervalSeconds ?? 60;
+  const tickInterval = tickIntervalCfg;
   const activeAgentCount = agents.filter((a) => a.isActive).length;
 
   // Sleep mode: sleeping if no recent user activity (beyond grace period of 30s)

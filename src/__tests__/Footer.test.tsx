@@ -18,6 +18,9 @@ vi.mock('../../convex/_generated/api', () => ({
       agents: {
         getAll: 'agents:getAll',
       },
+      config: {
+        getTickInterval: 'config:getTickInterval',
+      },
     },
   },
 }))
@@ -31,6 +34,8 @@ describe('Footer Status Bar', () => {
     vi.mocked(useQuery).mockImplementation(((fn: unknown) => {
       if (fn === 'world:getState') return { totalTicks: 42, lastTickAt: Date.now(), tickIntervalSeconds: 60 }
       if (fn === 'agents:getAll') return []
+      if (fn === 'config:getTickInterval') return 180
+      if (fn === 'config:getTickInterval') return 180
       return undefined
     }) as never)
     render(<Footer />)
@@ -45,6 +50,7 @@ describe('Footer Status Bar', () => {
         { _id: '2', name: 'Bob', isActive: true },
         { _id: '3', name: 'Charlie', isActive: false },
       ]
+      if (fn === 'config:getTickInterval') return 180
       return undefined
     }) as never)
     render(<Footer />)
@@ -57,6 +63,7 @@ describe('Footer Status Bar', () => {
     vi.mocked(useQuery).mockImplementation(((fn: unknown) => {
       if (fn === 'world:getState') return { totalTicks: 1, lastTickAt: tenSecondsAgo, tickIntervalSeconds: 60 }
       if (fn === 'agents:getAll') return []
+      if (fn === 'config:getTickInterval') return 180
       return undefined
     }) as never)
     render(<Footer />)
@@ -68,6 +75,7 @@ describe('Footer Status Bar', () => {
     vi.mocked(useQuery).mockImplementation(((fn: unknown) => {
       if (fn === 'world:getState') return { totalTicks: 5, lastTickAt: Date.now(), tickIntervalSeconds: 60, lastUserActivityAt: 0 }
       if (fn === 'agents:getAll') return []
+      if (fn === 'config:getTickInterval') return 180
       return undefined
     }) as never)
     render(<Footer />)
@@ -82,11 +90,12 @@ describe('Footer Status Bar', () => {
     vi.mocked(useQuery).mockImplementation(((fn: unknown) => {
       if (fn === 'world:getState') return { totalTicks: 1, lastTickAt: tenSecondsAgo, tickIntervalSeconds: 60 }
       if (fn === 'agents:getAll') return []
+      if (fn === 'config:getTickInterval') return 180
       return undefined
     }) as never)
     render(<Footer />)
-    // Countdown should show ~50s remaining (may be 49s due to timing)
-    expect(screen.getByText(/(49|50)s/)).toBeDefined()
+    // Countdown should show ~170s remaining (180s interval - 10s since last tick, may vary by 1s)
+    expect(screen.getByText(/(169|170)s/)).toBeDefined()
   })
 
   it('renders nothing when world state is loading', () => {

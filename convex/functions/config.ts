@@ -19,6 +19,10 @@ const DEFAULTS: Record<string, number> = {
   agentSpeed: 6,
 };
 
+// env var name for the world tick interval
+const TICK_INTERVAL_ENV = "WORLD_TICK_INTERVAL";
+const TICK_INTERVAL_DEFAULT = 180;
+
 export const get = query({
   args: {},
   handler: async (ctx) => {
@@ -30,6 +34,28 @@ export const getInternal = internalQuery({
   args: {},
   handler: async (ctx) => {
     return await ctx.db.query("config").first();
+  },
+});
+
+/**
+ * Query: Get the effective world tick interval in seconds.
+ * Priority: WORLD_TICK_INTERVAL env var > world_state.tickIntervalSeconds > 180
+ */
+export const getTickInterval = query({
+  args: {},
+  handler: async (ctx) => {
+    // 1. Check env var
+    if (process.env[TICK_INTERVAL_ENV] !== undefined) {
+      const parsed = parseInt(process.env[TICK_INTERVAL_ENV]!, 10);
+      if (!isNaN(parsed) && parsed > 0) return parsed;
+    }
+    // 2. Check world_state
+    const state = await ctx.db.query("world_state").first();
+    if (state?.tickIntervalSeconds != null && state.tickIntervalSeconds > 0) {
+      return state.tickIntervalSeconds;
+    }
+    // 3. Fallback
+    return TICK_INTERVAL_DEFAULT;
   },
 });
 
