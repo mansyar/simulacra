@@ -78,6 +78,7 @@ function RootDocument() {
       switch (e.code) {
         case 'Space': {
           e.preventDefault()
+          // TODO: Add Master auth guard when auth state is available (spec: only trigger when authenticated)
           void triggerManualTick()
           break
         }

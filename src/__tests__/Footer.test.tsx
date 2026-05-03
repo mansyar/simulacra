@@ -35,7 +35,6 @@ describe('Footer Status Bar', () => {
       if (fn === 'world:getState') return { totalTicks: 42, lastTickAt: Date.now(), tickIntervalSeconds: 60 }
       if (fn === 'agents:getAll') return []
       if (fn === 'config:getTickInterval') return 180
-      if (fn === 'config:getTickInterval') return 180
       return undefined
     }) as never)
     render(<Footer />)

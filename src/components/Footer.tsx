@@ -39,7 +39,8 @@ export default function Footer() {
 
   // Sleep mode: sleeping if no recent user activity (beyond grace period of 30s)
   const lastActivity = worldState.lastUserActivityAt ?? 0;
-  const sleeping = lastActivity > 0 && (now - lastActivity) > 30000;
+  const hasEverHadActivity = lastActivity > 0 || (worldState.totalTicks ?? 0) > 0;
+  const sleeping = hasEverHadActivity && (now - lastActivity) > 30000;
 
   // Next tick countdown — cycle forward past the last tick by interval until future
   const intervalMs = tickInterval * 1000;
