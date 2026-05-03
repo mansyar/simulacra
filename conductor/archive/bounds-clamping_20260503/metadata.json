@@ -1,0 +1,8 @@
+{
+  "track_id": "bounds-clamping_20260503",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-05-03T13:45:00Z",
+  "updated_at": "2026-05-03T13:45:00Z",
+  "description": "Add Math.max(0, Math.min(63, ...)) clamping around resolveMovement to prevent agents from walking off the [0, 63] map boundary"
+}
