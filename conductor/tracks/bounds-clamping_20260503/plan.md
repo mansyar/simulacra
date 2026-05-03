@@ -3,16 +3,17 @@
 ## Phase 1: Bounds Clamping Implementation
 
 - [ ] Task: Write failing tests for bounds clamping
-    - [ ] Sub-task: Create test in `convex/bounds_clamping.test.ts` to verify `resolveMovement` clamps `newX`/`newY` to [0, 63] when movement beyond the upper boundary (e.g., targeting gridX > 63) would occur.
-    - [ ] Sub-task: Create test to verify `resolveMovement` clamps `newX`/`newY` to [0, 63] when movement below the lower boundary (e.g., gridX < 0) would occur.
-    - [ ] Sub-task: Create test to verify the `distance < 0.1` snap path also clamps coordinates to [0, 63] (e.g., target is at gridX = 70, distance < 0.1, verify snap clamps to 63).
+    - [ ] Sub-task: Create a `_testSetTarget` internal mutation test helper in `convex/functions/agents.ts` that sets `targetX`/`targetY` without clamping (for testing resolveMovement clamping in isolation).
+    - [ ] Sub-task: Create test in `convex/bounds_clamping.test.ts` to verify `resolveMovement` clamps position to [0, 63] when movement beyond the upper boundary occurs (use `_testSetTarget` to set off-map target).
+    - [ ] Sub-task: Create test to verify `resolveMovement` clamps position to [0, 63] when movement below the lower boundary occurs (use `_testSetTarget` to set off-map target).
+    - [ ] Sub-task: Create test to verify `resolveMovement` marks as arrived and clears targets when clamping changes the computed position ("stuck at boundary" guard).
     - [ ] Sub-task: Create test to verify `updateAction` clamps `targetX`/`targetY` to [0, 63] when off-map values are passed.
     - [ ] Sub-task: Run the tests and confirm they fail as expected (Red phase).
 
 - [ ] Task: Implement clamping in `resolveMovement` and `updateAction`
-    - [ ] Sub-task: In `resolveMovement` (`distance > 0.1` path), apply `Math.max(0, Math.min(63, newX))` and `Math.max(0, Math.min(63, newY))` before the `ctx.db.patch` call.
-    - [ ] Sub-task: In `resolveMovement` (`distance < 0.1` snap path), apply `Math.max(0, Math.min(63, agent.targetX))` and `Math.max(0, Math.min(63, agent.targetY))` before the snap `ctx.db.patch` call.
-    - [ ] Sub-task: In `updateAction`, apply `Math.max(0, Math.min(63, targetX))` and `Math.max(0, Math.min(63, targetY))` if `targetX`/`targetY` are provided.
+    - [ ] Sub-task: In `resolveMovement`, apply `Math.max(0, Math.min(63, ...))` to all computed positions just before every `ctx.db.patch` call (both `distance > 0.1` and `distance < 0.1` paths use the same unified clamping logic).
+    - [ ] Sub-task: Add "stuck at boundary" guard: when clamping changes the position value, set `arrived = true` and clear `targetX`/`targetY` so the agent isn't stuck perpetually walking toward an unreachable target.
+    - [ ] Sub-task: In `updateAction`, apply `Math.max(0, Math.min(63, targetX))` and `Math.max(0, Math.min(63, targetY))` if `targetX`/`targetY` are provided, before the DB patch.
     - [ ] Sub-task: Run the full test suite and confirm all tests pass (Green phase).
 
 - [ ] Task: Verify functionality and refactor

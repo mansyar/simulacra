@@ -5,17 +5,12 @@ This track implements "Phase 10 Track D: Bounds Clamping" as detailed in `PHASE-
 
 ## Functional Requirements
 
-### FR1: Clamp resolved position in `resolveMovement`
-In `convex/functions/agents.ts` (`resolveMovement`), the computed `newX` and `newY` values must be clamped to the range [0, 63] before being written to the database in the `distance > 0.1` path.
-- `newX = Math.max(0, Math.min(63, newX))`
-- `newY = Math.max(0, Math.min(63, newY))`
+### FR1: Unified clamping in `resolveMovement` (both movement paths)
+In `convex/functions/agents.ts` (`resolveMovement`), all computed position values (`newX`/`newY`) must be clamped to [0, 63] **before** every `ctx.db.patch` call, regardless of which code path produces them. Both the `distance > 0.1` interpolated path and the `distance < 0.1` snap path must apply the same clamping logic just before the DB write.
 
-### FR2: Clamp snap path in `resolveMovement`
-In the `distance < 0.1` (early-exit snap) path, the target coordinates must also be clamped to [0, 63] before being written to the database.
-- `snappedX = Math.max(0, Math.min(63, agent.targetX))`
-- `snappedY = Math.max(0, Math.min(63, agent.targetY))`
+Additionally, when clamping **changes** the computed value (i.e., the raw position was outside [0, 63]), the agent must be treated as **arrived** — clearing `targetX`/`targetY` — to prevent the "stuck at boundary" loop where the agent perpetually walks towards an unreachable off-map target without ever getting a new LLM action.
 
-### FR3: Defensively clamp targets in `updateAction`
+### FR2: Defensively clamp targets in `updateAction`
 In `convex/functions/agents.ts` (`updateAction`), if `targetX` or `targetY` is provided, it must be clamped to [0, 63] before being stored. This prevents off-map targets from entering the system at the point of assignment.
 
 ## Non-Functional Requirements
@@ -27,7 +22,8 @@ In `convex/functions/agents.ts` (`updateAction`), if `targetX` or `targetY` is p
 - When an agent's movement would place it at gridX > 63, the position is clamped to 63
 - When an agent's movement would place it at gridY < 0, the position is clamped to 0
 - When an agent's movement would place it at gridY > 63, the position is clamped to 63
-- The snap path (distance < 0.1) also clamps coordinates to [0, 63]
+- Both the `distance > 0.1` and `distance < 0.1` code paths apply the same clamping
+- When clamping changes the position (raw was outside [0,63]), the agent is marked as arrived and targets are cleared — no "stuck at boundary" loop
 - `updateAction` clamps targetX/targetY to [0, 63] when set
 - All existing tests pass (363+ tests across 79 files)
 
