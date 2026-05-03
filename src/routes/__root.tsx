@@ -1,7 +1,8 @@
 import { HeadContent, Scripts, createRootRoute, Outlet } from '@tanstack/react-router'
-import { Suspense, lazy, useState, useEffect } from 'react'
+import { Suspense, lazy, useState, useEffect, useCallback } from 'react'
 import { ConvexProvider } from "convex/react"
 import { convex } from "../lib/convex"
+import { DrawerContext } from "../lib/drawer-context"
 import Footer from '../components/Footer'
 import Header from '../components/Header'
 import { GlobalThoughtStream, AdminPanel } from '../components'
@@ -45,6 +46,11 @@ export const Route = createRootRoute({
 })
 
 function RootDocument() {
+  const [drawerExpanded, setDrawerExpanded] = useState(false)
+  const toggleDrawer = useCallback(() => {
+    setDrawerExpanded((prev) => !prev)
+  }, [])
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -52,27 +58,29 @@ function RootDocument() {
       </head>
       <body className="font-sans antialiased">
         <ConvexProvider client={convex}>
-          <div className="flex flex-col h-screen w-screen overflow-hidden">
-            <Header />
-            <main className="flex-1 w-full overflow-hidden relative">
-              <ClientOnly>
-                <AdminPanel />
-                <GlobalThoughtStream />
-                <Suspense fallback={
-                  <div className="flex h-full w-full items-center justify-center bg-slate-900">
-                    <div className="text-center">
-                      <div className="w-8 h-8 border-2 border-slate-400 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                      <p className="text-slate-400">Loading game...</p>
+          <DrawerContext.Provider value={{ isExpanded: drawerExpanded, toggle: toggleDrawer, setExpanded: setDrawerExpanded }}>
+            <div className="flex flex-col h-screen w-screen overflow-hidden">
+              <Header />
+              <main className="flex-1 w-full overflow-hidden relative">
+                <ClientOnly>
+                  <AdminPanel />
+                  <GlobalThoughtStream />
+                  <Suspense fallback={
+                    <div className="flex h-full w-full items-center justify-center bg-slate-900">
+                      <div className="text-center">
+                        <div className="w-8 h-8 border-2 border-slate-400 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                        <p className="text-slate-400">Loading game...</p>
+                      </div>
                     </div>
-                  </div>
-                }>
-                  <GameCanvas />
-                </Suspense>
-                <Outlet />
-              </ClientOnly>
-            </main>
-            <Footer />
-          </div>
+                  }>
+                    <GameCanvas />
+                  </Suspense>
+                  <Outlet />
+                </ClientOnly>
+              </main>
+              <Footer />
+            </div>
+          </DrawerContext.Provider>
         </ConvexProvider>
         <Scripts />
       </body>

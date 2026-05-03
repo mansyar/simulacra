@@ -1,7 +1,24 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
+import { useState, useCallback } from 'react'
 import GlobalThoughtStream from '../components/GlobalThoughtStream'
+import { DrawerContext } from '../lib/drawer-context'
 import { useQuery } from "convex/react";
+import type { ReactNode } from 'react'
+
+// Helper to render with DrawerContext provider
+function renderWithDrawer(ui: ReactNode, initialExpanded = false) {
+  function Wrapper({ children }: { children: ReactNode }) {
+    const [isExpanded, setExpanded] = useState(initialExpanded)
+    const toggle = useCallback(() => setExpanded((prev) => !prev), [])
+    return (
+      <DrawerContext.Provider value={{ isExpanded, toggle, setExpanded }}>
+        {children}
+      </DrawerContext.Provider>
+    )
+  }
+  return render(<Wrapper>{ui}</Wrapper>)
+}
 
 // Mock convex
 vi.mock('convex/react', () => ({
@@ -57,7 +74,7 @@ describe('GlobalThoughtStream', () => {
       if (fn === 'agents:getAll') return undefined
       return undefined
     }) as never)
-    const { container } = render(<GlobalThoughtStream />)
+    const { container } = renderWithDrawer(<GlobalThoughtStream />)
     expect(container.firstChild).toBeNull()
   })
 
@@ -67,7 +84,7 @@ describe('GlobalThoughtStream', () => {
       if (fn === 'agents:getAll') return []
       return []
     }) as never)
-    render(<GlobalThoughtStream />)
+    renderWithDrawer(<GlobalThoughtStream />)
     expect(screen.getByText('Waiting for simulation events...')).toBeDefined()
   })
 
@@ -77,7 +94,7 @@ describe('GlobalThoughtStream', () => {
       if (fn === 'agents:getAll') return mockAgents
       return undefined
     }) as never)
-    const { container } = render(<GlobalThoughtStream />)
+    const { container } = renderWithDrawer(<GlobalThoughtStream />)
     // Expand the drawer first
     const expandHandle = container.querySelector('[data-testid="expand-handle"]')
     fireEvent.click(expandHandle!)
@@ -96,7 +113,7 @@ describe('GlobalThoughtStream', () => {
     })
 
     it('renders a scrollable container for events when expanded', () => {
-      const { container } = render(<GlobalThoughtStream />)
+      const { container } = renderWithDrawer(<GlobalThoughtStream />)
       // Expand the drawer to reveal the scroll container
       const expandHandle = container.querySelector('[data-testid="expand-handle"]')
       fireEvent.click(expandHandle!)
@@ -115,7 +132,7 @@ describe('GlobalThoughtStream', () => {
     })
 
     it('shows only the last event in collapsed state with expand handle', () => {
-      const { container } = render(<GlobalThoughtStream />)
+      const { container } = renderWithDrawer(<GlobalThoughtStream />)
       
       // Last event is "Bob walked south" (index 4) - text is nested in a composite span "Bob: Bob walked south"
       expect(screen.getByText(/Bob walked south/)).toBeDefined()
@@ -131,7 +148,7 @@ describe('GlobalThoughtStream', () => {
     })
 
     it('expands to show full event feed when toggled', () => {
-      const { container } = render(<GlobalThoughtStream />)
+      const { container } = renderWithDrawer(<GlobalThoughtStream />)
       
       // Click the expand handle
       const expandHandle = container.querySelector('[data-testid="expand-handle"]')
@@ -149,7 +166,7 @@ describe('GlobalThoughtStream', () => {
     })
 
     it('expanded state has 200px height class', () => {
-      const { container } = render(<GlobalThoughtStream />)
+      const { container } = renderWithDrawer(<GlobalThoughtStream />)
       
       // Click to expand
       const expandHandle = container.querySelector('[data-testid="expand-handle"]')
@@ -162,7 +179,7 @@ describe('GlobalThoughtStream', () => {
     })
 
     it('collapses back when toggled again', () => {
-      const { container } = render(<GlobalThoughtStream />)
+      const { container } = renderWithDrawer(<GlobalThoughtStream />)
       
       // Expand
       const handle = container.querySelector('[data-testid="expand-handle"]')
@@ -195,7 +212,7 @@ describe('GlobalThoughtStream', () => {
         location: { pathname: '/agent/agent-123' },
       })
 
-      const { container } = render(<GlobalThoughtStream />)
+      const { container } = renderWithDrawer(<GlobalThoughtStream />)
       // Expand the drawer to reveal the event feed
       const expandHandle = container.querySelector('[data-testid="expand-handle"]')
       fireEvent.click(expandHandle!)
@@ -212,7 +229,7 @@ describe('GlobalThoughtStream', () => {
         location: { pathname: '/' },
       })
 
-      const { container } = render(<GlobalThoughtStream />)
+      const { container } = renderWithDrawer(<GlobalThoughtStream />)
       const expandHandle = container.querySelector('[data-testid="expand-handle"]')
       fireEvent.click(expandHandle!)
       const highlightedCards = container.querySelectorAll('.bg-blue-800\\/30')
@@ -225,7 +242,7 @@ describe('GlobalThoughtStream', () => {
         location: { pathname: '/agent/agent-789' },
       })
 
-      const { container } = render(<GlobalThoughtStream />)
+      const { container } = renderWithDrawer(<GlobalThoughtStream />)
       // Expand the drawer to reveal the event feed
       const expandHandle = container.querySelector('[data-testid="expand-handle"]')
       fireEvent.click(expandHandle!)

@@ -3,13 +3,14 @@ import { api } from "../../convex/_generated/api";
 import { useRouterState } from "@tanstack/react-router";
 import { MessageSquare, Move, Activity, Cloud, Zap } from "lucide-react";
 import { useRef, useEffect, useMemo, useState } from "react";
+import { useDrawer } from "../lib/drawer-context";
 import type { Id } from "../../convex/_generated/dataModel";
 
 export default function GlobalThoughtStream() {
   const events = useQuery(api.functions.memory.getGlobalEvents, { limit: 20 });
   const agents = useQuery(api.functions.agents.getAll);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const { isExpanded, toggle: toggleExpanded } = useDrawer();
   const [filterAgent, setFilterAgent] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<string | null>(null);
 
@@ -66,11 +67,6 @@ export default function GlobalThoughtStream() {
     }
   }, [events]);
 
-  // Reset to collapsed when events data changes
-  useEffect(() => {
-    setIsExpanded(false);
-  }, [events]);
-
   if (!events) return null;
 
   const lastEvent = events[events.length - 1] ?? null;
@@ -88,10 +84,6 @@ export default function GlobalThoughtStream() {
       default:
         return <Zap className="w-3 h-3 text-purple-400" />;
     }
-  };
-
-  const toggleExpanded = () => {
-    setIsExpanded((prev) => !prev);
   };
 
   return (
