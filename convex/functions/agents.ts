@@ -94,29 +94,40 @@ export const resolveMovement = internalMutation({
       const ratio = Math.min(1, moveDistance / distance);
       const arrived = ratio === 1;
       
-      const newX = arrived ? agent.targetX : agent.gridX + dx * ratio;
-      const newY = arrived ? agent.targetY : agent.gridY + dy * ratio;
+      const rawNewX = arrived ? agent.targetX : agent.gridX + dx * ratio;
+      const rawNewY = arrived ? agent.targetY : agent.gridY + dy * ratio;
+
+      // Clamp to grid bounds [0, 63]
+      const clampedNewX = Math.max(0, Math.min(63, rawNewX));
+      const clampedNewY = Math.max(0, Math.min(63, rawNewY));
+      const wasClamped = clampedNewX !== rawNewX || clampedNewY !== rawNewY;
+
+      // When clamping changes the value, treat as arrived to prevent "stuck at boundary" loop
+      const finalArrived = arrived || wasClamped;
 
       await ctx.db.patch(args.agentId, {
-        gridX: newX,
-        gridY: newY,
-        targetX: arrived ? undefined : agent.targetX,
-        targetY: arrived ? undefined : agent.targetY,
+        gridX: clampedNewX,
+        gridY: clampedNewY,
+        targetX: finalArrived ? undefined : agent.targetX,
+        targetY: finalArrived ? undefined : agent.targetY,
         lastActiveAt: Date.now(),
       });
 
-      return { arrived, newX, newY };
+      return { arrived: finalArrived, newX: clampedNewX, newY: clampedNewY };
     }
     
     // Snapping for distance < 0.1
+    const clampedGridX = Math.max(0, Math.min(63, agent.targetX));
+    const clampedGridY = Math.max(0, Math.min(63, agent.targetY));
+
     await ctx.db.patch(args.agentId, {
-      gridX: agent.targetX,
-      gridY: agent.targetY,
+      gridX: clampedGridX,
+      gridY: clampedGridY,
       targetX: undefined,
       targetY: undefined,
       lastActiveAt: Date.now(),
     });
-    return { arrived: true, newX: agent.targetX, newY: agent.targetY };
+    return { arrived: true, newX: clampedGridX, newY: clampedGridY };
   },
 });
 
@@ -219,6 +230,21 @@ export const updateNeeds = internalMutation({
     });
   },
 });
+/** Internal Mutation: Set targetX/targetY without clamping (test helper) */
+export const _testSetTarget = internalMutation({
+  args: {
+    agentId: v.id("agents"),
+    targetX: v.number(),
+    targetY: v.number(),
+  },
+  handler: async (ctx, { agentId, targetX, targetY }) => {
+    await ctx.db.patch(agentId, {
+      targetX,
+      targetY,
+    });
+  },
+});
+
 /** Internal Mutation: Update agent action and target */
 export const updateAction = internalMutation({
   args: {
@@ -242,6 +268,13 @@ export const updateAction = internalMutation({
   },
   handler: async (ctx, args) => {
     const { agentId, action, ...updates } = args;
+    // Clamp targetX/targetY to grid bounds [0, 63]
+    if (updates.targetX !== undefined) {
+      updates.targetX = Math.max(0, Math.min(63, updates.targetX));
+    }
+    if (updates.targetY !== undefined) {
+      updates.targetY = Math.max(0, Math.min(63, updates.targetY));
+    }
     await ctx.db.patch(agentId, {
       currentAction: action,
       ...updates,
