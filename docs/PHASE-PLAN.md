@@ -13,7 +13,7 @@
 | 7 | The Mind | AI Context Fidelity | ✅ Complete | 1 week |
 | 8 | The Backbone | Robustness & Scaling | ✅ Complete | 1 week |
 | 9 | The Soul | Deeper Social Dynamics | ✅ Complete | 1 week |
-| 10 | Movement Coherence | Fix agent trajectory, weather sync, and arrival cleanup | ⏳ Tracks A-C Complete (Track D Pending) | 2-3 days |
+| 10 | Movement Coherence | Fix agent trajectory, weather sync, arrival cleanup, and bounds clamping | ✅ Complete | 2-3 days |
 | 11 | The Observatory | UI/UX Polish & World Immersion | ⏳ Not Started | 2-3 weeks |
 | 12 | The Polish | Master Panel + Deploy | ⏳ Not Started | 1 week |
 
@@ -127,11 +127,11 @@
 
 ---
 
-## Phase 10: Movement Coherence ⏳ (Track D Pending)
+## Phase 10: Movement Coherence ✅
 
 **Goal:** Fix logical gaps in the movement pipeline — LLM trajectory blindness, weather speed desync, missing arrival cleanup, and bounds clamping.
 
-**Status:** Tracks A-C ✅ Complete | Track D ⏳ Pending
+**Status:** ✅ Complete
 
 **Summary — Track A (LLM Sees Its Own Trajectory):** Added `currentAction` as structured data alongside `hunger/energy/social` in the `decision` action args. Appended `Current Position: (gridX, gridY)`, `Destination: (targetX, targetY)` (or `"None"`), and `Distance Remaining: ~N tiles` to the LLM context. Verified via tests that trajectory fields and `"None"` fallback appear correctly. All 352 tests pass.
 
@@ -139,9 +139,9 @@
 
 **Summary — Track C (Arrival Cleanup):** `resolveMovement` in `agents.ts` now atomically snaps `gridX/Y` to exact target coordinates and clears `targetX/Y` in a single DB patch when `distance < 0.1` or `ratio === 1`. `world.ts` simply logs the arrival event. 2 new tests. All 363 tests pass across 79 files.
 
-**Track D (Bounds Clamping — Pending):** Add `Math.max(0, Math.min(63, ...))` clamping around `resolveMovement` to prevent agents from walking off the [0, 63] map boundary.
+**Summary — Track D (Bounds Clamping):** Added `Math.max(0, Math.min(63, ...))` clamping to both movement paths in `resolveMovement` (interpolated and snap). Added a "stuck at boundary" guard: when clamping changes the computed position, the agent is marked as arrived and targets are cleared, preventing the infinite loop of walking toward an unreachable off-map target. Added defensive clamping in `updateAction` to prevent off-map targets from entering the system at the point of assignment. 5 new tests. All 368 tests pass across 80 files.
 
-**Key outcome (once complete):** Agents see their own trajectory and complete journeys, frontend speed matches backend in all weather without snap-back, arrived agents stop cleanly, and the map boundary remains respected.
+**Key outcome:** Agents see their own trajectory and complete journeys, frontend speed matches backend in all weather without snap-back, arrived agents stop cleanly, and the map boundary is respected with no agents walking off-grid.
 
 ---
 
@@ -389,12 +389,12 @@ Phase 9 (Soul) ✅
     └──► POI-aware agent behavior (Track E)
             │
             ▼
-Phase 10 (Movement Coherence) ⏳ (Track D Pending)
+Phase 10 (Movement Coherence) ✅
     │
     ├──► LLM sees its own trajectory (Track A) ✅
     ├──► Weather-aware frontend speed (Track B) ✅
     ├──► Arrival cleanup (Track C) ✅
-    └──► Bounds clamping (Track D) ⏳ Pending — **must complete before Phase 11**
+    └──► Bounds clamping (Track D) ✅
             │
             ▼
 Phase 11 (Observatory) ⏳
@@ -437,9 +437,8 @@ Phase 12 (Polish) ⏳
 
 ## Recommended Development Order
 
-### Current Status: Phase 10 (Movement Coherence) — Track D Pending ⏳; Phase 11-12 Planned 🎯
-**Prerequisite:** Phase 10 Track D must be completed before Phase 11 starts.
-**Order:** Movement Coherence (Phase 10) → UI/UX Polish (Phase 11) → Master Panel & Deploy (Phase 12)
+### Current Status: Phase 10 (Movement Coherence) ✅ Complete; Phase 11-12 Planned 🎯
+**Order:** UI/UX Polish (Phase 11) → Master Panel & Deploy (Phase 12)
 
 1. ✅ Phase 1 — Isometric grid rendering (Excalibur)
 2. ✅ Phase 2 — Convex + real-time sync
@@ -450,14 +449,13 @@ Phase 12 (Polish) ⏳
 7. ✅ Phase 7 — AI context fidelity: sensory buffer, user prompt restructuring
 8. ✅ Phase 8 — Backbone: parallel tick, spatial queries, batch embeddings, config cleanup
 9. ✅ Phase 9 — Soul: bidirectional conversations, sentiment, TTL cleanup, runtime config, POI awareness
-10. ✅ Phase 10 Tracks A-C — Movement coherence: trajectory awareness, weather sync, arrival cleanup
-11. ⏳ Phase 10 Track D — Bounds clamping [~1 day]
-12. ⏳ Phase 11 Track A — Layout rationalization [~2 days]
-13. ⏳ Phase 11 Track B — World navigation & minimap [~2-3 days]
-14. ⏳ Phase 11 Track C — Ambient world & theme integration [~3-4 days]
-15. ⏳ Phase 11 Track D — Admin panel + agent controls [~2-3 days]
-16. ⏳ Phase 11 Track E — Observer experience & social visualization [~3-4 days]
-17. ⏳ Phase 12 — Master panel + deployment [~1 week]
+10. ✅ Phase 10 — Movement coherence: trajectory awareness, weather sync, arrival cleanup, bounds clamping
+11. ⏳ Phase 11 Track A — Layout rationalization [~2 days]
+12. ⏳ Phase 11 Track B — World navigation & minimap [~2-3 days]
+13. ⏳ Phase 11 Track C — Ambient world & theme integration [~3-4 days]
+14. ⏳ Phase 11 Track D — Admin panel + agent controls [~2-3 days]
+15. ⏳ Phase 11 Track E — Observer experience & social visualization [~3-4 days]
+16. ⏳ Phase 12 — Master panel + deployment [~1 week]
 
 **Recommended execution order within Phase 11:** Track A first (foundational layout change), then Tracks B+C (world immersion), then Tracks D+E (controls + experience) — these last two can run in parallel since they touch different components.
 
