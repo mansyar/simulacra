@@ -12,9 +12,3 @@ This file tracks all major tracks for the project. Each track has its own detail
 - [x] **Archived: Phase 10 Track A — LLM Sees Its Own Trajectory**
   *Archive: [./archive/llm_sees_trajectory_20260501/](./archive/llm_sees_trajectory_20260501/)
 
-
-
----
-
-- [x] **Track: Phase 10 Track C - Arrival Cleanup**
-*Link: [./tracks/arrival-cleanup_20260503/](./tracks/arrival-cleanup_20260503/)*
