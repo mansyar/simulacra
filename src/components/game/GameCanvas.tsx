@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useContext } from 'react'
 import { Application, Container, Ticker } from 'pixi.js'
 import { useQuery } from 'convex/react'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
+import { GameCanvasContext } from '../../lib/game-canvas-context'
 import { IsometricGrid } from './IsometricGrid'
 import { CameraController } from './Camera'
 import { AgentSprite } from './AgentSprite'
@@ -25,11 +26,15 @@ export function GameCanvas() {
   const navigate = useNavigate()
   const routeParams = useParams({ from: '/agent/$id', shouldThrow: false })
   const selectedAgentId = routeParams?.id
+  const ctx = useContext(GameCanvasContext)
   const containerRef = useRef<HTMLDivElement>(null)
   const appRef = useRef<ExtendedApplication | null>(null)
   const gridRef = useRef<IsometricGrid | null>(null)
-  const cameraRef = useRef<CameraController | null>(null)
-  const agentsRef = useRef<Map<Id<'agents'>, AgentSprite>>(new Map())
+  // Use shared refs from context when available (for keyboard shortcuts), fallback to local
+  const localCameraRef = useRef<CameraController | null>(null)
+  const localAgentsRef = useRef<Map<Id<'agents'>, AgentSprite>>(new Map())
+  const cameraRef = ctx?.cameraRef ?? localCameraRef
+  const agentsRef = ctx?.agentsRef ?? localAgentsRef
   const poisRef = useRef<Map<Id<'pois'>, POISprite>>(new Map())
   const agentContainerRef = useRef<Container | null>(null)
   const poiContainerRef = useRef<Container | null>(null)
