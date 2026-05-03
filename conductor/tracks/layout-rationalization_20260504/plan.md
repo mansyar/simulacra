@@ -82,3 +82,14 @@
 - [x] Task: Update component index exports if needed
     - [x] No new components added; existing exports unchanged
 - [x] Task: Conductor - User Manual Verification 'Phase 4: Integration & Test Verification' (Protocol in workflow.md)
+
+---
+
+## Phase: Review Fixes [checkpoint: f2ba0bd]
+
+### Tasks
+
+- [x] Task: Apply review suggestions `f2ba0bd`
+    - [x] Fix: Remove duplicate mock line in Footer.test.tsx
+    - [x] Fix: Improve sleeping indicator edge case for fresh systems
+    - [x] Fix: Add TODO for Space key Master auth guard
