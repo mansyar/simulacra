@@ -61,7 +61,7 @@ function RootDocument() {
           <DrawerContext.Provider value={{ isExpanded: drawerExpanded, toggle: toggleDrawer, setExpanded: setDrawerExpanded }}>
             <div className="flex flex-col h-screen w-screen overflow-hidden">
               <Header />
-              <main className="flex-1 w-full overflow-hidden relative">
+              <main className="flex-1 w-full overflow-hidden relative pb-8">
                 <ClientOnly>
                   <AdminPanel />
                   <GlobalThoughtStream />
