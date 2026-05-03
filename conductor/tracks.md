@@ -12,3 +12,8 @@ This file tracks all major tracks for the project. Each track has its own detail
 - [x] **Archived: Phase 10 Track A — LLM Sees Its Own Trajectory**
   *Archive: [./archive/llm_sees_trajectory_20260501/](./archive/llm_sees_trajectory_20260501/)
 
+---
+
+- [ ] **Track: Phase 11 Track A — Layout Rationalization**
+  *Link: [./tracks/layout-rationalization_20260504/](./tracks/layout-rationalization_20260504/)*
+
