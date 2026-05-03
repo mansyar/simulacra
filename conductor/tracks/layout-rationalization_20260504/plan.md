@@ -9,14 +9,14 @@
 
 ### Tasks
 
-- [ ] Task: Convert GlobalThoughtStream to bottom drawer
-    - [ ] Write failing tests: update `GlobalThoughtStream.test.tsx` — test collapsed state (shows last event + expand handle), expanded state (200px height, full event feed), toggle via props/state
-    - [ ] Implement: refactor `GlobalThoughtStream.tsx` from fixed right sidebar (`right-4 top-20 bottom-24 w-64`) to an absolutely positioned bottom drawer anchored to viewport bottom
-    - [ ] Implement: collapsed state (~32px thin bar showing last event description + ▲ expand handle on the right)
-    - [ ] Implement: expanded state (200px height) with full event feed, filter tags, auto-scroll, highlighting
-    - [ ] Implement: Framer Motion or CSS transition for expand/collapse animation (~300ms)
-    - [ ] Implement: proper z-indexing (above canvas, below Header and Agent Detail panel)
-    - [ ] Run tests and verify all pass
+- [x] Task: Convert GlobalThoughtStream to bottom drawer `fcc532d`
+    - [x] Write failing tests: update `GlobalThoughtStream.test.tsx` — test collapsed state (shows last event + expand handle), expanded state (200px height, full event feed), toggle via props/state
+    - [x] Implement: refactor `GlobalThoughtStream.tsx` from fixed right sidebar (`right-4 top-20 bottom-24 w-64`) to an absolutely positioned bottom drawer anchored to viewport bottom
+    - [x] Implement: collapsed state (~32px thin bar showing last event description + ▲ expand handle on the right)
+    - [x] Implement: expanded state (200px height) with full event feed, filter tags, auto-scroll, highlighting
+    - [x] Implement: CSS transition for expand/collapse animation (~300ms ease-in-out) `fcc532d`
+    - [x] Implement: proper z-indexing (z-40, above canvas z-10/z-11, below Header z-50 and Agent Detail panel)
+    - [x] Run tests and verify all pass — 80 files, 372 tests pass
 - [ ] Task: Integrate drawer toggle state into layout
     - [ ] Wire the expanded/collapsed state so `__root.tsx` and other components can toggle it
     - [ ] Ensure the drawer doesn't overlap with the canvas's click/interaction area when collapsed
