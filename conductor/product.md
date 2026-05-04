@@ -26,7 +26,7 @@
 - **Grid**: 64×64 isometric tile map (4,096 tiles)
 - **Tile Size**: 32×16 pixels (isometric diamond)
 - **Coordinate System**: Iso coordinates (x, y) ↔ Screen coordinates conversion
-- **Camera**: Centered on world, zoomable (0.5x - 3x), pan via drag
+- **Camera**: Centered on world, zoomable (0.5x - 2x), pan via drag, URL-synced state
 - **Background**: Procedural sky gradient (day/night cycle optional)
 - **Environmental Effects**: Stochastic weather transitions (Sunny, Cloudy, Rainy, Stormy) affecting agent movement speed.
 
@@ -91,6 +91,7 @@
 | `/` | Full world view |
 | `/agent/:id` | Agent detail overlay (side panel) |
 | `?zoom=1.5&focus=agent_123` | URL-synced camera state |
+| `?cx=32&cy=32` | Center camera on grid coordinates |
 
 ### Visual Design
 - **Palette**: Earthy tones (forest green, warm brown, sky blue)
@@ -169,6 +170,15 @@
 - Integrated Simplex Noise for organic idle behaviors.
 - Implemented time-synced predictive pathing for continuous movement.
 - Smooth 500ms course correction for backend state synchronization.
+
+### Phase 11 - World Navigation & Awareness [COMPLETE: 2026-05-04]
+- [x] **Track B: World Navigation & Awareness** [COMPLETE: 2026-05-04]
+  - 120×120px HTML5 Canvas minimap with agent dots (archetype-colored), POI markers, and viewport rectangle
+  - Minimap click-to-jump camera navigation
+  - URL-synced camera state (`?focus`, `?zoom`, `?cx`, `?cy`) for shareable views
+  - Camera state written back to URL on pan/zoom (500ms debounce)
+  - Tile hover tooltip showing POI names, agent info, or grid coordinates
+  - Minimap dynamically repositions above thought stream with smooth animation
 
 ---
 
