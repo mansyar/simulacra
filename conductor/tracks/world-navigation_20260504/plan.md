@@ -9,7 +9,7 @@
 
 ### Tasks
 
-- [ ] Task: Add `getScale()` method to CameraController
+- [x] Task: Add `getScale()` method to CameraController `78c2a38`
     - [ ] Write failing tests: update `CameraController.test.ts` — test that `getScale()` returns the current stage scale
     - [ ] Implement: add `public getScale(): number` returning `this.stage.scale.x` to CameraController
     - [ ] Run tests and verify all pass
