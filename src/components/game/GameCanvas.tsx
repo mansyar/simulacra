@@ -22,6 +22,7 @@ interface ExtendedApplication extends Application {
   _handleMouseMove?: (e: MouseEvent) => void
   _handleMouseDown?: (e: MouseEvent) => void
   _handleMouseUp?: (e: MouseEvent) => void
+  _handleMouseLeave?: (e: MouseEvent) => void
   _handleWheel?: (e: WheelEvent) => void
   _tick?: (ticker: Ticker) => void
 }
@@ -54,6 +55,7 @@ export function GameCanvas() {
   const [hoveredTile, setHoveredTile] = useState<{ gridX: number; gridY: number } | null>(null)
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 })
   const appScreenRef = useRef<{ width: number; height: number } | null>(null)
+  const lastHoveredTileRef = useRef<{ gridX: number; gridY: number } | null>(null)
 
   const agentsData = useQuery(api.functions.agents.getAll)
   const poisData = useQuery(api.functions.world.getPois)
@@ -161,12 +163,20 @@ export function GameCanvas() {
         
         grid.updateHover(localX, localY)
 
-        // Compute hovered tile grid coordinates for tooltip
+        // Compute hovered tile grid coordinates for tooltip (throttled)
         const { x: gridX, y: gridY } = screenToGrid(localX - offsetX, localY - offsetY)
+        const prevTile = lastHoveredTileRef.current
+        const tileChanged = !prevTile || prevTile.gridX !== gridX || prevTile.gridY !== gridY
         if (gridX >= 0 && gridX < GRID_SIZE && gridY >= 0 && gridY < GRID_SIZE) {
-          setHoveredTile({ gridX, gridY })
+          if (tileChanged) {
+            setHoveredTile({ gridX, gridY })
+            lastHoveredTileRef.current = { gridX, gridY }
+          }
         } else {
-          setHoveredTile(null)
+          if (prevTile !== null) {
+            setHoveredTile(null)
+            lastHoveredTileRef.current = null
+          }
         }
 
         // Track cursor position for tooltip positioning
@@ -207,6 +217,7 @@ export function GameCanvas() {
       app._handleMouseDown = handleMouseDown
       app._handleMouseMove = handleMouseMove
       app._handleMouseUp = handleMouseUp
+      app._handleMouseLeave = handleMouseLeave
       app._handleWheel = handleWheel
 
       // Ticker for smooth updates
@@ -264,6 +275,7 @@ export function GameCanvas() {
         if (currentApp._tick) currentApp.ticker.remove(currentApp._tick)
         if (currentApp._handleMouseDown) currentApp.canvas.removeEventListener('mousedown', currentApp._handleMouseDown)
         if (currentApp._handleMouseMove) currentApp.canvas.removeEventListener('mousemove', currentApp._handleMouseMove)
+        if (currentApp._handleMouseLeave) currentApp.canvas.removeEventListener('mouseleave', currentApp._handleMouseLeave)
         if (currentApp._handleMouseUp) window.removeEventListener('mouseup', currentApp._handleMouseUp)
         if (currentApp._handleWheel) currentApp.canvas.removeEventListener('wheel', currentApp._handleWheel)
 

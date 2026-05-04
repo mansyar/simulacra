@@ -129,8 +129,8 @@ export function MiniMap({ agentsData, poisData, cameraStateRef, cameraRef }: Min
     const topLeft = gridToMinimap(bounds.minGridX, bounds.minGridY)
     const bottomRight = gridToMinimap(bounds.maxGridX, bounds.maxGridY)
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)'
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)'
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)'
     ctx.lineWidth = 1
     ctx.fillRect(
       topLeft.x,
