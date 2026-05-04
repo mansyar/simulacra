@@ -1,8 +1,0 @@
-{
-  "track_id": "world-navigation_20260504",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-05-04T11:24:00Z",
-  "updated_at": "2026-05-04T11:24:00Z",
-  "description": "Phase 11 Track B: World Navigation & Awareness — Add minimap, URL-synced camera state, and tile tooltip to the world interface"
-}
