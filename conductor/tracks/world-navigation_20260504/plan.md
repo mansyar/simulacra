@@ -48,7 +48,7 @@
     - [ ] Implement: add a debounced effect (500ms) in `GameCanvas` that watches camera position/zoom and updates URL via `router.history.push()` — pass router from context or use `window.location` to build the new URL
     - [ ] Implement: format: `?zoom=<level>&cx=<centerGridX>&cy=<centerGridY>` — compute center grid coordinate by converting viewport center from screen coords to grid coords
     - [ ] Run tests and verify all pass
-- [ ] Task: Update URL on agent detail navigation
+- [x] Task: Update URL on agent detail navigation `b4298ae`
     - [ ] Write failing tests: update `GameCanvas_navigation.test.tsx` — test that navigating to `/agent/$id` sets `?focus=$id` and clears `?cx`/`?cy` in URL
     - [ ] Implement: in the existing agent selection flow (AgentSprite click handler), update URL search params via `router.history.push()` to include `?focus=<agent_id>` and remove any `?cx`/`?cy`
     - [ ] Run tests and verify all pass
