@@ -37,7 +37,7 @@
 
 ### Tasks
 
-- [ ] Task: Implement URL camera state read on mount
+- [x] Task: Implement URL camera state read on mount `9c11f54`
     - [ ] Write failing tests: update `GameCanvas.test.tsx` — test that `?focus=agent1&zoom=1.5` URL params trigger `cameraRef.lookAt()` and `setZoom()` on mount; test that `?cx=32&cy=32` works when no focus param; test that no params leaves camera at default
     - [ ] Implement: in `GameCanvas`, read URL params on mount using `URLSearchParams(window.location.search)` — parse `focus`, `zoom`, `cx`, `cy`
     - [ ] Implement: priority logic — if `focus` present, find that agent in `agentsData` and call `cameraRef.lookAt(agentWorldX, agentWorldY, ...)`; else if `cx`/`cy` present, convert grid coords to screen coords and call `lookAt()`; else leave at default center
