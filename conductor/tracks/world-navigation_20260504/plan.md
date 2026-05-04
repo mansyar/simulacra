@@ -13,7 +13,7 @@
     - [ ] Write failing tests: update `CameraController.test.ts` — test that `getScale()` returns the current stage scale
     - [ ] Implement: add `public getScale(): number` returning `this.stage.scale.x` to CameraController
     - [ ] Run tests and verify all pass
-- [ ] Task: Create MiniMap React component with HTML5 Canvas
+- [x] Task: Create MiniMap React component with HTML5 Canvas `f8f07a6`
     - [ ] Write failing tests: create `src/__tests__/MiniMap.test.tsx` — test canvas rendering, agent dots color-coded by archetype (reference `ARCHETYPE_COLORS` from AgentSprite.ts), POI markers, viewport rectangle visibility
     - [ ] Implement: new `src/components/game/MiniMap.tsx` as a React component wrapping a `<canvas>` element with a ref to the native canvas
     - [ ] Implement: fixed positioning (absolute, bottom-2 right-2 within the canvas container) with 120×120px dimensions, rounded border, dark background (`bg-slate-900/80`)
