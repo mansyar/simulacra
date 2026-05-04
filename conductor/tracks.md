@@ -17,3 +17,8 @@ This file tracks all major tracks for the project. Each track has its own detail
 - [x] **Archived: Phase 11 Track A — Layout Rationalization**
   *Archive: [./archive/layout-rationalization_20260504/](./archive/layout-rationalization_20260504/)*
 
+---
+
+- [ ] **Track: Phase 11 Track B — World Navigation & Awareness**
+  *Link: [./tracks/world-navigation_20260504/](./tracks/world-navigation_20260504/)*
+
