@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { parseCameraUrlParams } from '../lib/url-camera'
+import { describe, it, expect, beforeEach } from 'vitest'
+import { parseCameraUrlParams, buildCameraUrlSearchString } from '../lib/url-camera'
 
 describe('parseCameraUrlParams', () => {
   it('should parse ?focus=agent1&zoom=1.5', () => {
@@ -68,5 +68,45 @@ describe('parseCameraUrlParams', () => {
     expect(result.centerGridX).toBe(32)
     expect(result.centerGridY).toBe(32)
     // Priority logic is handled by GameCanvas, not the parser
+  })
+})
+
+describe('buildCameraUrlSearchString', () => {
+  beforeEach(() => {
+    // Reset window.location for each test
+    window.history.replaceState({}, '', window.location.pathname)
+  })
+
+  it('should build search string with zoom and center coords', () => {
+    const result = buildCameraUrlSearchString(1.5, 32, 16)
+    expect(result).toContain('zoom=1.5')
+    expect(result).toContain('cx=32')
+    expect(result).toContain('cy=16')
+  })
+
+  it('should round zoom to 2 decimal places', () => {
+    const result = buildCameraUrlSearchString(1.33333, 32, 16)
+    expect(result).toContain('zoom=1.33')
+  })
+
+  it('should clear focus param when writing camera state', () => {
+    // Set initial URL with focus param
+    window.history.replaceState({}, '', '?focus=agent1')
+
+    const result = buildCameraUrlSearchString(1.0, 32, 16)
+    expect(result).not.toContain('focus')
+    expect(result).toContain('zoom=1')
+    expect(result).toContain('cx=32')
+    expect(result).toContain('cy=16')
+  })
+
+  it('should preserve non-camera URL params', () => {
+    window.history.replaceState({}, '', '?other=value')
+
+    const result = buildCameraUrlSearchString(1.0, 10, 10)
+    expect(result).toContain('other=value')
+    expect(result).toContain('zoom=1')
+    expect(result).toContain('cx=10')
+    expect(result).toContain('cy=10')
   })
 })

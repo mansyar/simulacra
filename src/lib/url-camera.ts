@@ -52,3 +52,28 @@ export function parseCameraUrlParams(searchParams: URLSearchParams): CameraUrlPa
 export function getCameraUrlParamsFromWindow(): CameraUrlParams {
   return parseCameraUrlParams(new URLSearchParams(window.location.search))
 }
+
+/**
+ * Build a URL search string from camera state (zoom, center grid coords).
+ * Clears ?focus if present (manual pan clears focus).
+ * Used when writing camera state back to the URL on pan/zoom.
+ */
+export function buildCameraUrlSearchString(
+  zoom: number,
+  centerGridX: number,
+  centerGridY: number
+): string {
+  const params = new URLSearchParams(window.location.search)
+
+  // Remove focus param (manual pan/zoom clears agent focus)
+  params.delete('focus')
+
+  // Round zoom to 2 decimal places
+  params.set('zoom', Math.round(zoom * 100) / 100 + '')
+
+  // Set center grid coordinates
+  params.set('cx', Math.round(centerGridX) + '')
+  params.set('cy', Math.round(centerGridY) + '')
+
+  return params.toString()
+}
