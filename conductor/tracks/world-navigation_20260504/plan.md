@@ -60,7 +60,7 @@
 
 ### Tasks
 
-- [ ] Task: Compute hovered tile coordinates in GameCanvas mousemove handler
+- [x] Task: Compute hovered tile coordinates in GameCanvas mousemove handler `8abbcf6`
     - [ ] Write failing tests: create `src/__tests__/TileTooltip.test.tsx` — test tooltip renders near cursor position; shows grid coords for empty tile; shows agent name+archetype when agent on tile; shows POI name when POI on tile; hidden when outside grid bounds
     - [ ] Implement: add `hoveredTile` state (`{ gridX: number, gridY: number } | null`) in GameCanvas
     - [ ] Implement: in the existing `mousemove` handler, after `grid.updateHover(localX, localY)`, compute grid coords via `screenToGrid(localX - offsetX, localY - offsetY)` where `offsetX = 1024` (64×32/2) and `offsetY = 50`
@@ -68,13 +68,13 @@
     - [ ] Implement: derive `hoveredAgent` by finding an agent in `agentsData` whose `gridX`/`gridY` matches the hovered tile (linear scan, 10 agents)
     - [ ] Implement: derive `hoveredPoi` by finding a POI in `poisData` whose `gridX`/`gridY` matches (linear scan, ~5 POIs)
     - [ ] Run tests and verify all pass
-- [ ] Task: Create TileTooltip React component
+- [x] Task: Create TileTooltip React component `8abbcf6`
     - [ ] Implement: new `src/components/game/TileTooltip.tsx` — absolutely positioned div that follows cursor with 10px right / 10px below offset
     - [ ] Implement: content priority — POI name first, then agent name + archetype badge, then grid coordinates fallback
     - [ ] Implement: styling — `bg-slate-900/90 backdrop-blur-sm`, `text-[10px] font-mono`, rounded border, compact padding (2px 6px), pixel-style font
     - [ ] Implement: visibility — only render when `hoveredTile` is non-null; hidden on mouse leave
     - [ ] Run tests and verify all pass
-- [ ] Task: Wire TileTooltip into GameCanvas
+- [x] Task: Wire TileTooltip into GameCanvas `8abbcf6`
     - [ ] Implement: render `<TileTooltip>` inside `GameCanvas` container div, passing `hoveredTile`, `hoveredAgent`, `hoveredPoi`, and cursor pixel position (`clientX`, `clientY`)
     - [ ] Implement: pass cursor position from the `mousemove` handler into the tooltip for positioning (store in a ref or state, throttled to avoid excessive re-renders since updateHover already gates on tile change)
     - [ ] Run tests and verify all pass
