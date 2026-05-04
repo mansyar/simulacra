@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, useContext } from 'react'
+import { useEffect, useRef, useState, useMemo, useContext } from 'react'
 import { Application, Container, Ticker } from 'pixi.js'
 import { useQuery } from 'convex/react'
 import { useNavigate, useParams } from '@tanstack/react-router'
@@ -13,9 +13,9 @@ import { AgentSprite } from './AgentSprite'
 import { POISprite } from './POISprite'
 import { ConversationLines } from './ConversationLines'
 import { MiniMap } from './MiniMap'
-import { getCameraUrlParamsFromWindow, buildCameraUrlSearchString } from '../../lib/url-camera'
-import type { CameraUrlParams } from '../../lib/url-camera'
-import { gridToScreen, screenToGrid } from '../../lib/isometric'
+import { TileTooltip } from './TileTooltip'
+import { screenToGrid } from '../../lib/isometric'
+import { useUrlCamera } from '../../lib/use-url-camera'
 import { getWeatherSpeedMultiplier } from '../../lib/weather'
 
 interface ExtendedApplication extends Application {
@@ -51,18 +51,24 @@ export function GameCanvas() {
     viewportHeight: 0,
   })
   const [isReady, setIsReady] = useState(false)
-  const [urlParamsApplied, setUrlParamsApplied] = useState(false)
-  const urlParamsRef = useRef<CameraUrlParams | null>(null)
-  const lastUrlStateRef = useRef({ posX: 0, posY: 0, zoom: 0 })
-
-  // Read URL camera params once on mount
-  useEffect(() => {
-    urlParamsRef.current = getCameraUrlParamsFromWindow()
-  }, [])
+  const [hoveredTile, setHoveredTile] = useState<{ gridX: number; gridY: number } | null>(null)
+  const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 })
+  const appScreenRef = useRef<{ width: number; height: number } | null>(null)
 
   const agentsData = useQuery(api.functions.agents.getAll)
   const poisData = useQuery(api.functions.world.getPois)
   const worldState = useQuery(api.functions.world.getState)
+
+  // Derive hovered agent and POI from hovered tile position
+  const hoveredAgent = useMemo(() => {
+    if (!hoveredTile || !agentsData) return null
+    return agentsData.find(a => a.gridX === hoveredTile.gridX && a.gridY === hoveredTile.gridY) ?? null
+  }, [hoveredTile, agentsData])
+
+  const hoveredPoi = useMemo(() => {
+    if (!hoveredTile || !poisData) return null
+    return poisData.find(p => p.gridX === hoveredTile.gridX && p.gridY === hoveredTile.gridY) ?? null
+  }, [hoveredTile, poisData])
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -91,6 +97,7 @@ export function GameCanvas() {
 
       container.appendChild(app.canvas)
       appRef.current = app
+      appScreenRef.current = { width: app.screen.width, height: app.screen.height }
 
       const grid = new IsometricGrid({
         width: 64,
@@ -139,6 +146,10 @@ export function GameCanvas() {
         lastPos = { x: e.clientX, y: e.clientY }
       }
 
+      const offsetX = 1024
+      const offsetY = 50
+      const GRID_SIZE = 64
+
       const handleMouseMove = (e: MouseEvent) => {
         const canvasRect = app.canvas.getBoundingClientRect()
         const screenX = e.clientX - canvasRect.left
@@ -150,6 +161,17 @@ export function GameCanvas() {
         
         grid.updateHover(localX, localY)
 
+        // Compute hovered tile grid coordinates for tooltip
+        const { x: gridX, y: gridY } = screenToGrid(localX - offsetX, localY - offsetY)
+        if (gridX >= 0 && gridX < GRID_SIZE && gridY >= 0 && gridY < GRID_SIZE) {
+          setHoveredTile({ gridX, gridY })
+        } else {
+          setHoveredTile(null)
+        }
+
+        // Track cursor position for tooltip positioning
+        setCursorPos({ x: e.clientX, y: e.clientY })
+
         if (isDragging) {
           const dx = e.clientX - lastPos.x
           const dy = e.clientY - lastPos.y
@@ -157,6 +179,10 @@ export function GameCanvas() {
           camera.handlePan(pos.x + dx, pos.y + dy)
           lastPos = { x: e.clientX, y: e.clientY }
         }
+      }
+
+      const handleMouseLeave = () => {
+        setHoveredTile(null)
       }
 
       const handleMouseUp = () => {
@@ -173,6 +199,7 @@ export function GameCanvas() {
 
       app.canvas.addEventListener('mousedown', handleMouseDown)
       app.canvas.addEventListener('mousemove', handleMouseMove)
+      app.canvas.addEventListener('mouseleave', handleMouseLeave)
       window.addEventListener('mouseup', handleMouseUp)
       app.canvas.addEventListener('wheel', handleWheel, { passive: false })
 
@@ -394,84 +421,8 @@ export function GameCanvas() {
     }
   }, [])
 
-  // Apply URL camera params on mount (once agentsData is ready)
-  useEffect(() => {
-    if (!isReady || !agentsData || !appRef.current) return
-    if (urlParamsApplied) return
-
-    const urlParams = urlParamsRef.current
-    if (!urlParams) return
-
-    const camera = cameraRef.current
-    if (!camera) return
-
-    const viewportWidth = appRef.current.screen.width
-    const viewportHeight = appRef.current.screen.height
-
-    // Priority 1: focus agent
-    if (urlParams.focusAgentId) {
-      const targetAgent = agentsData.find(a => a._id === urlParams.focusAgentId)
-      if (targetAgent) {
-        const { x: worldX, y: worldY } = gridToScreen(targetAgent.gridX, targetAgent.gridY)
-        const offsetX = (64 * 32) / 2
-        const offsetY = 50
-        camera.lookAt(worldX + offsetX, worldY + offsetY, viewportWidth, viewportHeight)
-      }
-    }
-    // Priority 2: center grid coords
-    else if (urlParams.centerGridX !== undefined && urlParams.centerGridY !== undefined) {
-      const { x: worldX, y: worldY } = gridToScreen(urlParams.centerGridX, urlParams.centerGridY)
-      const offsetX = (64 * 32) / 2
-      const offsetY = 50
-      camera.lookAt(worldX + offsetX, worldY + offsetY, viewportWidth, viewportHeight)
-    }
-    // Priority 3: no params, leave at default center
-
-    // Apply zoom after positioning
-    if (urlParams.zoom !== undefined) {
-      camera.setZoom(urlParams.zoom)
-    }
-
-    setUrlParamsApplied(true)
-  }, [isReady, agentsData, urlParamsApplied])
-
-  // Debounced write-back: Write camera state to URL on pan/zoom (500ms debounce)
-  useEffect(() => {
-    if (!isReady) return
-
-    const OFFSET_X = 1024
-    const OFFSET_Y = 50
-    const interval = setInterval(() => {
-      const state = cameraStateRef.current
-      const camera = cameraRef.current
-      if (!camera) return
-
-      const pos = camera.getPosition()
-      const zoom = camera.getZoom()
-
-      // Check if camera position or zoom changed significantly
-      const posChanged = Math.abs(pos.x - lastUrlStateRef.current.posX) > 0.5
-        || Math.abs(pos.y - lastUrlStateRef.current.posY) > 0.5
-      const zoomChanged = Math.abs(zoom - lastUrlStateRef.current.zoom) > 0.01
-
-      if (!posChanged && !zoomChanged) return
-
-      lastUrlStateRef.current = { posX: pos.x, posY: pos.y, zoom }
-
-      // Compute center grid coordinates from camera position and viewport
-      const centerWorldX = (-state.positionX + state.viewportWidth / 2) / state.scaleX
-      const centerWorldY = (-state.positionY + state.viewportHeight / 2) / state.scaleX
-      const { x: centerGridX, y: centerGridY } = screenToGrid(
-        centerWorldX - OFFSET_X,
-        centerWorldY - OFFSET_Y
-      )
-
-      const searchString = buildCameraUrlSearchString(zoom, centerGridX, centerGridY)
-      window.history.replaceState(null, '', '?' + searchString)
-    }, 500)
-
-    return () => clearInterval(interval)
-  }, [isReady])
+  // URL camera state: read from URL on mount, write back on pan/zoom
+  useUrlCamera(isReady, agentsData, cameraRef, cameraStateRef, appScreenRef)
 
   return (
     <div 
@@ -487,6 +438,13 @@ export function GameCanvas() {
           cameraRef={cameraRef}
         />
       )}
+      <TileTooltip
+        hoveredTile={hoveredTile}
+        hoveredAgent={hoveredAgent}
+        hoveredPoi={hoveredPoi}
+        cursorX={cursorPos.x}
+        cursorY={cursorPos.y}
+      />
     </div>
   )
 }
