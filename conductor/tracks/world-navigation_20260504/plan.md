@@ -43,7 +43,7 @@
     - [ ] Implement: priority logic — if `focus` present, find that agent in `agentsData` and call `cameraRef.lookAt(agentWorldX, agentWorldY, ...)`; else if `cx`/`cy` present, convert grid coords to screen coords and call `lookAt()`; else leave at default center
     - [ ] Implement: if `zoom` present, call `cameraRef.setZoom(parseFloat(zoom))` after camera positioning
     - [ ] Run tests and verify all pass
-- [ ] Task: Write camera state back to URL on pan/zoom
+- [x] Task: Write camera state back to URL on pan/zoom `2013efa`
     - [ ] Write failing tests: create test that camera movement triggers `router.history.push()` with updated search params (debounced 500ms); verify `?cx`/`?cy` are set and `?focus` is cleared on manual pan
     - [ ] Implement: add a debounced effect (500ms) in `GameCanvas` that watches camera position/zoom and updates URL via `router.history.push()` — pass router from context or use `window.location` to build the new URL
     - [ ] Implement: format: `?zoom=<level>&cx=<centerGridX>&cy=<centerGridY>` — compute center grid coordinate by converting viewport center from screen coords to grid coords
