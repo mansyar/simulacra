@@ -24,7 +24,7 @@
     - [ ] Implement: click-to-jump — convert minimap pixel to world grid coords, compute screen-space position via `gridToScreen()`, call `cameraRef.current.lookAt()`
     - [ ] Implement: use `useEffect` with `requestAnimationFrame` loop for redraw — reads camera state from a shared ref (not PixiJS ticker), draws agents/POIs from React props
     - [ ] Run tests and verify all pass
-- [ ] Task: Wire MiniMap into GameCanvas
+- [x] Task: Wire MiniMap into GameCanvas `8b340a0`
     - [ ] Write failing tests: update `GameCanvas.test.tsx` to verify MiniMap mounts inside canvas container div
     - [ ] Implement: create a shared `cameraStateRef` in GameCanvas that stores `{ positionX, positionY, scaleX, viewportWidth, viewportHeight }` and update it every PixiJS tick
     - [ ] Implement: import and render `<MiniMap>` component inside `GameCanvas` container div, passing `cameraStateRef`, `agentsData`, `poisData`, `cameraRef` as props
