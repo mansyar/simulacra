@@ -13,6 +13,9 @@ import { AgentSprite } from './AgentSprite'
 import { POISprite } from './POISprite'
 import { ConversationLines } from './ConversationLines'
 import { MiniMap } from './MiniMap'
+import { getCameraUrlParamsFromWindow } from '../../lib/url-camera'
+import type { CameraUrlParams } from '../../lib/url-camera'
+import { gridToScreen } from '../../lib/isometric'
 import { getWeatherSpeedMultiplier } from '../../lib/weather'
 
 interface ExtendedApplication extends Application {
@@ -48,6 +51,13 @@ export function GameCanvas() {
     viewportHeight: 0,
   })
   const [isReady, setIsReady] = useState(false)
+  const [urlParamsApplied, setUrlParamsApplied] = useState(false)
+  const urlParamsRef = useRef<CameraUrlParams | null>(null)
+
+  // Read URL camera params once on mount
+  useEffect(() => {
+    urlParamsRef.current = getCameraUrlParamsFromWindow()
+  }, [])
 
   const agentsData = useQuery(api.functions.agents.getAll)
   const poisData = useQuery(api.functions.world.getPois)
@@ -381,6 +391,47 @@ export function GameCanvas() {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [])
+
+  // Apply URL camera params on mount (once agentsData is ready)
+  useEffect(() => {
+    if (!isReady || !agentsData || !appRef.current) return
+    if (urlParamsApplied) return
+
+    const urlParams = urlParamsRef.current
+    if (!urlParams) return
+
+    const camera = cameraRef.current
+    if (!camera) return
+
+    const viewportWidth = appRef.current.screen.width
+    const viewportHeight = appRef.current.screen.height
+
+    // Priority 1: focus agent
+    if (urlParams.focusAgentId) {
+      const targetAgent = agentsData.find(a => a._id === urlParams.focusAgentId)
+      if (targetAgent) {
+        const { x: worldX, y: worldY } = gridToScreen(targetAgent.gridX, targetAgent.gridY)
+        const offsetX = (64 * 32) / 2
+        const offsetY = 50
+        camera.lookAt(worldX + offsetX, worldY + offsetY, viewportWidth, viewportHeight)
+      }
+    }
+    // Priority 2: center grid coords
+    else if (urlParams.centerGridX !== undefined && urlParams.centerGridY !== undefined) {
+      const { x: worldX, y: worldY } = gridToScreen(urlParams.centerGridX, urlParams.centerGridY)
+      const offsetX = (64 * 32) / 2
+      const offsetY = 50
+      camera.lookAt(worldX + offsetX, worldY + offsetY, viewportWidth, viewportHeight)
+    }
+    // Priority 3: no params, leave at default center
+
+    // Apply zoom after positioning
+    if (urlParams.zoom !== undefined) {
+      camera.setZoom(urlParams.zoom)
+    }
+
+    setUrlParamsApplied(true)
+  }, [isReady, agentsData, urlParamsApplied])
 
   return (
     <div 

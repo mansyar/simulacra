@@ -14,6 +14,7 @@ const mockApp = {
     position: { x: 0, y: 0, set: vi.fn() },
     scale: { x: 1, y: 1, set: vi.fn() },
   },
+  screen: { width: 800, height: 600 },
   ticker: { add: vi.fn(), remove: vi.fn(), stop: vi.fn(), start: vi.fn() },
 }
 
