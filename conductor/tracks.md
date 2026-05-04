@@ -19,6 +19,6 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [x] **Track: Phase 11 Track B — World Navigation & Awareness**
-  *Link: [./tracks/world-navigation_20260504/](./tracks/world-navigation_20260504/)*
+- [x] **Archived: Phase 11 Track B — World Navigation & Awareness**
+  *Archive: [./archive/world-navigation_20260504/](./archive/world-navigation_20260504/)*
 
