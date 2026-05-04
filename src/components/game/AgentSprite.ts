@@ -34,7 +34,7 @@ const ACTION_EMOJIS: Record<string, string> = {
   exploring: '🔍',
 }
 
-const ARCHETYPE_COLORS: Record<string, number> = {
+export const ARCHETYPE_COLORS: Record<string, number> = {
   builder: 0x3b82f6,
   socialite: 0xec4899,
   philosopher: 0x8b5cf6,
