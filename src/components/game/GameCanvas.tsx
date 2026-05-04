@@ -306,7 +306,8 @@ export function GameCanvas() {
         sprite.on('select', () => {
           navigate({
             to: '/agent/$id',
-            params: { id: agent._id }
+            params: { id: agent._id },
+            search: { focus: agent._id }
           })
           if (cameraRef.current && appRef.current) {
             cameraRef.current.lookAt(

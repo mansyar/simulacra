@@ -143,7 +143,8 @@ describe('GameCanvas Navigation', () => {
 
     expect(mockNavigate).toHaveBeenCalledWith({
       to: '/agent/$id',
-      params: { id: 'agent1' }
+      params: { id: 'agent1' },
+      search: { focus: 'agent1' }
     })
 
     // Verify setSelected was called (sync effect will trigger it)
