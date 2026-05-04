@@ -5,7 +5,7 @@
 
 ---
 
-## Phase 1: Minimap (HTML5 Canvas)
+## Phase 1: Minimap (HTML5 Canvas) [checkpoint: cb0e834]
 
 ### Tasks
 
@@ -29,7 +29,7 @@
     - [ ] Implement: create a shared `cameraStateRef` in GameCanvas that stores `{ positionX, positionY, scaleX, viewportWidth, viewportHeight }` and update it every PixiJS tick
     - [ ] Implement: import and render `<MiniMap>` component inside `GameCanvas` container div, passing `cameraStateRef`, `agentsData`, `poisData`, `cameraRef` as props
     - [ ] Run tests and verify all pass
-- [~] Task: Conductor - User Manual Verification 'Phase 1: Minimap' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Minimap' (Protocol in workflow.md) `cb0e834`
 
 ---
 
