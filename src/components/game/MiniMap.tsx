@@ -4,6 +4,7 @@ import { ARCHETYPE_COLORS } from './AgentSprite'
 import type { POIData } from './POISprite'
 import { screenToGrid, gridToScreen } from '../../lib/isometric'
 import type { CameraController } from './Camera'
+import { useDrawer } from '../../lib/drawer-context'
 
 const MINIMAP_SIZE = 120
 const PADDING = 8
@@ -97,9 +98,15 @@ interface MiniMapProps {
   cameraRef: React.MutableRefObject<CameraController | null>
 }
 
+// Thought stream dimensions for dynamic positioning
+const THOUGHT_STREAM_COLLAPSED_H = 32 // h-8
+const THOUGHT_STREAM_EXPANDED_H = 200 // h-[200px]
+const MINIMAP_MARGIN = 8
+
 export function MiniMap({ agentsData, poisData, cameraStateRef, cameraRef }: MiniMapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const rafRef = useRef<number>(0)
+  const { isExpanded: isThoughtStreamExpanded } = useDrawer()
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current
@@ -204,6 +211,12 @@ export function MiniMap({ agentsData, poisData, cameraStateRef, cameraRef }: Min
     [cameraRef, cameraStateRef]
   )
 
+  // Compute bottom offset to stay above the thought stream
+  const thoughtStreamHeight = isThoughtStreamExpanded
+    ? THOUGHT_STREAM_EXPANDED_H
+    : THOUGHT_STREAM_COLLAPSED_H
+  const bottomOffset = thoughtStreamHeight + MINIMAP_MARGIN
+
   return (
     <canvas
       ref={canvasRef}
@@ -212,12 +225,14 @@ export function MiniMap({ agentsData, poisData, cameraStateRef, cameraRef }: Min
       onClick={handleClick}
       style={{
         position: 'absolute',
-        bottom: 8,
+        bottom: bottomOffset,
         right: 8,
+        transition: 'bottom 300ms ease-in-out',
+        willChange: 'bottom',
         borderRadius: 8,
         border: '1px solid rgba(148, 163, 184, 0.3)',
         cursor: 'crosshair',
-        zIndex: 10,
+        zIndex: 45,
       }}
     />
   )
