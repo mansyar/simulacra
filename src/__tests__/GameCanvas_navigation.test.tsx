@@ -90,7 +90,14 @@ vi.mock('../components/game/AgentSprite', () => {
       }
       lastAgentSpriteInstance = instance as unknown as MockAgentSprite
       return instance
-    })
+    }),
+    ARCHETYPE_COLORS: {
+      builder: 0x3b82f6,
+      socialite: 0xec4899,
+      philosopher: 0x8b5cf6,
+      explorer: 0xf59e0b,
+      nurturer: 0x10b981,
+    },
   }
 })
 

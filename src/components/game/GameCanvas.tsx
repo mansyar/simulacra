@@ -12,6 +12,7 @@ import { CameraController } from './Camera'
 import { AgentSprite } from './AgentSprite'
 import { POISprite } from './POISprite'
 import { ConversationLines } from './ConversationLines'
+import { MiniMap } from './MiniMap'
 import { getWeatherSpeedMultiplier } from '../../lib/weather'
 
 interface ExtendedApplication extends Application {
@@ -39,6 +40,13 @@ export function GameCanvas() {
   const agentContainerRef = useRef<Container | null>(null)
   const poiContainerRef = useRef<Container | null>(null)
   const conversationLinesRef = useRef<ConversationLines | null>(null)
+  const cameraStateRef = useRef({
+    positionX: 0,
+    positionY: 0,
+    scaleX: 1,
+    viewportWidth: 0,
+    viewportHeight: 0,
+  })
   const [isReady, setIsReady] = useState(false)
 
   const agentsData = useQuery(api.functions.agents.getAll)
@@ -178,9 +186,18 @@ export function GameCanvas() {
           conversationLinesRef.current.update(ticker.deltaTime)
         }
         
+        // Update camera state ref for MiniMap
+        const stage = app.stage
+        cameraStateRef.current = {
+          positionX: stage.position.x,
+          positionY: stage.position.y,
+          scaleX: stage.scale.x,
+          viewportWidth: app.screen.width,
+          viewportHeight: app.screen.height,
+        }
+
         // Spec compliance: Viewport Culling
         if (gridRef.current) {
-          const stage = app.stage
           const viewportWidth = app.screen.width / stage.scale.x
           const viewportHeight = app.screen.height / stage.scale.y
           const left = -stage.position.x / stage.scale.x
@@ -371,6 +388,14 @@ export function GameCanvas() {
       className="w-full h-full relative"
     >
       {/* PixiJS canvas will be appended here */}
+      {agentsData && poisData && (
+        <MiniMap
+          agentsData={agentsData}
+          poisData={poisData}
+          cameraStateRef={cameraStateRef}
+          cameraRef={cameraRef}
+        />
+      )}
     </div>
   )
 }

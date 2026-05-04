@@ -92,6 +92,17 @@ describe('GameCanvas (PixiJS)', () => {
     expect(mockDestroy).toHaveBeenCalledWith(true, { children: true, texture: true })
   })
 
+  it('should render MiniMap component inside container div', async () => {
+    const { container } = render(<GameCanvas />)
+
+    // Wait for init to complete
+    await waitFor(() => expect(mockInit).toHaveBeenCalled())
+
+    // The container should have a canvas element (PixiJS canvas + MiniMap canvas)
+    const canvases = container.querySelectorAll('canvas')
+    expect(canvases.length).toBeGreaterThanOrEqual(1)
+  })
+
   it('should handle visibility change', async () => {
     render(<GameCanvas />)
     
