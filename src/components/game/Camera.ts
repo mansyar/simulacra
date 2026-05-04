@@ -97,6 +97,10 @@ export class CameraController {
     return this.targetZoom
   }
 
+  public getScale(): number {
+    return this.stage.scale.x
+  }
+
   public getPosition(): { x: number; y: number } {
     return { x: this.stage.position.x, y: this.stage.position.y }
   }

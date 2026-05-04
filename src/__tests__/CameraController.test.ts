@@ -32,6 +32,17 @@ describe('CameraController', () => {
     expect(mockStage.position.set).toHaveBeenCalled()
   })
 
+  it('should return current stage scale from getScale', () => {
+    const mockStage = { 
+      scale: { x: 1.5, y: 1.5, set: vi.fn() }, 
+      position: { x: 0, y: 0, set: vi.fn() } 
+    }
+    // @ts-expect-error - mock stage
+    const camera = new CameraController(mockStage)
+    
+    expect(camera.getScale()).toBe(1.5)
+  })
+
   it('should cancel auto-pan on manual handlePan', () => {
     const mockStage = { 
       scale: { x: 1, y: 1, set: vi.fn() }, 
